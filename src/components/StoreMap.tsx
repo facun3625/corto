@@ -18,11 +18,13 @@ export function StoreMap({ locations, franchiseLocation }: { locations: StoreLoc
     <div>
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-brand-pink-dark">
         <span className="h-px w-4 bg-brand-pink" />
-        Nuestra tienda
+        {locations.length > 1 ? "Nuestras tiendas físicas" : "Nuestra tienda física"}
       </p>
       <h2 className="mt-1 text-2xl font-bold text-brand-ink">Dónde estamos</h2>
       <p className="mt-2 max-w-2xl text-brand-muted">
-        Te esperamos en nuestro local en el centro de {franchiseLocation}. Vení a conocer todos nuestros productos.
+        {locations.length > 1
+          ? `Te esperamos en nuestros locales de ${franchiseLocation}. Vení a conocer todos nuestros productos.`
+          : `Te esperamos en nuestro local en el centro de ${franchiseLocation}. Vení a conocer todos nuestros productos.`}
       </p>
 
       {/* Pestañas: una por local, arriba y a lo ancho */}
