@@ -1,0 +1,25 @@
+# dependencias y build
+node_modules/
+.next/
+out/
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# cliente de Prisma (se genera con `npm install` / `prisma generate`)
+src/generated/
+
+# secretos y datos locales: NUNCA al repositorio
+.env
+.env.*
+!.env.example
+
+# archivos subidos en desarrollo (imágenes, videos, comprobantes) y backups
+public/uploads/
+backups/
+*.sql.gz
+
+# sistema / editor
+.DS_Store
+.vscode/
+.idea/
+*.log

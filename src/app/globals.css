@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #383e45;
+
+  --color-brand-pink: #e52327;
+  --color-brand-pink-dark: #c4161a;
+  --color-brand-ink: #383e45;
+  --color-brand-muted: #685563;
+  --color-brand-soft: #f6f6f6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-pink: var(--color-brand-pink);
+  --color-brand-pink-dark: var(--color-brand-pink-dark);
+  --color-brand-ink: var(--color-brand-ink);
+  --color-brand-muted: var(--color-brand-muted);
+  --color-brand-soft: var(--color-brand-soft);
+  --font-sans: var(--font-poppins);
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  min-width: 0;
+  overflow-x: clip;
+}
+
+@media (max-width: 639px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+/* Flechita nativa del <select> reemplazada por una propia con más aire —
+   la de cada navegador se pega demasiado al borde y queda encimada con el
+   texto cuando el campo no es muy ancho. */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23685563' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem !important;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+/* Tailwind v4 saca el cursor "pointer" por defecto de los <button> (a
+   diferencia del comportamiento nativo del navegador) — sin esto, cada
+   botón nuevo necesitaría acordarse de agregar cursor-pointer a mano. Los
+   deshabilitados quedan afuera: su cursor lo maneja disabled:cursor-* en
+   cada componente, que tiene más especificidad que esta regla. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Mac usa un scrollbar fino translúcido por defecto, pero Windows/Linux
+   muestran el clásico gris y grueso — se nota sobre todo en listas cortas
+   como el menú del admin. Esto lo afina en todos lados sin depender del SO. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-muted) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-brand-muted);
+  border-radius: 9999px;
+}
+
+/* Igual, pero pensado para superficies oscuras (ej. el sidebar del admin) —
+   el thumb gris de arriba casi no se distingue sobre bg-brand-ink. */
+.scrollbar-thin-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+}
+
+/* El panel de administración no toma los temas de campaña (tipografía de títulos ni forma de botones) */
+.admin-root :is(h1, h2, h3) {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+.admin-root :is(a, button).rounded-full:where(.bg-brand-pink, .border-brand-pink) {
+  border-radius: 9999px;
+}
