@@ -11,7 +11,7 @@ export function SettingsTabs({ tabs }: { tabs: { id: string; label: string; cont
 
   return (
     <div className="mt-6">
-      <div role="tablist" className="flex flex-wrap gap-1 border-b border-black/10">
+      <div role="tablist" className="flex flex-wrap gap-x-0.5 border-b border-black/10">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -19,7 +19,7 @@ export function SettingsTabs({ tabs }: { tabs: { id: string; label: string; cont
             type="button"
             aria-selected={active === t.id}
             onClick={() => setActive(t.id)}
-            className={`-mb-px cursor-pointer rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+            className={`-mb-px cursor-pointer whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2 text-[12.5px] font-medium transition-colors ${
               active === t.id
                 ? "border-brand-pink text-brand-pink-dark"
                 : "border-transparent text-brand-muted hover:text-brand-ink"

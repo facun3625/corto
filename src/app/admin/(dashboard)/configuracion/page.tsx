@@ -883,11 +883,11 @@ export default async function AdminConfiguracionPage({
       <SettingsTabs
         tabs={[
           { id: "general", label: "General", content: generalPanel },
-          { id: "beneficios", label: "Franja de beneficios", content: benefitsPanel },
+          { id: "beneficios", label: "Beneficios", content: benefitsPanel },
           { id: "mailing", label: "Franquicia", content: mailingPanel },
           ...(isSuper
             ? [
-                { id: "correo", label: "Correo (SMTP / Resend)", content: mailProviderPanel },
+                { id: "correo", label: "Correo", content: mailProviderPanel },
                 { id: "imagenes", label: "Imágenes (R2)", content: r2Panel },
                 { id: "backups", label: "Copias de seguridad", content: backupsPanel },
               ]
