@@ -24,6 +24,7 @@ export default async function AdminProductosPage({
     sort?: string;
     dir?: string;
     state?: string;
+    type?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -39,6 +40,8 @@ export default async function AdminProductosPage({
   const dir = params.dir === "desc" ? "desc" : "asc";
   const state = params.state === "visible" || params.state === "draft" || params.state === "scheduled" ? params.state : undefined;
 
+  const type = params.type === "simple" || params.type === "variable" ? params.type : undefined;
+
   const categories = await getAllCategories();
 
   const [counts, { products, total }] = await Promise.all([
@@ -47,6 +50,7 @@ export default async function AdminProductosPage({
       query: query || undefined,
       categoryId,
       state,
+      type,
       minPrice,
       maxPrice,
       minStock,
@@ -65,12 +69,13 @@ export default async function AdminProductosPage({
   const sortedAllCategories = [...categories].map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
 
   const hasFilters = Boolean(
-    query || categoryId || state || minPrice !== undefined || maxPrice !== undefined || minStock !== undefined || maxStock !== undefined
+    query || categoryId || state || type || minPrice !== undefined || maxPrice !== undefined || minStock !== undefined || maxStock !== undefined
   );
 
   const extraParams = {
     categoryId: params.categoryId,
     state,
+    type,
     minPrice: params.minPrice,
     maxPrice: params.maxPrice,
     minStock: params.minStock,
@@ -85,6 +90,7 @@ export default async function AdminProductosPage({
     if (query) p.set("q", query);
     if (params.categoryId) p.set("categoryId", params.categoryId);
     if (state) p.set("state", state);
+    if (type) p.set("type", type);
     if (params.minPrice) p.set("minPrice", params.minPrice);
     if (params.maxPrice) p.set("maxPrice", params.maxPrice);
     if (params.minStock) p.set("minStock", params.minStock);
@@ -137,6 +143,14 @@ export default async function AdminProductosPage({
                 <option value="visible">Publicados</option>
                 <option value="draft">Borradores</option>
                 <option value="scheduled">Programados / vencidos</option>
+              </select>
+            </div>
+            <div className="w-36">
+              <label className={labelClasses}>Tipo</label>
+              <select name="type" defaultValue={type ?? ""} className={fieldClasses}>
+                <option value="">Todos</option>
+                <option value="simple">Simples</option>
+                <option value="variable">Variables</option>
               </select>
             </div>
             <div className="w-24">

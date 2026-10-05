@@ -170,6 +170,8 @@ export async function getAdminProductsPage(opts: {
   categoryId?: string;
   // all | visible | draft | scheduled (publicado pero fuera de fecha)
   state?: "visible" | "draft" | "scheduled";
+  // simple | variable (con variantes: talle, color…)
+  type?: "simple" | "variable";
   minPrice?: number;
   maxPrice?: number;
   minStock?: number;
@@ -191,6 +193,7 @@ export async function getAdminProductsPage(opts: {
           : {};
   const where: Prisma.ProductWhereInput = {
     ...stateWhere,
+    ...(opts.type ? { type: opts.type } : {}),
     ...(categoryIds ? { categories: { some: { categoryId: { in: categoryIds } } } } : {}),
     ...(opts.query
       ? {
