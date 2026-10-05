@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatOrderNumber } from "@/lib/orderNumber";
 import { getCheckoutTexts } from "@/lib/checkoutTexts";
-import { getStoreSettingsRow } from "@/lib/settings";
+import { getContactInfo } from "@/lib/settings";
 import { buildWhatsAppLink, isLikelyPhone } from "@/lib/whatsapp";
 import { formatMoneyWith } from "@/lib/money";
 
@@ -19,11 +19,11 @@ export default async function GraciasPage({
   // "Sin pago online": si el admin lo dejó activado, se ofrece mandar el pedido por WhatsApp a la tienda
   let whatsappHref: string | null = null;
   if (order?.paymentMethod === "sin_pago") {
-    const [config, settings] = await Promise.all([
+    const [config, contact] = await Promise.all([
       prisma.paymentMethodConfig.findUnique({ where: { method: "sin_pago" }, select: { noPaymentWhatsapp: true } }),
-      getStoreSettingsRow(),
+      getContactInfo(),
     ]);
-    const phone = settings.whatsappPhone ?? "";
+    const phone = contact.whatsappNumber;
     if (config?.noPaymentWhatsapp && isLikelyPhone(phone)) {
       const lines = order.items.map((i) => `• ${i.quantity}x ${i.name}`).join("\n");
       whatsappHref = buildWhatsAppLink(

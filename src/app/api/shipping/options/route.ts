@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCheckoutItems } from "@/lib/checkout";
 import { InvalidCheckoutError } from "@/lib/checkoutItems";
 import { validateCoupon } from "@/lib/coupons";
-import { getStoreSettingsRow } from "@/lib/settings";
-import { WHATSAPP_NUMBER } from "@/lib/contact";
+import { getContactInfo } from "@/lib/settings";
 import { getShippingOptions } from "@/lib/shippingFlow";
 
 // Público: las opciones de envío que se le muestran al cliente según su código postal y su carrito.
@@ -48,8 +47,8 @@ export async function POST(req: Request) {
       paymentMethodConfigId: config?.id,
       couponFreeShipping,
     });
-    const settings = await getStoreSettingsRow();
-    return NextResponse.json({ ...result, contact: { whatsapp: settings.whatsappPhone || WHATSAPP_NUMBER } }, { headers: { "Cache-Control": "no-store" } });
+    const contact = await getContactInfo();
+    return NextResponse.json({ ...result, contact: { whatsapp: contact.whatsappNumber } }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     if (err instanceof InvalidCheckoutError) return NextResponse.json({ error: err.message }, { status: 400 });
     console.error("POST /api/shipping/options failed", err);

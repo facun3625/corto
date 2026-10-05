@@ -1,3 +1,5 @@
+import { getContactCards } from "@/lib/contactCards";
+import { resolveContact } from "@/lib/contactInfo";
 import { prisma } from "@/lib/prisma";
 import { getAllCategories } from "@/lib/categories";
 import { searchProductsForAssistant } from "@/lib/products";
@@ -6,11 +8,7 @@ import { optionalNumber, optionalText, safeToolArgs } from "@/lib/ai/validation"
 import type { AssistantProduct } from "@/lib/ai/types";
 import { getHumanSellerAvailability } from "@/lib/ai/availability";
 import {
-  DEFAULT_ADDRESS,
-  DEFAULT_CONTACT_EMAIL,
   DEFAULT_FRANCHISE_LOCATION,
-  INSTAGRAM_HANDLE,
-  WHATSAPP_NUMBER,
 } from "@/lib/contact";
 
 export type AssistantToolName = "search_products" | "list_categories" | "get_store_options";
@@ -140,22 +138,26 @@ export async function executeAssistantTool(
       getAllShippingMethods(),
       prisma.storeSettings.findUnique({ where: { id: "global" } }),
     ]);
+    const cards = await getContactCards();
+    const contact = resolveContact(settings ?? {}, cards, settings?.franchiseLocation?.trim() || DEFAULT_FRANCHISE_LOCATION);
     const humanSupport = getHumanSellerAvailability({
       aiHumanHandoffEnabled: settings?.aiHumanHandoffEnabled ?? true,
       aiHumanDays: settings?.aiHumanDays ?? [1, 2, 3, 4, 5, 6],
       aiHumanStartTime: settings?.aiHumanStartTime ?? "09:00",
       aiHumanEndTime: settings?.aiHumanEndTime ?? "18:00",
-      whatsappPhone: settings?.whatsappPhone || WHATSAPP_NUMBER,
+      whatsappPhone: contact.whatsappNumber,
     });
     return {
       output: JSON.stringify({
         store: {
           name: settings?.franchiseName?.trim() || "Cortopassi - Tienda",
           branch: settings?.franchiseLocation?.trim() || DEFAULT_FRANCHISE_LOCATION,
-          address: settings?.address?.trim() || DEFAULT_ADDRESS,
-          contactEmail: settings?.contactEmail?.trim() || DEFAULT_CONTACT_EMAIL,
-          instagram: `@${settings?.instagramHandle?.trim() || INSTAGRAM_HANDLE}`,
-          whatsapp: settings?.whatsappPhone || WHATSAPP_NUMBER,
+          address: contact.address || undefined,
+          // Cada local con su dirección, teléfono, WhatsApp e Instagram (las tarjetas de Contacto)
+          locations: cards.map((c) => ({ name: c.title, address: c.address, phone: c.phone, whatsapp: c.whatsapp, instagram: c.instagram })),
+          contactEmail: contact.contactEmail || undefined,
+          instagram: contact.instagramHandle ? `@${contact.instagramHandle}` : undefined,
+          whatsapp: contact.whatsappNumber || undefined,
         },
         paymentMethods: payments.map((payment) => ({
           name: PAYMENT_LABELS[payment.method] ?? payment.method,

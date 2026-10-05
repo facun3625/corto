@@ -2,7 +2,6 @@ import "server-only";
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
-import { DEFAULT_CONTACT_EMAIL } from "@/lib/contact";
 
 export type PushPayload = {
   title: string;
@@ -39,7 +38,8 @@ export async function getVapidPublicKey(): Promise<string> {
 
 async function configuredWebPush(contactEmail: string | null) {
   const { publicKey, privateKey } = await getOrCreateVapidKeys();
-  webpush.setVapidDetails(`mailto:${contactEmail || DEFAULT_CONTACT_EMAIL}`, publicKey, privateKey);
+  // El contacto del servicio de push es un mail de la tienda o, si no hay, la dirección del sitio
+  webpush.setVapidDetails(contactEmail ? `mailto:${contactEmail}` : (process.env.NEXTAUTH_URL ?? "https://localhost"), publicKey, privateKey);
   return webpush;
 }
 

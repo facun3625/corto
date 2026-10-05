@@ -386,14 +386,16 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                 <div className="mt-4 border-t border-black/10 pt-4">
                   <p className="px-3 text-xs font-semibold uppercase tracking-widest text-brand-muted">Contacto</p>
                   <div className="mt-3 flex flex-col gap-3 px-3 text-sm text-brand-ink">
-                    <div className="flex items-center gap-2.5">
-                      <MapPinIcon className="h-4 w-4 shrink-0 text-brand-muted" />
-                      <span>{settings.address}</span>
-                    </div>
+                    {settings.address && (
+                      <div className="flex items-center gap-2.5">
+                        <MapPinIcon className="h-4 w-4 shrink-0 text-brand-muted" />
+                        <span>{settings.address}</span>
+                      </div>
+                    )}
                     {/* Mismo horario configurado para la vendedora IA (ver
                         /admin/configuracion → horario de WhatsApp) — fuera de
                         esas horas no tiene sentido invitar a escribir. */}
-                    {whatsappAvailable ? (
+                    {!settings.whatsappNumber ? null : whatsappAvailable ? (
                       <a
                         href={settings.assistant.humanSeller.whatsappUrl!}
                         target="_blank"
@@ -409,14 +411,16 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                         {settings.whatsappNumber} (fuera de horario)
                       </div>
                     )}
-                    <a href={`mailto:${settings.contactEmail}`} className="flex items-center gap-2.5 hover:text-brand-pink-dark">
-                      <MailIcon className="h-4 w-4 shrink-0 text-brand-muted" />
-                      {settings.contactEmail}
-                    </a>
+                    {settings.contactEmail && (
+                      <a href={`mailto:${settings.contactEmail}`} className="flex items-center gap-2.5 hover:text-brand-pink-dark">
+                        <MailIcon className="h-4 w-4 shrink-0 text-brand-muted" />
+                        {settings.contactEmail}
+                      </a>
+                    )}
                   </div>
 
                   <div className="mt-4 flex gap-2 px-3">
-                    {whatsappAvailable ? (
+                    {!settings.whatsappNumber ? null : whatsappAvailable ? (
                       <a
                         href={settings.assistant.humanSeller.whatsappUrl!}
                         target="_blank"
@@ -434,15 +438,17 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                         <WhatsAppIcon className="h-4.5 w-4.5" />
                       </div>
                     )}
-                    <a
-                      href={`https://instagram.com/${settings.instagramHandle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Instagram"
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/10 text-brand-ink hover:border-brand-pink hover:text-brand-pink-dark"
-                    >
-                      <InstagramIcon className="h-4.5 w-4.5" />
-                    </a>
+                    {settings.instagramHandle && (
+                      <a
+                        href={`https://instagram.com/${settings.instagramHandle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/10 text-brand-ink hover:border-brand-pink hover:text-brand-pink-dark"
+                      >
+                        <InstagramIcon className="h-4.5 w-4.5" />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

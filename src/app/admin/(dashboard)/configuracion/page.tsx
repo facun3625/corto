@@ -14,6 +14,8 @@ import { BenefitsEditor } from "./BenefitsEditor";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
 import { R2Form } from "./R2Form";
 import { getR2Config } from "@/lib/storage";
+import { getContactCards } from "@/lib/contactCards";
+import { resolveContact } from "@/lib/contactInfo";
 import { auth } from "@/lib/auth";
 import { MailProviderFields } from "@/app/integraciones/MailProviderFields";
 import { MailTestButton } from "@/app/integraciones/MailTestButton";
@@ -69,13 +71,14 @@ export default async function AdminConfiguracionPage({
 
   // Mismos defaults que calcula BenefitsStrip cuando el admin no cargó nada
   // — se muestran como placeholder para que quede claro qué se ve hoy.
+  const contactCards = await getContactCards();
   const benefitDefaults = [
     {
       title: cashDiscountPct ? `${cashDiscountPct}% OFF pagando en efectivo` : "Múltiples medios de pago",
       subtitle: cashDiscountPct ? "En toda la tienda" : "Efectivo, transferencia y tarjeta",
     },
     { title: `Envíos a ${settings.franchiseLocation || "Santa Fe"}`, subtitle: "Rápidos y seguros" },
-    { title: "Retiro en local", subtitle: settings.address || "San Martín 2191 — Santa Fe, Argentina" },
+    { title: "Retiro en local", subtitle: resolveContact(settings, contactCards, settings.franchiseLocation || "Santa Fe").address },
   ];
 
 
@@ -222,7 +225,7 @@ export default async function AdminConfiguracionPage({
                 type="text"
                 name="whatsappPhone"
                 defaultValue={settings.whatsappPhone ?? ""}
-                placeholder="5493420000000"
+                placeholder="Vacío: se usa el de la primera tarjeta de Contacto"
                 className={fieldClasses}
               />
             </div>
@@ -232,7 +235,7 @@ export default async function AdminConfiguracionPage({
                 type="text"
                 name="address"
                 defaultValue={settings.address ?? ""}
-                placeholder="San Martín 2191 — Santa Fe, Argentina"
+                placeholder="Vacío: se usa la dirección de la primera tarjeta de Contacto"
                 className={fieldClasses}
               />
             </div>
@@ -242,7 +245,7 @@ export default async function AdminConfiguracionPage({
                 type="email"
                 name="contactEmail"
                 defaultValue={settings.contactEmail ?? ""}
-                placeholder="info@tudominio.com"
+                placeholder="Ej.: info@tutienda.com"
                 className={fieldClasses}
               />
             </div>

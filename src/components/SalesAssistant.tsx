@@ -256,28 +256,32 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                           <div className="h-14 w-14 shrink-0 rounded-lg bg-brand-soft" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <Link href={product.href} className="line-clamp-2 text-xs font-semibold text-brand-ink hover:underline">
+                          <Link href={product.href} onClick={() => setOpen(false)} className="line-clamp-2 text-xs font-semibold text-brand-ink hover:underline">
                             {product.name}
                           </Link>
                           <p className="mt-0.5 text-xs font-bold text-brand-pink-dark">{money(product.price)}</p>
                           {product.type === "variable" ? (
                             // Un producto con variantes (talle, color…) no se puede agregar sin elegir: se abre su ficha
-                            <Link href={product.href} className="mt-1 inline-block text-[11px] font-semibold text-brand-pink-dark hover:underline">
+                            <Link href={product.href} onClick={() => setOpen(false)} className="mt-1 inline-block text-[11px] font-semibold text-brand-pink-dark hover:underline">
                               {product.available > 0 ? "Elegir opciones" : "Sin stock"}
                             </Link>
                           ) : (
                           <button
                             type="button"
                             disabled={product.available <= 0}
-                            onClick={() => addItem({
-                              productId: product.id,
-                              variantId: null,
-                              name: product.name,
-                              price: product.price,
-                              image: product.image,
-                              maxStock: product.available,
-                              categoryId: product.categoryId,
-                            })}
+                            onClick={() => {
+                              addItem({
+                                productId: product.id,
+                                variantId: null,
+                                name: product.name,
+                                price: product.price,
+                                image: product.image,
+                                maxStock: product.available,
+                                categoryId: product.categoryId,
+                              });
+                              // Ya hizo lo que vino a hacer: se cierra el chat para dejarle ver el carrito
+                              setOpen(false);
+                            }}
                             className="mt-1 cursor-pointer text-[11px] font-semibold text-brand-pink-dark disabled:cursor-not-allowed disabled:text-brand-muted"
                           >
                             {product.available > 0 ? "Agregar al carrito" : "Sin stock"}

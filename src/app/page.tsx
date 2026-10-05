@@ -80,7 +80,7 @@ const CARD_GRID = ["", "grid-cols-1 mx-auto max-w-xs", "grid-cols-2", "grid-cols
 
 const MARQUEE_ITEMS = settings.marqueeItems;
 
-  // La dirección se guarda como un solo string ("San Martín 2191 — Santa
+  // La dirección se guarda como un solo string ("Calle 123 — Santa
   // Fe, Argentina") — la separamos en dos líneas para la tarjeta de "Dónde
   // estamos". Si no tiene el separador (dirección cargada distinto), la
   // segunda línea cae en la franquicia como fallback razonable.
@@ -93,10 +93,13 @@ const MARQUEE_ITEMS = settings.marqueeItems;
   const cardLocations: StoreLocation[] = settings.contactCards
     .filter((c) => c.address)
     .map((c) => ({ id: c.id, title: c.title, street: c.address!, city: settings.franchiseLocation, query: `${c.address}, ${settings.franchiseLocation}` }));
+  // Sin tarjetas con dirección ni dirección general cargada, no hay nada que mostrar y la sección "Dónde estamos" no aparece
   const locations: StoreLocation[] =
     cardLocations.length > 0
       ? cardLocations
-      : [{ id: "tienda", title: "Tienda", street: addressStreet, city: addressCity, query: settings.address }];
+      : settings.address
+        ? [{ id: "tienda", title: "Tienda", street: addressStreet, city: addressCity, query: settings.address }]
+        : [];
 
   // El slider se maneja dentro de cada tema (Temas y campañas). Si el tema vigente no tiene slides propios, se usa el slider
   // del aspecto base. Si tampoco hay, un slide de ejemplo con las categorías destacadas.
@@ -292,11 +295,13 @@ const MARQUEE_ITEMS = settings.marqueeItems;
       )}
 
       {/* Dónde estamos */}
-      <section id="donde-estamos" className="scroll-mt-36 px-3 py-5 sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <StoreMap locations={locations} franchiseLocation={settings.franchiseLocation} />
-        </div>
-      </section>
+      {locations.length > 0 && (
+        <section id="donde-estamos" className="scroll-mt-36 px-3 py-5 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <StoreMap locations={locations} franchiseLocation={settings.franchiseLocation} />
+          </div>
+        </section>
+      )}
 
       {/* Newsletter */}
       <NewsletterBanner />

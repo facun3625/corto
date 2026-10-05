@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { WHATSAPP_NUMBER, INSTAGRAM_HANDLE, DEFAULT_ADDRESS, DEFAULT_FRANCHISE_LOCATION, DEFAULT_CONTACT_EMAIL } from "@/lib/contact";
+import { DEFAULT_FRANCHISE_LOCATION } from "@/lib/contact";
+import { resolveContact } from "@/lib/contactInfo";
 import { getHumanSellerAvailability } from "@/lib/ai/availability";
 import { getFooterPages } from "@/lib/pages";
 import { DEFAULT_FOOTER_TEXT } from "@/lib/contact";
@@ -30,12 +31,15 @@ export async function getSiteSettings() {
   // solo define CUÁNDO está disponible el WhatsApp (ya sea el botón dentro
   // del chat de la IA, o el botón flotante que lo reemplaza cuando la IA
   // está apagada) — ver SalesAssistant y SiteChrome.
+  const contactCards = await getContactCards();
+  const franchiseLocation = row.franchiseLocation || DEFAULT_FRANCHISE_LOCATION;
+  const contact = resolveContact(row, contactCards, franchiseLocation);
   const humanSeller = getHumanSellerAvailability({
     aiHumanHandoffEnabled: true,
     aiHumanDays: row.aiHumanDays,
     aiHumanStartTime: row.aiHumanStartTime,
     aiHumanEndTime: row.aiHumanEndTime,
-    whatsappPhone: row.whatsappPhone || WHATSAPP_NUMBER,
+    whatsappPhone: contact.whatsappNumber,
   });
 
   return {
@@ -44,18 +48,18 @@ export async function getSiteSettings() {
     footerText: row.footerText?.trim() || DEFAULT_FOOTER_TEXT,
     logos: resolveLogos(row),
     footerPages: await getFooterPages(),
-    contactCards: await getContactCards(),
+    contactCards,
     home: {
       featuredEnabled: row.homeFeaturedEnabled,
       featuredTitle: row.homeFeaturedTitle?.trim() || "Lo más elegido de la tienda",
       offersEnabled: row.homeOffersEnabled,
       offersTitle: row.homeOffersTitle?.trim() || "Ofertas y promociones",
     },
-    whatsappNumber: row.whatsappPhone || WHATSAPP_NUMBER,
-    instagramHandle: row.instagramHandle || INSTAGRAM_HANDLE,
-    address: row.address || DEFAULT_ADDRESS,
-    contactEmail: row.contactEmail || DEFAULT_CONTACT_EMAIL,
-    franchiseLocation: row.franchiseLocation || DEFAULT_FRANCHISE_LOCATION,
+    whatsappNumber: contact.whatsappNumber,
+    instagramHandle: contact.instagramHandle,
+    address: contact.address,
+    contactEmail: contact.contactEmail,
+    franchiseLocation,
     marqueeItems: row.marqueeText
       ? row.marqueeText.split("\n").map((s) => s.trim()).filter(Boolean)
       : DEFAULT_MARQUEE,
@@ -104,4 +108,10 @@ export async function getHeroSlides() {
 // Logo para los mails (URL absoluta)
 export async function getEmailLogoUrl(): Promise<string> {
   return absoluteUrl(resolveLogos(await getStoreSettingsRow()).header);
+}
+
+// Datos de contacto ya resueltos (configuración + tarjetas de Contacto), para código del servidor que lee la fila cruda
+export async function getContactInfo() {
+  const row = await getStoreSettingsRow();
+  return resolveContact(row, await getContactCards(), row.franchiseLocation || DEFAULT_FRANCHISE_LOCATION);
 }
