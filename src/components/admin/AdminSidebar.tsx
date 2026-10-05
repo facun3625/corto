@@ -78,8 +78,8 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
   const list = searching ? matches : LINKS;
 
   return (
-    <aside className="relative z-50 flex w-full shrink-0 flex-col border-b border-black/5 bg-white px-3 py-2 md:h-full md:w-56 md:border-0 md:bg-brand-ink md:py-3">
-      <div className="flex min-h-11 shrink-0 items-center justify-between px-1 md:mb-2.5 md:justify-center md:rounded-lg md:bg-white md:px-3 md:py-2">
+    <aside className="relative z-50 flex w-full shrink-0 flex-col border-b border-black/5 bg-white px-3 py-2 md:h-full md:w-56 md:border-0 md:border-r md:border-black/10 md:bg-white md:py-3">
+      <div className="flex min-h-11 shrink-0 items-center justify-between px-1 md:mb-2.5 md:justify-center md:px-3 md:py-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoUrl} alt="Logo de la tienda" className="h-9 w-auto md:h-8" />
         <button
@@ -105,7 +105,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
         className={`${open ? "flex" : "hidden"} absolute left-0 right-0 top-full max-h-[calc(100dvh-3.75rem)] flex-col border-b border-black/10 bg-white px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-xl md:static md:flex md:min-h-0 md:flex-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none`}
       >
         <div className="relative shrink-0 py-2 md:pb-2 md:pt-0">
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-muted md:top-[calc(50%-0.25rem)] md:text-white/50" />
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-muted md:top-[calc(50%-0.25rem)]" />
           <input
             ref={searchRef}
             type="search"
@@ -130,12 +130,12 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
             }}
             placeholder="Buscar en el panel…  (Ctrl K)"
             aria-label="Buscar una sección del panel"
-            className="w-full rounded-lg border border-black/10 bg-white py-2 pl-8 pr-2 text-xs text-brand-ink placeholder:text-brand-muted focus:border-brand-pink focus:outline-none md:border-white/10 md:bg-white/10 md:py-1.5 md:text-white md:placeholder:text-white/50 md:focus:border-white/40"
+            className="w-full rounded-lg border border-black/10 bg-white py-2 pl-8 pr-2 text-xs text-brand-ink placeholder:text-brand-muted focus:border-brand-pink focus:outline-none md:bg-black/[0.03] md:py-1.5"
           />
         </div>
 
-        <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-px overflow-y-auto pb-2 md:scrollbar-thin-dark md:pb-0">
-        {searching && matches.length === 0 && <p className="px-3 py-2 text-xs text-brand-muted md:px-2 md:text-white/60">Sin resultados para “{query}”.</p>}
+        <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-px overflow-y-auto pb-2 md:pb-0">
+        {searching && matches.length === 0 && <p className="px-3 py-2 text-xs text-brand-muted md:px-2">Sin resultados para “{query}”.</p>}
         {list.map((link, index) => {
           const active = pathname.startsWith(link.href);
           const picked = searching && index === highlight;
@@ -150,10 +150,10 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
               }}
               className={`flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:min-h-0 md:px-2 md:py-1.5 md:text-[12px] ${
                 picked
-                  ? "bg-brand-pink/10 text-brand-pink-dark ring-1 ring-brand-pink md:bg-white/20 md:text-white md:ring-white/40"
+                  ? "bg-brand-pink/10 text-brand-pink-dark ring-1 ring-brand-pink"
                   : active
                   ? "bg-brand-pink/10 text-brand-pink-dark md:bg-brand-pink md:text-white"
-                  : "text-brand-muted hover:bg-black/[0.03] hover:text-brand-ink md:text-white/70 md:hover:bg-white/10 md:hover:text-white"
+                  : "text-brand-ink/80 hover:bg-black/[0.04] hover:text-brand-ink"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
@@ -170,15 +170,15 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
         })}
         </nav>
 
-        <div className="mt-1.5 flex shrink-0 flex-col gap-px border-t border-black/5 pt-1.5 md:border-white/10">
-        <p className="flex items-center gap-2 px-2 py-1 text-xs text-brand-muted md:text-white/70">
+        <div className="mt-1.5 flex shrink-0 flex-col gap-px border-t border-black/5 pt-1.5">
+        <p className="flex items-center gap-2 px-2 py-1 text-xs text-brand-ink/80">
           <UserIcon className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{userLabel}</span>
         </p>
         <Link
           href="/"
           onClick={() => setOpen(false)}
-          className="flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-brand-muted transition-colors hover:bg-black/[0.03] hover:text-brand-ink md:text-white/70 md:hover:bg-white/10 md:hover:text-white"
+          className="flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-brand-ink/80 transition-colors hover:bg-black/[0.04] hover:text-brand-ink"
         >
           <StoreIcon className="h-3.5 w-3.5 shrink-0" />
           Volver al sitio
