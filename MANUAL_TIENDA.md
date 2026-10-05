@@ -582,6 +582,10 @@ Permite elegir un período rápido (7 días, 30 días, 12 meses, todo el histori
 
 Permite consultar páginas vistas, sesiones únicas, evolución y páginas más visitadas.
 
+### 10.4 quinquies Atributos
+
+En **Atributos** hay un listado (nombre, algunos valores, cantidad de valores y de productos que lo usan) con buscador. A la izquierda se **agrega** un atributo nuevo; al entrar a uno (**Configurar valores**) se ve la lista completa de sus valores, paginada y con buscador: se pueden **agregar** varios a la vez (uno por línea, con color opcional como `Rojo|#ff0000`), **editar** el nombre o el color de cada valor y **eliminarlos**. Borrar un valor o un atributo elimina también las variantes que lo usan (se avisa antes).
+
 ### 10.4 quater Deshacer la migración
 
 En **Migración Woo**, el superadministrador tiene una **zona de peligro**: *Ver qué se borraría* muestra cuántos productos, imágenes, categorías y atributos migrados hay, y *Borrar todo lo migrado* los elimina (con sus imágenes en R2) para empezar de cero. Hay que escribir BORRAR MIGRACION para confirmar. Solo reconoce lo traído de WooCommerce: lo cargado a mano no se toca, y los clientes migrados que ya compraron o tienen puntos se conservan. No se puede deshacer.

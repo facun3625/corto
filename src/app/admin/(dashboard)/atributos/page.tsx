@@ -1,63 +1,73 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { saveAttribute, deleteAttribute } from "../productos/actions";
+import { NewAttributeForm } from "./NewAttributeForm";
+import { DeleteAttributeButton } from "./DeleteAttributeButton";
 
-const field =
-  "w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
-const label = "mb-1 block text-xs font-medium text-brand-muted";
+export const dynamic = "force-dynamic";
 
-export default async function AdminAtributosPage() {
+export default async function AdminAtributosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const q = ((await searchParams).q ?? "").trim();
   const attributes = await prisma.attribute.findMany({
+    where: q ? { name: { contains: q, mode: "insensitive" } } : {},
     orderBy: { name: "asc" },
-    include: { terms: { orderBy: { sortOrder: "asc" } }, _count: { select: { products: true } } },
+    include: { terms: { orderBy: { sortOrder: "asc" }, take: 8, select: { name: true } }, _count: { select: { products: true, terms: true } } },
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-auto">
-      <h1 className="text-2xl font-bold text-brand-ink">Atributos</h1>
-      <p className="mt-1 text-sm text-brand-muted">
-        Talle, color, material… Cada valor va en una línea (podés agregar un color así: <code>Rojo|#ff0000</code>). Los
-        atributos se usan en los productos variables para armar las variantes.
-      </p>
-
-      <form action={saveAttribute} className="mt-6 rounded-xl border border-dashed border-black/20 bg-white p-5">
-        <p className="mb-3 font-semibold text-brand-ink">Nuevo atributo</p>
-        <div className="grid gap-3 sm:grid-cols-[200px_1fr_auto] sm:items-end">
-          <div>
-            <label className={label}>Nombre</label>
-            <input name="name" required className={field} placeholder="Talle" />
-          </div>
-          <div>
-            <label className={label}>Valores (uno por línea)</label>
-            <textarea name="terms" rows={3} className={field} placeholder={"S\nM\nL"} />
-          </div>
-          <button type="submit" className="cursor-pointer rounded-lg bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-pink-dark">Crear</button>
+    <div className="flex h-full min-h-0 flex-col overflow-auto pb-10">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-ink">Atributos</h1>
+          <p className="mt-1 max-w-2xl text-sm text-brand-muted">
+            Talle, color, material… Cada atributo tiene sus valores (S, M, L…). Se usan en los productos variables para armar las variantes.
+            Entrá a un atributo para ver y editar sus valores.
+          </p>
         </div>
-      </form>
+        <form className="flex gap-2" action="/admin/atributos">
+          <input name="q" defaultValue={q} placeholder="Buscar atributo…" className="w-56 rounded-lg border border-black/10 px-3 py-2 text-sm focus:border-brand-pink focus:outline-none" />
+          <button type="submit" className="cursor-pointer rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-brand-ink hover:bg-brand-soft">Buscar</button>
+        </form>
+      </div>
 
-      <div className="mt-6 flex flex-col gap-3">
-        {attributes.map((attr) => (
-          <div key={attr.id} className="rounded-xl border border-black/10 bg-white p-4">
-            <form action={saveAttribute} className="grid gap-3 sm:grid-cols-[200px_1fr_auto] sm:items-end">
-              <input type="hidden" name="id" value={attr.id} />
-              <div>
-                <label className={label}>Nombre</label>
-                <input name="name" defaultValue={attr.name} required className={field} />
-              </div>
-              <div>
-                <label className={label}>Valores</label>
-                <textarea name="terms" rows={Math.min(8, Math.max(3, attr.terms.length))} defaultValue={attr.terms.map((t) => (t.colorHex ? `${t.name}|${t.colorHex}` : t.name)).join("\n")} className={field} />
-              </div>
-              <button type="submit" className="cursor-pointer rounded-lg bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-pink-dark">Guardar</button>
-            </form>
-            <form action={deleteAttribute.bind(null, attr.id)} className="mt-2 flex items-center justify-between text-xs text-brand-muted">
-              <span>
-                Usado en {attr._count.products} producto{attr._count.products === 1 ? "" : "s"}. Quitar un valor o borrar el atributo elimina las variantes que lo usan.
-              </span>
-              <button type="submit" className="cursor-pointer text-red-600 hover:underline">Eliminar</button>
-            </form>
-          </div>
-        ))}
-        {attributes.length === 0 && <p className="rounded-xl border border-dashed border-black/15 bg-white p-5 text-center text-sm text-brand-muted">Todavía no hay atributos.</p>}
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[320px_1fr]">
+        <NewAttributeForm />
+
+        <div className="overflow-hidden rounded-xl border border-black/10 bg-white">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-black/10 bg-brand-soft/40 text-xs uppercase tracking-wide text-brand-muted">
+                <th className="px-4 py-3 font-semibold">Nombre</th>
+                <th className="px-4 py-3 font-semibold">Valores</th>
+                <th className="px-4 py-3 font-semibold">Productos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attributes.map((a) => (
+                <tr key={a.id} className="border-b border-black/5 align-top last:border-0 hover:bg-brand-soft/30">
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/atributos/${a.id}`} className="font-semibold text-brand-ink hover:text-brand-pink-dark hover:underline">{a.name}</Link>
+                    <div className="mt-1 flex items-center gap-3 text-xs">
+                      <Link href={`/admin/atributos/${a.id}`} className="font-medium text-brand-pink-dark hover:underline">Configurar valores</Link>
+                      <DeleteAttributeButton id={a.id} name={a.name} products={a._count.products} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-brand-muted">
+                    {a.terms.map((t) => t.name).join(", ")}
+                    {a._count.terms > a.terms.length && <span className="text-brand-muted/70"> … y {a._count.terms - a.terms.length} más</span>}
+                    {a._count.terms === 0 && "—"}
+                    <span className="mt-0.5 block text-xs text-brand-muted/70">{a._count.terms} valor{a._count.terms === 1 ? "" : "es"}</span>
+                  </td>
+                  <td className="px-4 py-3 text-brand-ink">{a._count.products}</td>
+                </tr>
+              ))}
+              {attributes.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-brand-muted">{q ? "Ningún atributo coincide." : "Todavía no hay atributos. Creá el primero a la izquierda."}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
