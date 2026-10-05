@@ -8,9 +8,10 @@ export type OrderCustomer = {
 };
 
 // Datos extra que pide el checkout (OCA los necesita para registrar el envío)
-export type OrderContact = { firstName: string | null; lastName: string | null; dni: string | null };
+// Nombres de los campos tal cual están en el pedido (Order.contactFirstName, etc.), para poder volcarlos directo al crearlo
+export type OrderContact = { contactFirstName: string | null; contactLastName: string | null; contactDni: string | null };
 
 export function contactFromCustomer(customer: OrderCustomer & { firstName?: string; lastName?: string; dni?: string }): OrderContact {
   const clean = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
-  return { firstName: clean(customer.firstName, 60), lastName: clean(customer.lastName, 60), dni: clean(customer.dni, 20) };
+  return { contactFirstName: clean(customer.firstName, 60), contactLastName: clean(customer.lastName, 60), contactDni: clean(customer.dni, 20) };
 }
