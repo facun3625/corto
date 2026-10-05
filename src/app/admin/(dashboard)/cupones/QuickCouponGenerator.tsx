@@ -48,17 +48,20 @@ export function QuickCouponGenerator() {
         más condiciones.
       </p>
 
-      <form action={formAction} className="mt-4 flex flex-wrap items-end gap-3">
-        <div className="w-32">
+      {/* Grilla alineada por arriba: cada campo es "etiqueta + caja + ayuda", así las cajas quedan siempre a la misma altura
+          aunque unos tengan texto de ayuda y otros no (antes se alineaban por abajo y la caja con ayuda subía). */}
+      <form action={formAction} className="mt-4 grid items-start gap-x-4 gap-y-3 sm:grid-cols-[120px_150px_minmax(200px,1fr)_auto]">
+        <div>
           <label className={labelClasses}>Descuento (%)</label>
           <input type="number" name="discountValue" min={1} max={100} defaultValue={15} required className={fieldClasses} />
+          <p className="mt-1 text-[11px] text-brand-muted">De 1 a 100</p>
         </div>
-        <div className="w-36">
+        <div>
           <label className={labelClasses}>Vence en (días)</label>
           <input type="number" name="expiresInDays" min={0} defaultValue={30} className={fieldClasses} />
           <p className="mt-1 text-[11px] text-brand-muted">0 = sin vencimiento</p>
         </div>
-        <div className="min-w-[180px] flex-1">
+        <div>
           <label className={labelClasses}>WhatsApp del cliente (opcional)</label>
           <input
             type="text"
@@ -67,14 +70,18 @@ export function QuickCouponGenerator() {
             placeholder="5493420000000"
             className={fieldClasses}
           />
+          <p className="mt-1 text-[11px] text-brand-muted">Con código de país, sin “+” ni espacios</p>
         </div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="cursor-pointer rounded-full bg-brand-pink px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-pink-dark disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {pending ? "Generando..." : "Generar cupón"}
-        </button>
+        {/* El botón arranca a la altura de las cajas (deja el hueco de la etiqueta) */}
+        <div className="sm:pt-[1.4rem]">
+          <button
+            type="submit"
+            disabled={pending}
+            className="h-[38px] w-full cursor-pointer whitespace-nowrap rounded-full bg-brand-pink px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-pink-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          >
+            {pending ? "Generando..." : "Generar cupón"}
+          </button>
+        </div>
       </form>
 
       {state && !state.ok && <p className="mt-3 text-sm font-medium text-red-600">{state.error}</p>}
