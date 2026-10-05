@@ -75,6 +75,7 @@ function productDto(product: Awaited<ReturnType<typeof searchProductsForAssistan
     categoryId: product.categoryId ?? undefined,
     categoryName: product.categoryName ?? undefined,
     image: product.thumb,
+    type: product.type,
     href: `/producto/${product.slug}`,
   };
 }

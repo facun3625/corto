@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 // Texto legible por código de acción. Si aparece uno sin mapear, se muestra
 // el código crudo (mejor que ocultarlo).
 const ACTION_LABELS: Record<string, string> = {
+  "category.create": "Creó una categoría",
+  "category.delete": "Eliminó una categoría",
   "attribute.create": "Creó un atributo",
   "attribute.delete": "Eliminó un atributo",
   "migration.undo": "Deshizo la migración (borró lo migrado)",

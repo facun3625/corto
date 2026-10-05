@@ -8,9 +8,10 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TelegramTestButton } from "./TelegramTestButton";
 import { SettingsTabs } from "./SettingsTabs";
 import { CategoryChipSelector } from "./CategoryChipSelector";
-import { IconPicker } from "./IconPicker";
 import { WrenchIcon, PackageIcon, StarIcon } from "@/components/icons";
 import { LogoField } from "./LogoField";
+import { BenefitsEditor } from "./BenefitsEditor";
+import { sanitizeBenefits } from "@/lib/benefitIcons";
 import { R2Form } from "./R2Form";
 import { getR2Config } from "@/lib/storage";
 import { auth } from "@/lib/auth";
@@ -33,7 +34,6 @@ import {
   updateMaintenanceMode,
   updateHideOutOfStock,
   updateAiAssistantSettings,
-  updateBenefitsSettings,
   updatePopupSettings,
   uploadPopupImage,
 } from "./actions";
@@ -318,53 +318,6 @@ export default async function AdminConfiguracionPage({
           </div>
         </form>
       </div>
-
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-muted">Franja de beneficios</h2>
-        <p className="mt-1 text-xs text-brand-muted">
-          Los 3 ítems debajo del slider del home. Dejá un campo vacío para usar el valor calculado automáticamente
-          (que ves de fondo, en gris).
-        </p>
-        <form action={updateBenefitsSettings} className="mt-3 rounded-xl border border-black/10 bg-white p-5">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {([1, 2, 3] as const).map((i) => (
-              <div key={i} className="rounded-lg border border-black/10 bg-brand-soft/40 p-3.5">
-                <p className="mb-2 text-xs font-semibold text-brand-ink">Ítem {i}</p>
-                <IconPicker
-                  name={`benefit${i}Icon`}
-                  defaultValue={settings[`benefit${i}Icon` as const] ?? null}
-                />
-                <div className="mt-3">
-                  <label className={labelClasses}>Título</label>
-                  <input
-                    type="text"
-                    name={`benefit${i}Title`}
-                    maxLength={80}
-                    defaultValue={settings[`benefit${i}Title` as const] ?? ""}
-                    placeholder={benefitDefaults[i - 1].title}
-                    className={fieldClasses}
-                  />
-                </div>
-                <div className="mt-3">
-                  <label className={labelClasses}>Subtítulo</label>
-                  <input
-                    type="text"
-                    name={`benefit${i}Subtitle`}
-                    maxLength={120}
-                    defaultValue={settings[`benefit${i}Subtitle` as const] ?? ""}
-                    placeholder={benefitDefaults[i - 1].subtitle}
-                    className={fieldClasses}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 border-t border-black/5 pt-4">
-            <SaveButton trackDirty />
-          </div>
-        </form>
-      </div>
     </div>
   );
 
@@ -411,6 +364,21 @@ export default async function AdminConfiguracionPage({
   // --- Panel: Correo (proveedor de envío: se habilita SMTP o Resend, uno de los dos) ---
   // Lo técnico (correo e imágenes/R2) solo lo ve el superadministrador
   const isSuper = (await auth())?.user?.role === "superadmin";
+  // Franja de beneficios: lo que se ve hoy (la lista guardada o, si no hay, los 3 de siempre con sus textos reales)
+  const savedBenefits = sanitizeBenefits(settings.homeBenefits);
+  const currentBenefits =
+    savedBenefits.length > 0
+      ? savedBenefits
+      : benefitDefaults.map((d, i) => {
+          const legacy = [
+            { icon: settings.benefit1Icon, title: settings.benefit1Title, subtitle: settings.benefit1Subtitle },
+            { icon: settings.benefit2Icon, title: settings.benefit2Title, subtitle: settings.benefit2Subtitle },
+            { icon: settings.benefit3Icon, title: settings.benefit3Title, subtitle: settings.benefit3Subtitle },
+          ][i];
+          return { icon: legacy.icon || ["tag", "truck", "store"][i], title: legacy.title?.trim() || d.title, subtitle: legacy.subtitle?.trim() || d.subtitle };
+        });
+  const benefitsPanel = <BenefitsEditor initial={currentBenefits} hasCustom={savedBenefits.length > 0} />;
+
   const r2 = isSuper ? await getR2Config() : null;
   const r2Panel = (
     <R2Form
@@ -900,6 +868,7 @@ export default async function AdminConfiguracionPage({
       <SettingsTabs
         tabs={[
           { id: "general", label: "General", content: generalPanel },
+          { id: "beneficios", label: "Franja de beneficios", content: benefitsPanel },
           { id: "mailing", label: "Franquicia", content: mailingPanel },
           ...(isSuper
             ? [

@@ -179,6 +179,7 @@ const MARQUEE_ITEMS = settings.marqueeItems;
             franchiseLocation={settings.franchiseLocation}
             address={settings.address}
             overrides={settings.benefits}
+            items={settings.homeBenefits}
           />
         </div>
       </section>

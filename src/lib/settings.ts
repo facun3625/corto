@@ -5,6 +5,7 @@ import { getFooterPages } from "@/lib/pages";
 import { DEFAULT_FOOTER_TEXT } from "@/lib/contact";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 import { getContactCards } from "@/lib/contactCards";
+import { sanitizeBenefits } from "@/lib/benefitIcons";
 
 export async function getStoreSettingsRow() {
   return prisma.storeSettings.upsert({
@@ -61,6 +62,8 @@ export async function getSiteSettings() {
     featuredCategoryIds: row.featuredCategoryIds.length > 0 ? row.featuredCategoryIds : DEFAULT_FEATURED_CATEGORY_IDS,
     // Franja de beneficios del home — null en cualquier campo significa
     // "usar el valor calculado por defecto" (ver BenefitsStrip).
+    // Franja de beneficios editable (1 a 6 ítems). Vacío = se usan los 3 de siempre (benefits)
+    homeBenefits: sanitizeBenefits(row.homeBenefits),
     benefits: [
       { icon: row.benefit1Icon, title: row.benefit1Title, subtitle: row.benefit1Subtitle },
       { icon: row.benefit2Icon, title: row.benefit2Title, subtitle: row.benefit2Subtitle },

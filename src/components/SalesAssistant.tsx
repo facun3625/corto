@@ -248,7 +248,7 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                         {product.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={`data:image/png;base64,${product.image}`}
+                            src={product.image}
                             alt=""
                             className="h-14 w-14 shrink-0 rounded-lg object-cover"
                           />
@@ -260,6 +260,12 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                             {product.name}
                           </Link>
                           <p className="mt-0.5 text-xs font-bold text-brand-pink-dark">{money(product.price)}</p>
+                          {product.type === "variable" ? (
+                            // Un producto con variantes (talle, color…) no se puede agregar sin elegir: se abre su ficha
+                            <Link href={product.href} className="mt-1 inline-block text-[11px] font-semibold text-brand-pink-dark hover:underline">
+                              {product.available > 0 ? "Elegir opciones" : "Sin stock"}
+                            </Link>
+                          ) : (
                           <button
                             type="button"
                             disabled={product.available <= 0}
@@ -276,6 +282,7 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                           >
                             {product.available > 0 ? "Agregar al carrito" : "Sin stock"}
                           </button>
+                          )}
                         </div>
                       </article>
                     ))}

@@ -6,6 +6,7 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { sendTelegram } from "@/lib/telegram";
 import { normalizeTime } from "@/lib/ai/availability";
@@ -382,4 +383,21 @@ export async function testR2Settings(form: Record<string, string>): Promise<{ ok
     bucket: form.r2Bucket?.trim() || saved?.r2Bucket || "",
     publicUrl: (form.r2PublicUrl?.trim() || saved?.r2PublicUrl || "").replace(/\/$/, ""),
   });
+}
+
+// Franja de beneficios del inicio: lista de 1 a 6 ítems (ícono de la librería, título y subtítulo)
+export async function saveHomeBenefits(items: { icon: string; title: string; subtitle: string }[]): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  const { sanitizeBenefits } = await import("@/lib/benefitIcons");
+  const clean = sanitizeBenefits(items);
+  // Sin ítems = se vuelve a la franja de siempre (los 3 con textos automáticos)
+  const homeBenefits = clean.length > 0 ? clean : null;
+  await prisma.storeSettings.upsert({
+    where: { id: "global" },
+    create: { id: "global", homeBenefits: homeBenefits ?? undefined },
+    update: { homeBenefits: homeBenefits ?? Prisma.DbNull },
+  });
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/");
+  return { ok: true, message: clean.length > 0 ? "Franja guardada." : "Se restableció la franja original." };
 }

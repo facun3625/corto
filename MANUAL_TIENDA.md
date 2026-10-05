@@ -582,6 +582,10 @@ Permite elegir un período rápido (7 días, 30 días, 12 meses, todo el histori
 
 Permite consultar páginas vistas, sesiones únicas, evolución y páginas más visitadas.
 
+### 10.4 sexies Categorías
+
+En **Categorías** hay un listado en árbol (cada subcategoría debajo de su padre, con su imagen, slug y cantidad de productos), con buscador y paginado de a 50. A la izquierda se **agrega** una categoría (nombre y padre); al crearla o al entrar a una (**Editar**) se abre su pantalla: nombre, slug, categoría padre, orden, descripción, imagen y SEO. No permite que una categoría sea hija de sí misma ni de sus subcategorías. Al borrar una categoría, sus subcategorías suben al nivel superior y los productos no se borran (solo pierden ese vínculo); el diálogo avisa cuántos se ven afectados.
+
 ### 10.4 quinquies Atributos
 
 En **Atributos** hay un listado (nombre, algunos valores, cantidad de valores y de productos que lo usan) con buscador. A la izquierda se **agrega** un atributo nuevo; al entrar a uno (**Configurar valores**) se ve la lista completa de sus valores, paginada y con buscador: se pueden **agregar** varios a la vez (uno por línea, con color opcional como `Rojo|#ff0000`), **editar** el nombre o el color de cada valor y **eliminarlos**. Borrar un valor o un atributo elimina también las variantes que lo usan (se avisa antes).
@@ -608,6 +612,7 @@ Las pestañas disponibles son:
 - **General:** mantenimiento, stock, contacto, **moneda**, **secciones del inicio** (ofertas y destacados, con título editable), texto del pie de página, textos y categorías destacadas.
 - **Logo e íconos** (pestaña General): se sube el logo del encabezado, el del pie de página y el favicon (también ícono al instalar la tienda como app). Sin nada cargado se usa el original. El logo del encabezado también se ve en el panel y en los mails.
 - **Imágenes (R2):** dónde se guardan las imágenes y videos (Cloudflare R2): Account ID, bucket, URL pública y claves, con botón **Probar conexión** (sube, lee por la URL pública y borra un archivo de prueba). Tiene prioridad sobre las variables del servidor. Lo ya subido no se mueve solo.
+- **Franja de beneficios:** los ítems que se ven debajo del slider del inicio (por ejemplo "Envíos", "Retiro en local", "Medios de pago"). Se pueden tener de 1 a 6, con **ícono de una librería** (con buscador: envío, tarjeta, regalo, fiesta…), título y subtítulo, ordenarlos, agregar y quitar. Se reparten el ancho (hasta 4 por fila) y hay una vista previa. *Volver a la franja original* restablece los 3 de siempre.
 - **Franquicia:** nombre y ubicación.
 - **Mail de compra:** contenido del mensaje enviado al cliente y avisos por cambio de estado.
 - **Checkout y mensajes:** aviso del checkout y textos de “pedido registrado”.

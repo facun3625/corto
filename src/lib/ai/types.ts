@@ -10,7 +10,9 @@ export type AssistantProduct = {
   available: number;
   categoryId?: string;
   categoryName?: string;
+  // URL de la miniatura del producto
   image: string | null;
+  type?: "simple" | "variable";
   href: string;
 };
 

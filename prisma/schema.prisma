@@ -236,6 +236,10 @@ model StoreSettings {
   r2Bucket          String?
   r2PublicUrl       String?
 
+  // Franja de beneficios del inicio: lista de { icon, title, subtitle } (1 a 6). Si es null se usan los 3 ítems de siempre
+  // (benefit1..3 + valores por defecto).
+  homeBenefits Json?
+
   // Logos e ícono (URL de imagen subida desde Configuración). Vacío = el logo original de la instalación.
   logoHeaderUrl String?
   logoFooterUrl String?

@@ -11,6 +11,7 @@ export function LogoField({
   initialUrl,
   fallbackUrl,
   previewClass = "h-12",
+  onValueChange,
 }: {
   name: string;
   label: string;
@@ -18,6 +19,8 @@ export function LogoField({
   initialUrl: string;
   fallbackUrl: string | null;
   previewClass?: string;
+  // Para formularios controlados: avisa cada vez que cambia la imagen (el input oculto igual se envía en formularios nativos)
+  onValueChange?: (url: string) => void;
 }) {
   const [url, setUrl] = useState(initialUrl);
   const [busy, setBusy] = useState(false);
@@ -34,6 +37,7 @@ export function LogoField({
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo subir la imagen");
       setUrl(data.url);
+      onValueChange?.(data.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo subir la imagen");
     } finally {
@@ -71,14 +75,17 @@ export function LogoField({
             />
           </label>
           {url && (
-            <button type="button" onClick={() => setUrl("")} className="cursor-pointer text-xs text-brand-muted hover:text-red-600">
+            <button type="button" onClick={() => {
+                setUrl("");
+                onValueChange?.("");
+              }} className="cursor-pointer text-xs text-brand-muted hover:text-red-600">
               Quitar (usar el original)
             </button>
           )}
         </div>
       </div>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-      {url && <p className="mt-2 text-xs text-brand-muted">Se aplica cuando tocás Guardar.</p>}
+      {url !== initialUrl && <p className="mt-2 text-xs text-brand-muted">Se aplica cuando tocás Guardar.</p>}
     </div>
   );
 }
