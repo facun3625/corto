@@ -594,6 +594,10 @@ En **Atributos** hay un listado (nombre, algunos valores, cantidad de valores y 
 
 En **Migración Woo**, el superadministrador tiene una **zona de peligro**: *Ver qué se borraría* muestra cuántos productos, imágenes, categorías y atributos migrados hay, y *Borrar todo lo migrado* los elimina (con sus imágenes en R2) para empezar de cero. Hay que escribir BORRAR MIGRACION para confirmar. Solo reconoce lo traído de WooCommerce: lo cargado a mano no se toca, y los clientes migrados que ya compraron o tienen puntos se conservan. No se puede deshacer.
 
+### 10.4 bis bis Barra superior del panel
+
+Arriba del panel hay una barra con la **campanita** de novedades (pedidos pendientes y mensajes sin leer, con el detalle y enlaces; avisa cuántos pendientes llevan más de 24 horas) y el **menú del perfil** (nombre, email y rol, "Ver la tienda" y "Cerrar sesión"). En el menú lateral, **Ventas** muestra un número con los pedidos pendientes y **Mensajes** con los mensajes sin leer.
+
 ### 10.4 ter Roles y administradores
 
 - **Cliente:** compra en la tienda.

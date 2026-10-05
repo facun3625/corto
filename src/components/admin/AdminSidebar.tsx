@@ -37,7 +37,7 @@ const LINKS = [
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-export function AdminSidebar({ userLabel, logoUrl = "/logo2.png" }: { userLabel: string; logoUrl?: string }) {
+export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { pendingOrders: number; unreadMessages: number } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -157,7 +157,14 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png" }: { userLabel:
               }`}
             >
               <Icon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
-              {link.label}
+              <span className="min-w-0 flex-1 truncate">{link.label}</span>
+              {(() => {
+                // Números a la derecha: pedidos pendientes en Ventas y mensajes sin leer en Mensajes
+                const n = link.href === "/admin/ventas" ? counts?.pendingOrders : link.href === "/admin/mensajes" ? counts?.unreadMessages : 0;
+                return n ? (
+                  <span className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white text-brand-pink-dark" : "bg-brand-pink text-white"}`}>{n > 99 ? "99+" : n}</span>
+                ) : null;
+              })()}
             </Link>
           );
         })}
