@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LiveSearch } from "@/components/admin/LiveSearch";
 import { prisma } from "@/lib/prisma";
 import { NewAttributeForm } from "./NewAttributeForm";
 import { DeleteAttributeButton } from "./DeleteAttributeButton";
@@ -23,10 +24,7 @@ export default async function AdminAtributosPage({ searchParams }: { searchParam
             Entrá a un atributo para ver y editar sus valores.
           </p>
         </div>
-        <form className="flex gap-2" action="/admin/atributos">
-          <input name="q" defaultValue={q} placeholder="Buscar atributo…" className="w-56 rounded-lg border border-black/10 px-3 py-2 text-sm focus:border-brand-pink focus:outline-none" />
-          <button type="submit" className="cursor-pointer rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-brand-ink hover:bg-brand-soft">Buscar</button>
-        </form>
+        <LiveSearch defaultValue={q} placeholder="Buscar atributo…" />
       </div>
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[320px_1fr]">

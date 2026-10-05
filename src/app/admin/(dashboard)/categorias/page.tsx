@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LiveSearch } from "@/components/admin/LiveSearch";
 import { prisma } from "@/lib/prisma";
 import { NewCategoryForm } from "./NewCategoryForm";
 import { DeleteCategoryButton } from "./DeleteCategoryButton";
@@ -56,10 +57,7 @@ export default async function AdminCategoriasPage({ searchParams }: { searchPara
             sus subcategorías suben al nivel superior y los productos no se borran.
           </p>
         </div>
-        <form action="/admin/categorias" className="flex gap-2">
-          <input name="q" defaultValue={q} placeholder="Buscar categoría…" className="w-56 rounded-lg border border-black/10 px-3 py-2 text-sm focus:border-brand-pink focus:outline-none" />
-          <button type="submit" className="cursor-pointer rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-brand-ink hover:bg-brand-soft">Buscar</button>
-        </form>
+        <LiveSearch defaultValue={q} placeholder="Buscar categoría…" />
       </div>
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[320px_1fr]">
