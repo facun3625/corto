@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 // Texto legible por código de acción. Si aparece uno sin mapear, se muestra
 // el código crudo (mejor que ocultarlo).
 const ACTION_LABELS: Record<string, string> = {
+  "migration.undo": "Deshizo la migración (borró lo migrado)",
   "user.create_admin": "Creó un administrador",
   "user.make_admin": "Hizo administrador a un usuario",
   "user.remove_admin": "Quitó el rol de administrador",

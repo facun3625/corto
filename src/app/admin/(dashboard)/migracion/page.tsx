@@ -2,10 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { hasRunningJob } from "@/lib/woo/jobs";
 import { countPendingActivation } from "./actions";
 import { MigrationWizard } from "./MigrationWizard";
+import { UndoMigration } from "./UndoMigration";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function MigracionPage() {
+  const isSuper = (await auth())?.user?.role === "superadmin";
   const [latest, pendingActivation] = await Promise.all([
     prisma.migrationJob.findFirst({ orderBy: { createdAt: "desc" }, select: { id: true, status: true, sourceUrl: true } }),
     countPendingActivation(),
@@ -23,6 +26,8 @@ export default async function MigracionPage() {
         lastJob={latest ? { id: latest.id, sourceUrl: latest.sourceUrl } : null}
         pendingActivation={pendingActivation}
       />
+      {/* Solo el superadministrador: borra todo lo migrado, por si la migración no salió bien */}
+      {isSuper && <UndoMigration />}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { sendResetEmail } from "@/lib/passwordReset";
 import { WooError, type WooCredentials } from "@/lib/woo/client";
-import { previewWoo, requestCancel, startMigration, type WooPreview } from "@/lib/woo/jobs";
+import { hasRunningJob, previewWoo, requestCancel, startMigration, type WooPreview } from "@/lib/woo/jobs";
 
 function credsFrom(formData: FormData): WooCredentials | null {
   const baseUrl = String(formData.get("baseUrl") ?? "").trim();
@@ -90,4 +90,30 @@ export async function sendActivationEmailsAction(): Promise<ActivationResult> {
   await logAdminAction("migration.activation_emails", { targetType: "migration", detail: `${sent} enviados, ${failed} fallidos` });
   revalidatePath("/admin/migracion");
   return { ok: true, sent, failed, remaining: await prisma.user.count({ where: await pendingActivationWhere() }) };
+}
+
+// ---- Deshacer la migración (solo superadministrador) ----
+
+export async function previewUndoMigrationAction() {
+  await requireSuperAdmin();
+  const { previewUndo } = await import("@/lib/woo/undo");
+  return previewUndo();
+}
+
+export async function undoMigrationAction(input: { confirm: string; customers: boolean }): Promise<{ ok: true; result: import("@/lib/woo/undo").UndoResult } | { ok: false; error: string }> {
+  const session = await requireSuperAdmin();
+  if (input.confirm.trim().toUpperCase() !== "BORRAR MIGRACION") return { ok: false, error: "Escribí BORRAR MIGRACION para confirmar." };
+  if (hasRunningJob()) return { ok: false, error: "Hay una migración en curso: cancelala o esperá a que termine." };
+  try {
+    const { undoMigration } = await import("@/lib/woo/undo");
+    const result = await undoMigration({ customers: input.customers });
+    await logAdminAction("migration.undo", { targetType: "migration", detail: `${result.products} productos, ${result.categories} categorías, ${result.filesDeleted} archivos`, adminEmail: session.user?.email ?? undefined });
+    revalidatePath("/admin/migracion");
+    revalidatePath("/admin/productos");
+    revalidatePath("/", "layout");
+    return { ok: true, result };
+  } catch (err) {
+    console.error("undoMigration failed", err);
+    return { ok: false, error: "No se pudo completar el borrado. Probá de nuevo." };
+  }
 }

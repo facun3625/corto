@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { saveProduct, deleteProduct, type ProductInput } from "./actions";
 import { TagsInput, RelatedPicker } from "./CatalogPickers";
+import { AttributePicker } from "./AttributePicker";
 import { isoToLocalInput, localInputToIso } from "@/lib/datetimeLocal";
 import { useConfirm } from "@/lib/useConfirm";
 
@@ -33,6 +34,13 @@ function flattenTree(categories: FormCategory[]) {
   };
   walk(null, 0);
   return out;
+}
+
+// Imágenes que se insertan dentro de las descripciones (van al mismo almacenamiento que las del producto)
+async function uploadRichImage(fd: FormData) {
+  const res = await fetch("/api/admin/images", { method: "POST", body: fd });
+  const data = await res.json().catch(() => ({}));
+  return res.ok ? ({ ok: true, url: data.url } as const) : ({ ok: false, error: data.error ?? "No se pudo subir" } as const);
 }
 
 export function ProductForm({
@@ -109,6 +117,15 @@ export function ProductForm({
     const active = form.attributeIds.includes(attrId);
     set("attributeIds", active ? form.attributeIds.filter((a) => a !== attrId) : [...form.attributeIds, attrId]);
     setChosen((prev) => ({ ...prev, [attrId]: prev[attrId] ?? new Set() }));
+  }
+
+  function removeAttribute(attrId: string) {
+    set("attributeIds", form.attributeIds.filter((a) => a !== attrId));
+    setChosen((prev) => ({ ...prev, [attrId]: new Set() }));
+  }
+
+  function setTerms(attrId: string, termIds: string[]) {
+    setChosen((prev) => ({ ...prev, [attrId]: new Set(termIds) }));
   }
 
   function toggleTerm(attrId: string, termId: string) {
@@ -204,7 +221,13 @@ export function ProductForm({
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Descripción corta</label>
-            <textarea className={field} rows={2} value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} />
+            <RichTextEditor
+              name="shortDescription"
+              compact
+              initialValue={initial.shortDescription}
+              onChange={(html) => set("shortDescription", html)}
+              uploadImage={uploadRichImage}
+            />
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Descripción</label>
@@ -212,11 +235,7 @@ export function ProductForm({
               name="description"
               initialValue={initial.description}
               onChange={(html) => set("description", html)}
-              uploadImage={async (fd) => {
-                const res = await fetch("/api/admin/images", { method: "POST", body: fd });
-                const data = await res.json().catch(() => ({}));
-                return res.ok ? { ok: true, url: data.url } : { ok: false, error: data.error ?? "No se pudo subir" };
-              }}
+              uploadImage={uploadRichImage}
             />
           </div>
         </div>
@@ -283,29 +302,15 @@ export function ProductForm({
             {attributes.length === 0 && " Todavía no hay atributos: creálos en Atributos."}
           </p>
 
-          <div className="flex flex-col gap-3">
-            {attributes.map((attr) => {
-              const active = form.attributeIds.includes(attr.id);
-              return (
-                <div key={attr.id} className="rounded-lg border border-black/10 p-3">
-                  <label className="flex items-center gap-2 text-sm font-medium text-brand-ink">
-                    <input type="checkbox" checked={active} onChange={() => toggleAttribute(attr.id)} />
-                    {attr.name}
-                  </label>
-                  {active && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {attr.terms.map((term) => (
-                        <label key={term.id} className="flex cursor-pointer items-center gap-1.5 rounded-full border border-black/15 px-3 py-1 text-xs">
-                          <input type="checkbox" checked={chosen[attr.id]?.has(term.id) ?? false} onChange={() => toggleTerm(attr.id, term.id)} />
-                          {term.name}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <AttributePicker
+            attributes={attributes}
+            selectedIds={form.attributeIds}
+            chosen={chosen}
+            onAddAttribute={toggleAttribute}
+            onRemoveAttribute={removeAttribute}
+            onToggleTerm={toggleTerm}
+            onSetTerms={setTerms}
+          />
 
           <button type="button" onClick={generateVariants} className="mt-4 cursor-pointer rounded-lg bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-pink-dark">
             Generar variantes

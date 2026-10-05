@@ -118,7 +118,7 @@ export async function saveProduct(input: ProductInput): Promise<SaveResult> {
         sku: nullIfEmpty(input.sku),
         type: input.type,
         status: input.status,
-        shortDescription: nullIfEmpty(input.shortDescription),
+        shortDescription: input.shortDescription.replace(/<[^>]+>/g, "").trim() ? sanitizeRichHtml(input.shortDescription) : null,
         description: input.description.trim() ? sanitizeRichHtml(input.description) : null,
         videoUrl: nullIfEmpty(input.videoUrl),
         price: input.type === "variable" ? 0 : input.price,

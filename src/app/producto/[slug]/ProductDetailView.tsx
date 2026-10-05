@@ -1,5 +1,6 @@
 "use client";
 
+import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
@@ -122,7 +123,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             {hasDiscount && <p className="text-sm text-brand-muted line-through">{formatMoney(compareAtPrice!)}</p>}
           </div>
 
-          {product.shortDescription && <p className="mt-4 text-sm text-brand-ink/80">{product.shortDescription}</p>}
+          {product.shortDescription && <div className="rich-content mt-4 text-sm text-brand-ink/80" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(product.shortDescription) }} />}
           {product.tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {product.tags.map((t) => (
@@ -222,8 +223,8 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             <div className="mt-8 border-t border-black/10 pt-6">
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-brand-muted">Descripción</h2>
               <div
-                className="prose prose-sm max-w-none text-brand-ink/80"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                className="rich-content max-w-none text-sm text-brand-ink/80"
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(product.description) }}
               />
             </div>
           )}

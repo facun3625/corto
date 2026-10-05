@@ -538,6 +538,9 @@ Desde **Productos** se administra todo el catálogo:
 - **Acciones masivas:** seleccioná varios productos para publicarlos, pasarlos a borrador, destacarlos, agregarles o quitarles una categoría, **subir o bajar el precio un porcentaje** (también el de sus variantes) o eliminarlos.
 - **Duplicar:** crea una copia como borrador para partir de un producto parecido.
 - **Nuevo producto / Editar:** nombre, tipo (simple o variable), estado (publicado o borrador), SKU, descripción, precio, precio anterior, **precio de costo**, stock, medidas de envío, imágenes, categorías, **etiquetas**, **productos recomendados**, producto destacado y datos SEO.
+  - La **descripción corta** y la **descripción** tienen editor de texto completo: títulos, negrita, cursiva, subrayado, tachado, listas con viñetas y numeradas, citas, línea separadora, colores de texto, enlaces, imágenes, deshacer/rehacer y quitar formato.
+  - En los productos variables, los **atributos** se agregan de a uno con un buscador, y sus valores se eligen escribiendo (con "Agregar todos" y "Quitar todos"), en vez de una lista larga de casillas.
+  - En el listado, cada producto tiene un botón **Editar** al lado del nombre.
 - **Programar publicación:** “mostrar desde” y “ocultar desde”: el producto aparece y desaparece solo en esas fechas.
 - **Precio promocional programado:** un precio promocional con fecha de inicio y de fin. Mientras está vigente se cobra y se muestra el precio normal tachado; cuando termina, vuelve solo al normal. En los productos variables se carga en cada variante.
 - **Productos variables:** se eligen los atributos y sus valores y el botón **Generar variantes** crea todas las combinaciones. Cada variante tiene su propio SKU, precio, costo, promoción, stock e imagen.
@@ -578,6 +581,10 @@ Permite elegir un período rápido (7 días, 30 días, 12 meses, todo el histori
 ### 10.4 Visitas
 
 Permite consultar páginas vistas, sesiones únicas, evolución y páginas más visitadas.
+
+### 10.4 quater Deshacer la migración
+
+En **Migración Woo**, el superadministrador tiene una **zona de peligro**: *Ver qué se borraría* muestra cuántos productos, imágenes, categorías y atributos migrados hay, y *Borrar todo lo migrado* los elimina (con sus imágenes en R2) para empezar de cero. Hay que escribir BORRAR MIGRACION para confirmar. Solo reconoce lo traído de WooCommerce: lo cargado a mano no se toca, y los clientes migrados que ya compraron o tienen puntos se conservan. No se puede deshacer.
 
 ### 10.4 ter Roles y administradores
 

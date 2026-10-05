@@ -57,16 +57,17 @@ export async function updateMailProviderSettings(formData: FormData) {
   await requireSuperAdmin();
 
   const port = formData.get("smtpPort");
-  const password = formData.get("smtpPassword") as string;
+  // Espacios o saltos de línea de más (típico al copiar y pegar) hacen fallar el login: se sacan al guardar
+  const password = String(formData.get("smtpPassword") ?? "").trim();
   const resendKey = formData.get("resendApiKey") as string;
   const provider = formData.get("mailProvider") === "resend" ? "resend" : "smtp";
 
   const data: Record<string, unknown> = {
     mailProvider: provider,
-    smtpHost: (formData.get("smtpHost") as string) || null,
+    smtpHost: String(formData.get("smtpHost") ?? "").trim() || null,
     smtpPort: port ? Number(port) : null,
     smtpSecure: formData.get("smtpSecure") === "on",
-    smtpUser: (formData.get("smtpUser") as string) || null,
+    smtpUser: String(formData.get("smtpUser") ?? "").trim() || null,
     mailFromName: (formData.get("mailFromName") as string) || null,
     mailFromEmail: (formData.get("mailFromEmail") as string) || null,
   };
@@ -111,7 +112,7 @@ export async function testMailSending(to: string, form: Record<string, string>):
     smtpPort: Number(form.smtpPort) || saved.smtpPort,
     smtpSecure: form.smtpSecure === "on",
     smtpUser: form.smtpUser?.trim() || saved.smtpUser,
-    smtpPassword: form.smtpPassword || saved.smtpPassword,
+    smtpPassword: form.smtpPassword?.trim() || saved.smtpPassword,
     resendApiKey: form.resendApiKey?.trim() || saved.resendApiKey,
   });
 

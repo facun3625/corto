@@ -52,8 +52,11 @@ export function RichTextEditor({
   onChange,
   placeholder,
   uploadImage,
+  compact = false,
 }: {
   name: string;
+  // compact: editor más bajo (para textos cortos, como la descripción corta)
+  compact?: boolean;
   initialValue?: string;
   // Opcional: cuando este editor se usa desde un Server Component (como el
   // panel del pop-up), no hay forma de pasarle una función — no se puede
@@ -139,6 +142,13 @@ export function RichTextEditor({
     exec("createLink", url);
   }
 
+  // Bloque (párrafo / título / subtítulo)
+  function handleBlock(e: ChangeEvent<HTMLSelectElement>) {
+    const tag = e.target.value;
+    if (tag) exec("formatBlock", tag);
+    e.target.value = "";
+  }
+
   function handleSize(e: ChangeEvent<HTMLSelectElement>) {
     const size = SIZES[e.target.value];
     if (size) exec("fontSize", size);
@@ -195,9 +205,48 @@ export function RichTextEditor({
         </div>
       )}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-black/5 bg-brand-soft/40 px-2 py-1.5">
+        <ToolbarButton label="Deshacer" onClick={() => exec("undo")}><span className="text-sm">↶</span></ToolbarButton>
+        <ToolbarButton label="Rehacer" onClick={() => exec("redo")}><span className="text-sm">↷</span></ToolbarButton>
+        <span className="mx-1 h-5 w-px bg-black/10" />
+        <select
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={handleBlock}
+          defaultValue=""
+          aria-label="Formato del párrafo"
+          className="h-8 cursor-pointer rounded-md border-0 bg-transparent px-1.5 text-xs text-brand-muted hover:bg-black/5 focus:outline-none"
+        >
+          <option value="" disabled>
+            Formato
+          </option>
+          <option value="p">Párrafo</option>
+          <option value="h2">Título</option>
+          <option value="h3">Subtítulo</option>
+          <option value="blockquote">Cita</option>
+        </select>
+        <span className="mx-1 h-5 w-px bg-black/10" />
         <ToolbarButton label="Negrita" onClick={() => exec("bold")}>
           <BoldIcon className="h-4 w-4" />
         </ToolbarButton>
+        <ToolbarButton label="Cursiva" onClick={() => exec("italic")}><span className="text-sm font-serif italic">I</span></ToolbarButton>
+        <ToolbarButton label="Subrayado" onClick={() => exec("underline")}><span className="text-sm underline">U</span></ToolbarButton>
+        <ToolbarButton label="Tachado" onClick={() => exec("strikeThrough")}><span className="text-sm line-through">S</span></ToolbarButton>
+        <span className="mx-1 h-5 w-px bg-black/10" />
+        <ToolbarButton label="Lista con viñetas" onClick={() => exec("insertUnorderedList")}><span className="text-sm">• ≡</span></ToolbarButton>
+        <ToolbarButton label="Lista numerada" onClick={() => exec("insertOrderedList")}><span className="text-xs font-semibold">1.</span></ToolbarButton>
+        <ToolbarButton label="Línea separadora" onClick={() => exec("insertHorizontalRule")}><span className="text-sm">―</span></ToolbarButton>
+        <span className="mx-1 h-5 w-px bg-black/10" />
+        {[
+          ["Texto negro", "#1f2937"],
+          ["Texto rojo", "#e52327"],
+          ["Texto verde", "#15803d"],
+          ["Texto azul", "#1d4ed8"],
+          ["Texto gris", "#6b7280"],
+        ].map(([label, color]) => (
+          <ToolbarButton key={color} label={label} onClick={() => exec("foreColor", color)}>
+            <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: color }} />
+          </ToolbarButton>
+        ))}
+        <ToolbarButton label="Quitar formato" onClick={() => { exec("removeFormat"); exec("formatBlock", "p"); }}><span className="text-xs">Tx</span></ToolbarButton>
         <span className="mx-1 h-5 w-px bg-black/10" />
         <ToolbarButton label="Alinear a la izquierda" onClick={() => exec("justifyLeft")}>
           <AlignLeftIcon className="h-4 w-4" />
@@ -242,7 +291,7 @@ export function RichTextEditor({
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
-          className="min-h-[180px] px-3 py-2.5 text-sm text-brand-ink focus:outline-none [&_a]:text-brand-pink-dark [&_a]:underline [&_img]:max-w-full [&_img]:rounded-lg"
+          className={`rich-content ${compact ? "min-h-[90px]" : "min-h-[180px]"} px-3 py-2.5 text-sm text-brand-ink focus:outline-none`}
         />
       </div>
 

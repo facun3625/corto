@@ -26,6 +26,7 @@ export function MaskedCredentialField({
         <input
           type={type}
           name={name}
+          autoComplete={type === "password" ? "new-password" : "off"}
           required={required}
           placeholder={placeholder}
           autoFocus={configured}
