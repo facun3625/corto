@@ -46,13 +46,7 @@ export default async function AdminCarritosAbandonadosPage({
     include: { user: { select: { name: true, email: true, phone: true } } },
   });
 
-  // Enlace del mensaje de WhatsApp: a la ficha del producto si el carrito tiene uno solo, o al carrito
-  const singleIds = carts.flatMap((c) => {
-    const list = (c.items as unknown as CartItemJson[]) ?? [];
-    return list.length === 1 && list[0].productId ? [list[0].productId] : [];
-  });
-  const slugRows = singleIds.length ? await prisma.product.findMany({ where: { id: { in: singleIds } }, select: { id: true, slug: true } }) : [];
-  const slugById = new Map(slugRows.map((p) => [p.id, p.slug]));
+  // El link del mensaje de WhatsApp vuelve a cargar los productos en el carrito de quien lo abre
   const base = siteUrl();
 
   const emails = carts.map((c) => c.user?.email ?? c.email).filter((e): e is string => Boolean(e));
@@ -137,7 +131,7 @@ export default async function AdminCarritosAbandonadosPage({
                         <a
                           href={buildWhatsAppLink(
                             phone,
-                            `Hola ${cart.user?.name ?? cart.name ?? ""}! Vimos que dejaste ${items.length === 1 ? items[0]?.name ?? "un producto" : `${items.length} productos`} en tu carrito de Cortopassi - Tienda. ¿Te ayudamos a completar la compra? ${items.length === 1 && items[0]?.productId && slugById.get(items[0].productId) ? `${base}/producto/${slugById.get(items[0].productId)}` : `${base}/carrito`}`
+                            `Hola ${cart.user?.name ?? cart.name ?? ""}! Vimos que dejaste ${items.length === 1 ? items[0]?.name ?? "un producto" : `${items.length} productos`} en tu carrito de Cortopassi - Tienda. ¿Te ayudamos a completar la compra? ${base}/carrito?recuperar=${cart.id}`
                           )}
                           target="_blank"
                           rel="noopener noreferrer"

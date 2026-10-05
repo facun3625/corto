@@ -68,6 +68,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
+  // Link de recuperación (?recuperar=<id>, el que se manda por WhatsApp): vuelve a cargar
+  // los productos del carrito abandonado en este navegador, sumándolos a los que ya hubiera.
+  useEffect(() => {
+    if (!hydrated) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("recuperar");
+    if (!id) return;
+    url.searchParams.delete("recuperar");
+    window.history.replaceState(null, "", url.pathname + (url.search || "") + url.hash);
+    fetch(`/api/cart/recover?id=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((data: { items?: CartItem[] }) => {
+        const recovered = data.items ?? [];
+        if (recovered.length === 0) return;
+        setItems((prev) => [...prev, ...recovered.filter((r) => !prev.some((p) => cartKey(p) === cartKey(r)))]);
+      })
+      .catch(() => {});
+  }, [hydrated]);
+
   // Se sincroniza solo, en silencio, con cada cambio del carrito — no hay
   // "detector de abandono": es solo una foto del último estado conocido. El
   // endpoint borra el registro si el carrito quedó vacío (por eso comprar y
