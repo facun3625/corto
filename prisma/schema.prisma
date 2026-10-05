@@ -240,6 +240,12 @@ model StoreSettings {
   // (benefit1..3 + valores por defecto).
   homeBenefits Json?
 
+  // Recuperación automática de carritos por mail (Carritos abandonados). Apagada por defecto.
+  cartRecoveryEnabled    Boolean @default(false)
+  cartRecoveryDelayHours Int     @default(4)
+  cartRecoverySubject    String?
+  cartRecoveryMessage    String?
+
   // Logos e ícono (URL de imagen subida desde Configuración). Vacío = el logo original de la instalación.
   logoHeaderUrl String?
   logoFooterUrl String?
@@ -707,6 +713,14 @@ model AbandonedCart {
   total      Float
   lastActive DateTime @updatedAt
   createdAt  DateTime @default(now())
+  // Cuándo se le mandó el mail automático de recuperación (null = nunca)
+  recoveryEmailSentAt DateTime?
+}
+
+// Personas que pidieron no recibir más recordatorios de carrito (link de baja del mail)
+model CartRecoveryOptOut {
+  email     String   @id
+  createdAt DateTime @default(now())
 }
 
 // Registro de ventas online: única fuente de verdad de los pedidos hechos

@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
 import { logAdminAction } from "@/lib/adminLog";
+import { sendResetEmail } from "@/lib/passwordReset";
 
 export async function setUserRole(id: string, role: "admin" | "customer") {
   const session = await requireAdmin();
@@ -46,6 +47,39 @@ export async function createAdminUser(input: NewAdminInput): Promise<{ ok: boole
   await logAdminAction("user.create_admin", { targetType: "user", targetId: created.id, detail: email });
   revalidatePath("/admin/usuarios");
   return { ok: true, message: `Administrador creado. Puede entrar con ${email} y la contraseña que cargaste.` };
+}
+
+// Restablecer la contraseña de alguien que la olvidó (solo el superadministrador). La cuenta del
+// superadministrador no se toca desde el panel. Los links de recuperación pendientes de esa persona
+// se anulan, así un mail viejo no pisa la contraseña nueva.
+async function resettableUser(id: string) {
+  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, name: true, role: true } });
+  if (!target || target.role === "superadmin") return null;
+  return target;
+}
+
+export async function setUserPassword(id: string, password: string): Promise<{ ok: boolean; message: string }> {
+  await requireSuperAdmin();
+  const target = await resettableUser(id);
+  if (!target) return { ok: false, message: "No se puede cambiar la contraseña de esa cuenta." };
+  if (typeof password !== "string" || password.length < 8) return { ok: false, message: "La contraseña tiene que tener al menos 8 caracteres." };
+  if (password.length > 200) return { ok: false, message: "La contraseña es demasiado larga." };
+  await prisma.$transaction([
+    prisma.user.update({ where: { id }, data: { passwordHash: await bcrypt.hash(password, 10) } }),
+    prisma.passwordResetToken.deleteMany({ where: { userId: id } }),
+  ]);
+  await logAdminAction("user.reset_password", { targetType: "user", targetId: id, detail: `${target.email} (contraseña definida a mano)` });
+  return { ok: true, message: `Listo: ${target.email} ya puede entrar con la contraseña nueva. Pasásela por un canal seguro.` };
+}
+
+export async function sendUserResetLink(id: string): Promise<{ ok: boolean; message: string }> {
+  await requireSuperAdmin();
+  const target = await resettableUser(id);
+  if (!target) return { ok: false, message: "No se puede cambiar la contraseña de esa cuenta." };
+  const sent = await sendResetEmail(target, "reset");
+  if (!sent) return { ok: false, message: "No se pudo enviar el mail. Revisá que el correo esté configurado (Configuración → Correo) o definí la contraseña a mano." };
+  await logAdminAction("user.reset_password", { targetType: "user", targetId: id, detail: `${target.email} (link enviado por mail)` });
+  return { ok: true, message: `Le mandamos a ${target.email} un link para crear una contraseña nueva (vale 1 hora).` };
 }
 
 // El delete es en cascada por el schema, no hace falta borrar nada a mano acá:

@@ -13,6 +13,8 @@ import { LogoField } from "./LogoField";
 import { BenefitsEditor } from "./BenefitsEditor";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
 import { R2Form } from "./R2Form";
+import { BackupsPanel } from "./BackupsPanel";
+import { KEEP_BACKUPS, backupSecret, listBackups } from "@/lib/backup";
 import { getR2Config } from "@/lib/storage";
 import { getContactCards } from "@/lib/contactCards";
 import { resolveContact } from "@/lib/contactInfo";
@@ -393,6 +395,16 @@ export default async function AdminConfiguracionPage({
         hasSecret: Boolean(settings.r2SecretAccessKey),
       }}
       source={r2?.source ?? "disco"}
+    />
+  );
+
+  const backupList = isSuper ? await listBackups().catch(() => []) : [];
+  const backupsPanel = (
+    <BackupsPanel
+      backups={backupList.map((b) => ({ name: b.name, size: b.size, modified: b.modified.toISOString(), kind: b.kind }))}
+      configured={backupSecret() !== null}
+      where={r2 ? "r2" : "disco"}
+      keep={KEEP_BACKUPS}
     />
   );
 
@@ -877,6 +889,7 @@ export default async function AdminConfiguracionPage({
             ? [
                 { id: "correo", label: "Correo (SMTP / Resend)", content: mailProviderPanel },
                 { id: "imagenes", label: "Imágenes (R2)", content: r2Panel },
+                { id: "backups", label: "Copias de seguridad", content: backupsPanel },
               ]
             : []),
           { id: "mail-compra", label: "Mail de compra", content: orderEmailPanel },

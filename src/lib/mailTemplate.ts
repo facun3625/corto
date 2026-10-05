@@ -60,6 +60,10 @@ export type MailTemplateData = {
   // lo usa Mailing, armado por el RichTextEditor del admin.
   body?: string;
   bodyHtml?: string;
+  // Botón de acción debajo del texto (ej. "Completar mi compra")
+  cta?: { label: string; url: string };
+  // Línea chica al final (ej. el link para no recibir más avisos)
+  footerNote?: { text: string; linkLabel: string; linkUrl: string };
   footer: {
     address?: string | null;
     whatsappNumber?: string | null;
@@ -98,6 +102,11 @@ export function buildMailHtml(data: MailTemplateData): string {
       <div style="padding:32px 4px;">
         <h1 style="margin:0 0 18px;font-size:23px;line-height:1.3;color:#2a1f24;">${escapeHtml(title)}</h1>
         ${bodyContent}
+        ${
+          data.cta
+            ? `<p style="margin:8px 0 0;text-align:center;"><a href="${escapeHtml(data.cta.url)}" style="display:inline-block;background:#c4161a;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 28px;border-radius:999px;">${escapeHtml(data.cta.label)}</a></p>`
+            : ""
+        }
       </div>
 
       <div style="height:1px;background:#e8e5e6;"></div>
@@ -107,6 +116,7 @@ export function buildMailHtml(data: MailTemplateData): string {
         ${footer.address ? `<p style="margin:0 0 4px;font-size:12.5px;color:#8a7580;">${escapeHtml(footer.address)}</p>` : ""}
         ${footerLinks ? `<p style="margin:0;font-size:12.5px;color:#8a7580;">${footerLinks}</p>` : ""}
         ${footer.whatsappNumber ? `<p style="margin:8px 0 0;font-size:12.5px;color:#8a7580;">WhatsApp: ${escapeHtml(footer.whatsappNumber)}</p>` : ""}
+        ${data.footerNote ? `<p style="margin:14px 0 0;font-size:11.5px;color:#a89aa0;">${escapeHtml(data.footerNote.text)} <a href="${escapeHtml(data.footerNote.linkUrl)}" style="color:#a89aa0;text-decoration:underline;">${escapeHtml(data.footerNote.linkLabel)}</a></p>` : ""}
       </div>
     </div>
   </body>

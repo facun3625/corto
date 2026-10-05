@@ -9,6 +9,7 @@ import { setUserRole, deleteUser } from "./actions";
 import { UserSearchInput } from "./UserSearchInput";
 import { SegmentFilter } from "./SegmentFilter";
 import { NewAdminForm } from "./NewAdminForm";
+import { ResetPasswordButton } from "./ResetPasswordButton";
 
 type Sort = "recent" | "spent" | "orders" | "last";
 
@@ -105,6 +106,8 @@ export default async function AdminUsuariosPage({
                   <td className="px-4 py-3 text-brand-muted">{u.stats.lastOrderAt ? u.stats.lastOrderAt.toLocaleDateString("es-AR") : "—"}</td>
                   <td className="px-4 py-3 text-brand-muted">{u.points}</td>
                   <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                    {isSuperAdmin(viewerRole) && u.role !== "superadmin" && <ResetPasswordButton userId={u.id} email={u.email} />}
                     {u.role === "superadmin" ? null : u.role === "admin" ? (
                       <form action={setUserRole.bind(null, u.id, "customer")}>
                         <button type="submit" disabled={isSelf} className="cursor-pointer text-xs font-medium text-brand-muted hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40" title={isSelf ? "No podés quitarte el rol a vos mismo" : undefined}>Quitar admin</button>
@@ -114,6 +117,7 @@ export default async function AdminUsuariosPage({
                         <button type="submit" className="cursor-pointer text-xs font-semibold text-brand-pink-dark hover:underline">Hacer admin</button>
                       </form>
                     )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <form action={deleteUser.bind(null, u.id)} hidden={u.role === "superadmin"}>

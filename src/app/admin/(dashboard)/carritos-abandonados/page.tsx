@@ -8,10 +8,17 @@ import { siteUrl } from "@/lib/siteUrl";
 import { CopyEmailsButton } from "./CopyEmailsButton";
 import { UserTypeFilter } from "./UserTypeFilter";
 import { deleteAbandonedCart, cleanupOldAbandonedCarts } from "./actions";
+import { CartRecoveryPanel } from "./CartRecoveryPanel";
+import { getMailSender } from "@/lib/mailer";
+import { DEFAULT_MESSAGE, DEFAULT_SUBJECT } from "@/lib/cartRecoveryMail";
 
 type CartItemJson = { productId: string | null; name: string; price: number; quantity: number };
 
 type UserType = "all" | "registered" | "guest" | "anonymous";
+
+function daysAgo(days: number): Date {
+  return new Date(Date.now() - days * 24 * 3600_000);
+}
 
 function timeAgo(date: Date): string {
   const minutes = Math.round((Date.now() - date.getTime()) / 60000);
@@ -29,7 +36,12 @@ export default async function AdminCarritosAbandonadosPage({
   searchParams: Promise<{ userType?: string }>;
 }) {
   const params = await searchParams;
-  const { currency } = await getStoreSettingsRow();
+  const settings = await getStoreSettingsRow();
+  const { currency } = settings;
+  const [mailSender, sentLast7Days] = await Promise.all([
+    getMailSender(),
+    prisma.abandonedCart.count({ where: { recoveryEmailSentAt: { gte: daysAgo(7) } } }),
+  ]);
   const fm = (n: number) => formatMoneyWith(n, currency);
   const userType: UserType =
     params.userType === "registered" || params.userType === "guest" || params.userType === "anonymous"
@@ -56,9 +68,16 @@ export default async function AdminCarritosAbandonadosPage({
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-brand-ink">Carritos abandonados</h1>
         <p className="mt-1 text-sm text-brand-muted">
-          {carts.length} carritos con productos sin comprar. No es automático: es una foto del último estado de cada
-          carrito, para que puedan contactar a mano a quien no terminó la compra.
+          {carts.length} carritos con productos sin comprar. Es una foto del último estado de cada carrito: podés contactar
+          a mano a quien no terminó la compra o dejar que se les mande un mail automático.
         </p>
+
+        <CartRecoveryPanel
+          initial={{ enabled: settings.cartRecoveryEnabled, delayHours: settings.cartRecoveryDelayHours, subject: settings.cartRecoverySubject ?? "", message: settings.cartRecoveryMessage ?? "" }}
+          mailReady={mailSender !== null}
+          sentLast7Days={sentLast7Days}
+          defaults={{ subject: DEFAULT_SUBJECT, message: DEFAULT_MESSAGE }}
+        />
 
         <div className="mt-6 flex flex-wrap items-end gap-3">
           <UserTypeFilter defaultValue={userType} />
@@ -86,6 +105,7 @@ export default async function AdminCarritosAbandonadosPage({
               <th className="px-4 py-3 font-semibold">Items</th>
               <th className="px-4 py-3 font-semibold">Total</th>
               <th className="px-4 py-3 font-semibold">Última actividad</th>
+              <th className="px-4 py-3 font-semibold">Mail automático</th>
               <th className="px-4 py-3 font-semibold" />
             </tr>
           </thead>
@@ -125,6 +145,7 @@ export default async function AdminCarritosAbandonadosPage({
                   </td>
                   <td className="px-4 py-3 text-brand-pink-dark">{fm(cart.total)}</td>
                   <td className="px-4 py-3 text-brand-muted">{timeAgo(cart.lastActive)}</td>
+                  <td className="px-4 py-3 text-xs text-brand-muted">{cart.recoveryEmailSentAt ? `Enviado ${timeAgo(cart.recoveryEmailSentAt)}` : "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-3">
                       {phone && isLikelyPhone(phone) && (
@@ -157,7 +178,7 @@ export default async function AdminCarritosAbandonadosPage({
             })}
             {carts.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-brand-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-brand-muted">
                   No hay carritos abandonados por ahora.
                 </td>
               </tr>

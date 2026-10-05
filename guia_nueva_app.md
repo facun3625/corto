@@ -191,6 +191,13 @@ curl http://localhost:<PUERTO_APP>/api/health  # si existe endpoint de health
 
 ## Backups automáticos, restauración y monitoreo
 
+### Copias desde el panel (recomendado)
+Configuración → Copias de seguridad (superadmin): botón "Hacer copia ahora", lista, descarga y copia nocturna automática,
+cifradas y guardadas en R2 (fuera del VPS). Requiere `BACKUP_SECRET` en el `.env` (`echo "BACKUP_SECRET=$(openssl rand -hex 32)" >> .env`;
+**guardalo también fuera del servidor**) y una línea de cron: `30 3 * * * /root/<nombre>/<nombre>/scripts/run-backup.sh >> /root/backup-cron.log 2>&1`
+(si la app no usa el puerto 3017, anteponé `APP_URL=http://127.0.0.1:PUERTO`). Se restaura con `scripts/restore-backup.mjs`
+(ver MANUAL_TIENDA.md, sección 10.8). Lo que sigue (`scripts/backup.sh`) sirve como segundo respaldo del servidor.
+
 ### Backups
 `scripts/backup.sh` guarda la base de datos (`pg_dump` comprimido) y la carpeta `public/uploads` (comprobantes
 de transferencia e imágenes subidas al disco), y borra los de más de 14 días. Programalo con cron:

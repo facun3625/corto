@@ -412,6 +412,16 @@ El panel conserva la última actividad de los carritos y permite:
 - Eliminar registros.
 - Limpiar carritos antiguos.
 
+**El link de recuperación.** El mensaje de WhatsApp (y el mail automático) llevan un link `/carrito?recuperar=...` que vuelve a cargar los productos en el carrito de quien lo abre, en cualquier navegador o dispositivo. Los precios, el stock y las fotos se toman de hoy; lo que ya no se puede comprar no se incluye.
+
+**Recuperación automática por mail (con interruptor).** Arriba de la lista hay una tarjeta con un interruptor que la **activa o la suspende** al instante (viene suspendida). Mientras esté suspendida no se manda ningún mail. Con **Ajustes** se elige cuántas horas esperar desde la última actividad del carrito (1 a 72; por defecto 4), el asunto y el mensaje (si se dejan vacíos se usan los de ejemplo), y **Enviarme una prueba** manda el mail a tu casilla para verlo antes de activar.
+
+- Para activarla tiene que estar configurado el correo (Configuración → Correo).
+- Reglas: un mail por carrito (como mucho uno cada 3 días), solo a carritos de los últimos 3 días (al activarla no se avisa a carritos viejos), solo a quien dejó su email o tiene cuenta, y nunca a quien ya compró después de dejar el carrito ni a quien pidió no recibir más.
+- Cada mail incluye un link para **no recibir más recordatorios**; quien lo toca queda excluido para siempre.
+- En la lista, la columna **Mail automático** muestra a quién ya se le envió, y la tarjeta cuenta los enviados en los últimos 7 días.
+- No hace falta configurar nada en el servidor: la propia tienda revisa los carritos cada 10 minutos mientras está encendida.
+
 ### 8.2 Mailing
 
 El módulo permite crear campañas para:
@@ -604,6 +614,7 @@ Arriba del panel hay una barra con la **campanita** de novedades (pedidos pendie
 - **Administrador:** maneja el panel de la tienda (catálogo, ventas, clientes, temas, envíos, etc.). No ve la configuración técnica (**Correo** e **Imágenes (R2)**) ni al superadministrador.
 - **Superadministrador:** ve todo el panel, incluida la configuración técnica y el registro de sus propias acciones. Su cuenta no aparece en **Clientes y usuarios** para el administrador y no se puede editar ni borrar desde el panel (se define en la base de datos). Ingresa con Google.
 - Desde **Clientes y usuarios → + Nuevo administrador**, un administrador puede crear otros administradores (con email y una contraseña inicial) o convertir a un cliente en administrador.
+- **Restablecer la contraseña** (solo el superadministrador): en **Clientes y usuarios**, el botón **Contraseña** de cada fila permite **definir una contraseña nueva** (con un botón para generar una y el ojito para verla) o **mandarle un link por mail** para que la cree ella misma (vale 1 hora; necesita el correo configurado). Al cambiarla se anulan los links de recuperación anteriores. Queda anotado en el registro de actividad, sin la contraseña. No aplica a la cuenta del superadministrador.
 
 ### 10.4 bis Datos de contacto
 
@@ -633,6 +644,32 @@ El panel registra acciones administrativas relevantes, como cambios de pedidos y
 Al activarlo, los clientes ven una pantalla de mantenimiento. Los administradores pueden continuar ingresando al panel y revisar la tienda.
 
 ---
+
+### 10.8 Copias de seguridad
+
+**Configuración → Copias de seguridad** (solo el superadministrador). Guarda una copia completa de la base de datos: productos, pedidos, clientes y configuración. Las imágenes y videos no entran porque ya viven en R2.
+
+- **Hacer copia ahora:** crea una copia en el momento (conviene antes de un cambio grande).
+- **Automática:** una vez por noche, si el servidor tiene configurado el cron (ver más abajo). Se conservan las últimas 14, manuales y automáticas juntas.
+- **Dónde se guardan:** en R2, fuera del servidor. Si R2 no está configurado, en la carpeta `backups/` del servidor (hay que configurar R2 para que queden afuera).
+- **Cifradas:** cada copia se cifra con el `BACKUP_SECRET` del servidor, porque tiene datos de clientes y el bucket de imágenes es público. **Guardá ese secreto también fuera del servidor** (en tu gestor de contraseñas): sin él las copias guardadas en R2 no se pueden abrir.
+- **Descargar:** entrega la copia sin cifrar (`.json.gz`); guardala en un lugar seguro. **Eliminar** pide confirmación.
+- Si pasó más de un día sin copia automática, el panel lo avisa.
+
+**Configuración inicial en el VPS (una vez):**
+
+1. Agregar el secreto al `.env` sin mostrarlo: `echo "BACKUP_SECRET=$(openssl rand -hex 32)" >> .env`, y reiniciar la app (`pm2 restart cortopassi`).
+2. Verlo para guardarlo en tu gestor de contraseñas: `grep BACKUP_SECRET .env`.
+3. Programar la copia nocturna con `crontab -e`: `30 3 * * * /root/cortopassi/cortopassi/scripts/run-backup.sh >> /root/backup-cron.log 2>&1`. El script lee el secreto del `.env`; si la app no escucha en el puerto 3017, agregar `APP_URL=http://127.0.0.1:PUERTO` delante.
+
+**Restaurar** (no hay botón, para que un clic no pise toda la tienda). Se hace desde el servidor, en una base que ya tenga las tablas:
+
+```bash
+node scripts/restore-backup.mjs <archivo> --url "postgresql://usuario:clave@localhost:PUERTO/base"          # solo mira
+node scripts/restore-backup.mjs <archivo> --url "postgresql://usuario:clave@localhost:PUERTO/base" --yes    # restaura
+```
+
+`<archivo>` es el `.json.gz` descargado o un `.cpbk` (en ese caso, con `BACKUP_SECRET=...` delante). La URL es obligatoria a propósito: nunca toma `DATABASE_URL` del entorno, para no restaurar sobre la base equivocada. Vacía las tablas de destino y las reemplaza; si algo falla, deshace todo. Probalo una vez en una base de prueba: una copia que nunca se restauró no es de fiar.
 
 ## 11. Temas, páginas y mantenimiento
 

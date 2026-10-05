@@ -15,7 +15,7 @@ src/generated/
 
 # archivos subidos en desarrollo (imágenes, videos, comprobantes) y backups
 public/uploads/
-backups/
+/backups/
 *.sql.gz
 
 # sistema / editor
