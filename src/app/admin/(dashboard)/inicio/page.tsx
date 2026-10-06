@@ -5,6 +5,7 @@ import { orderStatusLabel, paymentMethodLabel } from "@/lib/sales";
 import { StatCard } from "@/components/admin/StatCard";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { Badge } from "@/components/admin/Badge";
+import { QuickCouponGenerator } from "../cupones/QuickCouponGenerator";
 import {
   SalesIcon,
   ClockIcon,
@@ -91,6 +92,11 @@ export default async function AdminInicioPage() {
           </ul>
         </div>
       )}
+
+      {/* Cupón rápido para invitar a probar la tienda online a quien compró en el local */}
+      <div className="mt-4 shrink-0">
+        <QuickCouponGenerator />
+      </div>
 
       {/* KPIs */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
