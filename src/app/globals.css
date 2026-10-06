@@ -162,3 +162,37 @@ button:not(:disabled),
 .rich-content table { border-collapse: collapse; margin: 0.75em 0; max-width: 100%; }
 .rich-content th, .rich-content td { border: 1px solid rgba(0, 0, 0, 0.15); padding: 0.35em 0.6em; }
 .rich-content b, .rich-content strong { font-weight: 700; }
+
+/* Panel de administración: tipografía Montserrat, texto negro, peso liviano y tamaños más chicos, para un aspecto sobrio y elegante.
+   Las clases de Tailwind se "bajan un escalón" solo dentro del panel (medium → regular, semibold → medium, bold → semibold);
+   la tienda pública no cambia. */
+.admin-panel {
+  --color-brand-ink: #0a0a0a;
+  --color-brand-muted: #3a3a3a;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  color: #0a0a0a;
+  font-size: 13px;
+}
+.admin-panel * {
+  font-family: inherit;
+}
+.admin-panel .font-medium { font-weight: 400; }
+.admin-panel .font-semibold { font-weight: 500; }
+.admin-panel .font-bold,
+.admin-panel .font-extrabold { font-weight: 600; }
+.admin-panel .text-xs { font-size: 11px; line-height: 1.4; }
+.admin-panel .text-sm { font-size: 12.5px; line-height: 1.45; }
+.admin-panel .text-base { font-size: 13.5px; line-height: 1.5; }
+.admin-panel .text-lg { font-size: 15px; }
+.admin-panel .text-xl { font-size: 17px; }
+.admin-panel .text-2xl { font-size: 21px; }
+.admin-panel .text-3xl { font-size: 24px; }
+
+/* Sin el anillo azul del navegador al hacer clic; con teclado, un anillo de la marca. */
+.admin-panel :focus:not(:focus-visible) {
+  outline: none;
+}
+.admin-panel :focus-visible {
+  outline: 2px solid var(--color-brand-pink);
+  outline-offset: 2px;
+}

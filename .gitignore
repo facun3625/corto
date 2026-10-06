@@ -23,3 +23,6 @@ public/uploads/
 .vscode/
 .idea/
 *.log
+
+# carpetas de referencia de otras apps (no forman parte de este proyecto)
+/moda/

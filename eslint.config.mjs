@@ -21,6 +21,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "arai/**",
     "corto app/**",
+    "moda/**",
     "src/generated/**",
     // Scripts de prueba de punta a punta (corren con esbuild, no forman parte de la app)
     "tests/e2e/**",
