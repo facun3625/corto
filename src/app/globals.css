@@ -188,11 +188,14 @@ button:not(:disabled),
 .admin-panel .text-2xl { font-size: 21px; }
 .admin-panel .text-3xl { font-size: 24px; }
 
-/* Sin el anillo azul del navegador al hacer clic; con teclado, un anillo de la marca. */
-.admin-panel :focus:not(:focus-visible) {
-  outline: none;
-}
-.admin-panel :focus-visible {
-  outline: 2px solid var(--color-brand-pink);
-  outline-offset: 2px;
+/* Sin el anillo azul del navegador al hacer clic; con teclado, un anillo de la marca. Va en la capa "base" para que los
+   campos que ya se dibujan su propio foco (focus:outline-none, focus-within) no muestren un segundo recuadro encima. */
+@layer base {
+  .admin-panel :focus:not(:focus-visible) {
+    outline: none;
+  }
+  .admin-panel :focus-visible {
+    outline: 2px solid var(--color-brand-pink);
+    outline-offset: 2px;
+  }
 }

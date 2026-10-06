@@ -27,6 +27,7 @@ export function CategoryChipSelector({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const firstRender = useRef(true);
   const listboxId = useId();
 
@@ -40,6 +41,13 @@ export function CategoryChipSelector({
     }
     containerRef.current?.dispatchEvent(new Event("change", { bubbles: true }));
   }, [selected]);
+
+  // Al abrir la lista, la página baja lo justo para que se vea entera (si no, queda pegada al borde de abajo)
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => listRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    return () => cancelAnimationFrame(id);
+  }, [open, query]);
 
   useEffect(() => {
     if (!open) return;
@@ -174,6 +182,7 @@ export function CategoryChipSelector({
 
         {open && (
           <ul
+            ref={listRef}
             id={listboxId}
             role="listbox"
             className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-black/10 bg-white py-1 shadow-lg"
@@ -204,6 +213,9 @@ export function CategoryChipSelector({
           </ul>
         )}
       </div>
+
+      {/* Con la lista abierta se reserva lugar debajo: la lista flota y, sin esto, el formulario termina justo después del buscador */}
+      {open && <div className="h-64" aria-hidden />}
     </div>
   );
 }
