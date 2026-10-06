@@ -25,7 +25,7 @@ const PAYMENT_METHODS = Object.keys(PAYMENT_METHOD_LABELS) as (keyof typeof PAYM
 
 const toDateInputValue = instantToDay;
 
-type CouponDefaults = {
+export type CouponDefaults = {
   code: string;
   enabled: boolean;
   discountType: string;
