@@ -13,9 +13,13 @@ import { SearchIcon } from "@/components/icons";
 export function CategoryChipSelector({
   categories,
   selectedIds,
+  name = "featuredCategoryIds",
+  emptyText = "Ninguna elegida — se usa la selección por defecto.",
 }: {
   categories: { id: string; name: string }[];
   selectedIds: string[];
+  name?: string;
+  emptyText?: string;
 }) {
   const byId = new Map(categories.map((c) => [c.id, c]));
   const [selected, setSelected] = useState<string[]>(() => selectedIds.filter((id) => byId.has(id)));
@@ -94,7 +98,7 @@ export function CategoryChipSelector({
   return (
     <div ref={containerRef}>
       {selected.map((id) => (
-        <input key={id} type="hidden" name="featuredCategoryIds" value={id} />
+        <input key={id} type="hidden" name={name} value={id} />
       ))}
 
       {selected.length > 0 ? (
@@ -143,7 +147,7 @@ export function CategoryChipSelector({
           ))}
         </ol>
       ) : (
-        <p className="mb-3 text-sm italic text-brand-muted">Ninguna elegida — se usa la selección por defecto.</p>
+        <p className="mb-3 text-sm italic text-brand-muted">{emptyText}</p>
       )}
 
       <div className="relative w-full max-w-sm">

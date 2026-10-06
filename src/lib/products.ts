@@ -78,6 +78,15 @@ async function categoryScope(categoryId?: string): Promise<string[] | undefined>
   return descendantIds(await getAllCategories(), categoryId);
 }
 
+// "Tiene stock" con el mismo criterio que toListItem: un producto simple sin control de stock o con unidades, o un
+// variable con alguna variante habilitada sin control de stock o con unidades.
+const WITH_STOCK: Prisma.ProductWhereInput = {
+  OR: [
+    { type: "simple", OR: [{ manageStock: false }, { stock: { gt: 0 } }] },
+    { type: "variable", variants: { some: { enabled: true, OR: [{ manageStock: false }, { stock: { gt: 0 } }] } } },
+  ],
+};
+
 export async function getProductsPage(opts: {
   categoryId?: string;
   query?: string;
@@ -85,32 +94,81 @@ export async function getProductsPage(opts: {
   onlyOffers?: boolean;
   limit: number;
   offset: number;
+  // Categorías que van primero, en este orden (con sus subcategorías); después el resto. Solo para la vista general.
+  priorityCategoryIds?: string[];
 }): Promise<{ products: ProductListItem[]; total: number }> {
   const where: Prisma.ProductWhereInput = {
     ...storeWhere({ categoryIds: await categoryScope(opts.categoryId), query: opts.query, tagSlug: opts.tagSlug }),
     ...(opts.onlyOffers ? { OR: OFFER_PREFILTER } : {}),
   };
 
-  // Filtro opcional del admin (Configuración → General): oculta del todo los
-  // productos sin stock en vez de mostrarlos con "Sin stock" + "Avisarme".
+  // Filtro opcional del admin (Configuración → General): oculta del todo los productos sin stock en vez de
+  // mostrarlos al final con "Sin stock" + "Avisarme".
   const settings = await getStoreSettingsRow();
-  // Stock de los variables y "en oferta" son derivados: en esos casos se filtra en memoria
-  const inMemory = settings.hideOutOfStock || opts.onlyOffers;
 
-  const rows = await prisma.product.findMany({
-    where,
-    include: LIST_INCLUDE,
-    orderBy: { name: "asc" },
-    ...(inMemory ? {} : { take: opts.limit, skip: opts.offset }),
-  });
-
-  if (inMemory) {
-    const items = rows
-      .map(toListItem)
-      .filter((p) => (!settings.hideOutOfStock || p.stock > 0) && (!opts.onlyOffers || p.onSale));
-    return { products: items.slice(opts.offset, opts.offset + opts.limit), total: items.length };
+  // "En oferta" es un dato derivado (fechas de la promoción): ese listado se arma en memoria
+  if (opts.onlyOffers) {
+    const rows = await prisma.product.findMany({ where, include: LIST_INCLUDE, orderBy: [{ name: "asc" }, { id: "asc" }] });
+    const items = rows.map(toListItem).filter((p) => p.onSale && (!settings.hideOutOfStock || p.stock > 0));
+    // Lo que tiene stock primero (el orden por nombre se mantiene dentro de cada grupo)
+    const sorted = [...items.filter((p) => p.stock > 0), ...items.filter((p) => p.stock <= 0)];
+    return { products: sorted.slice(opts.offset, opts.offset + opts.limit), total: sorted.length };
   }
-  const total = await prisma.product.count({ where });
+
+  // Tramos del listado, en orden: primero las categorías prioritarias (si hay) y después el resto. Cada tramo se parte
+  // en "con stock" y "sin stock", y todos los "sin stock" van al final: así un cliente siempre ve primero lo que puede
+  // comprar. Si el admin oculta lo sin stock, ese segundo grupo no existe.
+  const priority = opts.priorityCategoryIds ?? [];
+  let byCategory: Prisma.ProductWhereInput[] = [where];
+  if (priority.length > 0) {
+    const all = await getAllCategories();
+    const scopes = priority.map((id) => descendantIds(all, id));
+    const inScope = (ids: string[]): Prisma.ProductWhereInput => ({ categories: { some: { categoryId: { in: ids } } } });
+    const outOfScope = (ids: string[]): Prisma.ProductWhereInput => ({ categories: { none: { categoryId: { in: ids } } } });
+    byCategory = [
+      ...scopes.map((ids, i) => ({ AND: [where, inScope(ids), ...(i > 0 ? [outOfScope([...new Set(scopes.slice(0, i).flat())])] : [])] })),
+      { AND: [where, outOfScope([...new Set(scopes.flat())])] },
+    ];
+  }
+  const segments: Prisma.ProductWhereInput[] = [
+    ...byCategory.map((w) => ({ AND: [w, WITH_STOCK] })),
+    ...(settings.hideOutOfStock ? [] : byCategory.map((w) => ({ AND: [w, { NOT: WITH_STOCK }] }))),
+  ];
+  return getSegmentedPage(segments, opts.limit, opts.offset);
+}
+
+// Arma el listado como una sola lista hecha de tramos (cada uno ordenado por nombre). Cuenta cada tramo y trae solo las
+// partes que caen dentro de la página pedida, así la paginación sigue siendo continua y sin repetidos.
+async function getSegmentedPage(
+  segments: Prisma.ProductWhereInput[],
+  limit: number,
+  offset: number
+): Promise<{ products: ProductListItem[]; total: number }> {
+  const counts = await Promise.all(segments.map((w) => prisma.product.count({ where: w })));
+  const total = counts.reduce((a, b) => a + b, 0);
+
+  const reads: Promise<ProductRow[]>[] = [];
+  let start = 0;
+  for (let i = 0; i < segments.length; i++) {
+    const end = start + counts[i];
+    const from = Math.max(offset, start);
+    const to = Math.min(offset + limit, end);
+    if (from < to) {
+      reads.push(
+        prisma.product.findMany({
+          where: segments[i],
+          include: LIST_INCLUDE,
+          // id desempata productos con el mismo nombre: sin eso, al paginar se repiten o se saltean entre páginas
+          orderBy: [{ name: "asc" }, { id: "asc" }],
+          skip: from - start,
+          take: to - from,
+        })
+      );
+    }
+    start = end;
+  }
+
+  const rows = (await Promise.all(reads)).flat();
   return { products: rows.map(toListItem), total };
 }
 

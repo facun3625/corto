@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getCartSessionId } from "@/lib/cartSession";
 
@@ -35,17 +35,28 @@ type CartContextValue = {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  // El cliente tocó algo dentro del carrito: no se cierra solo
+  keepCartOpen: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "shop_cart_v2";
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, autoCloseSeconds = 2 }: { children: React.ReactNode; autoCloseSeconds?: number }) {
   const { data: session } = useSession();
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  // Al agregar un producto el carrito se muestra un momento para confirmar y se cierra solo, así se puede seguir comprando
+  const autoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function clearAutoClose() {
+    if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
+    autoCloseTimer.current = null;
+  }
+
+  useEffect(() => clearAutoClose, []);
 
   useEffect(() => {
     try {
@@ -126,6 +137,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { ...item, quantity: Math.min(quantity, item.maxStock) }];
     });
     setIsOpen(true);
+    clearAutoClose();
+    if (autoCloseSeconds > 0) autoCloseTimer.current = setTimeout(() => setIsOpen(false), autoCloseSeconds * 1000);
   }
 
   function removeItem(key: string) {
@@ -157,8 +170,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         count,
         total,
         isOpen,
-        openCart: () => setIsOpen(true),
-        closeCart: () => setIsOpen(false),
+        openCart: () => {
+          clearAutoClose();
+          setIsOpen(true);
+        },
+        closeCart: () => {
+          clearAutoClose();
+          setIsOpen(false);
+        },
+        keepCartOpen: clearAutoClose,
       }}
     >
       {children}

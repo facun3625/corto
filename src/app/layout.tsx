@@ -54,7 +54,7 @@ export default async function RootLayout({
         {fontHref && <link rel="stylesheet" href={fontHref} />}
       </head>
       <body className="flex min-h-full flex-col font-sans">
-        <Providers currency={settings.currency}>
+        <Providers currency={settings.currency} cartAutoCloseSeconds={settings.cartAutoCloseSeconds}>
           <SiteChrome settings={settings} isMaintenancePage={isMaintenancePage} announcement={theme?.config.announcement.enabled ? theme.config.announcement : null} previewThemeName={theme?.previewing ? theme.name : null}>
             {children}
           </SiteChrome>

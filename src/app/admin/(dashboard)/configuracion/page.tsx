@@ -37,6 +37,7 @@ import {
   updateCheckoutTexts,
   updateMaintenanceMode,
   updateHideOutOfStock,
+  updateCartAutoCloseSettings,
   updateAiAssistantSettings,
   updatePopupSettings,
   uploadPopupImage,
@@ -169,6 +170,38 @@ export default async function AdminConfiguracionPage({
           </div>
           <div className="flex items-center gap-3">
             <ToggleSwitch name="hideOutOfStock" defaultChecked={settings.hideOutOfStock} />
+            <SaveButton trackDirty />
+          </div>
+        </div>
+      </form>
+
+      <form action={updateCartAutoCloseSettings} className="rounded-xl border border-black/10 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-muted">
+              <PackageIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-brand-ink">Carrito al agregar un producto</p>
+              <p className="max-w-xl text-xs text-brand-muted">
+                Al agregar algo, el carrito se muestra un momento y se cierra solo, para seguir comprando. Si el cliente
+                toca algo dentro, se queda abierto. 0 = no se cierra solo.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-end gap-3">
+            <div>
+              <label className={labelClasses}>Se cierra después de (segundos)</label>
+              <input
+                type="number"
+                name="cartAutoCloseSeconds"
+                min={0}
+                max={10}
+                step={1}
+                defaultValue={settings.cartAutoCloseSeconds}
+                className="w-28 rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none"
+              />
+            </div>
             <SaveButton trackDirty />
           </div>
         </div>
@@ -316,6 +349,21 @@ export default async function AdminConfiguracionPage({
               orden (reordenalas con las flechas). Si no elegís ninguna, se usa una selección por defecto.
             </p>
             <CategoryChipSelector categories={categories} selectedIds={settings.featuredCategoryIds} />
+          </div>
+
+          <div className="mt-5 border-t border-black/5 pt-4">
+            <label className={labelClasses}>Categorías primero en la tienda</label>
+            <p className="mb-2.5 text-xs text-brand-muted">
+              Al entrar a la tienda sin filtros, se muestran primero los productos de estas categorías (con sus
+              subcategorías), en este orden, y después el resto. Dentro de cada grupo, los productos con stock van antes
+              que los agotados. Si el cliente elige una categoría o busca algo, no aplica.
+            </p>
+            <CategoryChipSelector
+              categories={categories}
+              selectedIds={settings.shopPriorityCategoryIds}
+              name="shopPriorityCategoryIds"
+              emptyText="Ninguna elegida — la tienda se ordena alfabéticamente, como siempre."
+            />
           </div>
 
           <div className="mt-5 border-t border-black/5 pt-4">

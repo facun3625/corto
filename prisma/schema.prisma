@@ -139,6 +139,13 @@ model StoreSettings {
   // lib/settings.ts).
   featuredCategoryIds String[] @default([])
 
+  // Categorías que se muestran primero en /tienda sin filtros, en este orden (incluye subcategorías); después va el
+  // resto. Vacío = la tienda se ordena alfabéticamente. Ver lib/products.ts.
+  shopPriorityCategoryIds String[] @default([])
+
+  // Segundos que el carrito queda abierto después de agregar un producto (0 = no se cierra solo). Ver lib/cart.tsx.
+  cartAutoCloseSeconds Int @default(2)
+
   // Franja de 3 beneficios debajo del hero (ver BenefitsStrip) — ícono
   // (clave de components/icons.tsx, ver BENEFIT_ICON_OPTIONS), título y
   // subtítulo, editables desde /admin/configuracion. Null = se usa el valor

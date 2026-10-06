@@ -64,6 +64,7 @@ export async function getSiteSettings() {
       ? row.marqueeText.split("\n").map((s) => s.trim()).filter(Boolean)
       : DEFAULT_MARQUEE,
     featuredCategoryIds: row.featuredCategoryIds.length > 0 ? row.featuredCategoryIds : DEFAULT_FEATURED_CATEGORY_IDS,
+    cartAutoCloseSeconds: Math.min(10, Math.max(0, row.cartAutoCloseSeconds)),
     // Franja de beneficios del home — null en cualquier campo significa
     // "usar el valor calculado por defecto" (ver BenefitsStrip).
     // Franja de beneficios editable (1 a 6 ítems). Vacío = se usan los 3 de siempre (benefits)

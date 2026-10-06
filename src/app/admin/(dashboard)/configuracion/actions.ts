@@ -156,6 +156,7 @@ export async function updateSiteSettings(formData: FormData) {
     homeOffersEnabled: formData.get("homeOffersEnabled") === "on",
     homeOffersTitle: (formData.get("homeOffersTitle") as string)?.trim().slice(0, 100) || null,
     featuredCategoryIds: formData.getAll("featuredCategoryIds").map(String),
+    shopPriorityCategoryIds: [...new Set(formData.getAll("shopPriorityCategoryIds").map(String).filter(Boolean))],
     currency: formData.get("currency") === "USD" ? ("USD" as const) : ("ARS" as const),
   };
 
@@ -167,6 +168,16 @@ export async function updateSiteSettings(formData: FormData) {
 
   revalidatePath("/admin/configuracion");
   revalidatePath("/");
+  revalidatePath("/tienda");
+}
+
+// Cuánto queda abierto el carrito después de agregar un producto (0 = no se cierra solo)
+export async function updateCartAutoCloseSettings(formData: FormData) {
+  await requireAdmin();
+  const seconds = Math.min(10, Math.max(0, Math.floor(Number(formData.get("cartAutoCloseSeconds")) || 0)));
+  await prisma.storeSettings.upsert({ where: { id: "global" }, create: { id: "global", cartAutoCloseSeconds: seconds }, update: { cartAutoCloseSeconds: seconds } });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/configuracion");
 }
 
 // Franja de 3 beneficios del home (ver BenefitsStrip) — cada campo vacío

@@ -9,12 +9,12 @@ import { FavoritesProvider } from "@/lib/favorites";
 import { CouponCapture } from "@/components/CouponCapture";
 import { CurrencyProvider, type CurrencyCode } from "@/lib/currency";
 
-export function Providers({ children, currency }: { children: React.ReactNode; currency: CurrencyCode }) {
+export function Providers({ children, currency, cartAutoCloseSeconds }: { children: React.ReactNode; currency: CurrencyCode; cartAutoCloseSeconds: number }) {
   return (
     <SessionProvider>
       <CurrencyProvider currency={currency}>
       <FavoritesProvider>
-        <CartProvider>
+        <CartProvider autoCloseSeconds={cartAutoCloseSeconds}>
           <AuthModalProvider>
             <CouponCapture />
             {children}

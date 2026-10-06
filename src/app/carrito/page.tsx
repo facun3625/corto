@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart, cartKey } from "@/lib/cart";
 import { useMoney } from "@/lib/currency";
@@ -10,6 +10,34 @@ export default function CarritoPage() {
   const { formatMoney } = useMoney();
   const { items, removeItem, setQuantity, total } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
+  const checkoutRef = useRef<HTMLDivElement>(null);
+
+  // Al abrir el checkout, bajar hasta el formulario (si no, queda el botón arriba y parece que no pasó nada).
+  // Se anima a mano y el destino se recalcula en cada cuadro: al scrollear, el encabezado puede cambiar de alto y correr
+  // la página, y el scroll suave del navegador se cortaría a mitad de camino.
+  useEffect(() => {
+    if (!showCheckout) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const duration = reduce ? 0 : 500;
+    const startY = window.scrollY;
+    const target = () => {
+      const el = checkoutRef.current;
+      if (!el) return startY;
+      const header = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+      return Math.max(0, el.getBoundingClientRect().top + window.scrollY - header - 16);
+    };
+    let frame = 0;
+    let begin: number | null = null;
+    const step = (now: number) => {
+      begin ??= now;
+      const t = duration === 0 ? 1 : Math.min(1, (now - begin) / duration);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      window.scrollTo({ top: startY + (target() - startY) * eased, behavior: "instant" });
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [showCheckout]);
 
   if (items.length === 0) {
     return (
@@ -97,7 +125,9 @@ export default function CarritoPage() {
       </div>
 
       {showCheckout ? (
-        <CheckoutForm />
+        <div ref={checkoutRef}>
+          <CheckoutForm />
+        </div>
       ) : (
         <button
           onClick={() => setShowCheckout(true)}

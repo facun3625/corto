@@ -126,6 +126,8 @@ La tienda muestra los productos publicados (con al menos una imagen) cargados en
 
 El administrador puede decidir si los productos agotados permanecen visibles o se ocultan por completo.
 
+**Orden del catálogo.** Los productos **con stock van siempre antes que los agotados**, en la tienda, en cada categoría y en la búsqueda, sin cortar la paginación. Además, en **Configuración → General → Categorías primero en la tienda** se eligen (y se ordenan con las flechas) las categorías que van al principio de la tienda cuando se entra sin filtros: primero sus productos (con los de sus subcategorías), en ese orden, y después el resto. Si el cliente elige una categoría o busca algo, ese orden no aplica. Sin categorías elegidas, la tienda se ordena alfabéticamente.
+
 ### 3.5 Categorías
 
 Las categorías forman un árbol de niveles ilimitados que se administra desde **Categorías**. Se utilizan para:
@@ -135,6 +137,8 @@ Las categorías forman un árbol de niveles ilimitados que se administra desde *
 - Aplicar cupones.
 - Configurar descuentos.
 - Generar recomendaciones.
+
+**Menú de categorías de la tienda.** Tiene un **buscador predictivo** (encuentra cualquier categoría, también las subcategorías, sin importar tildes ni mayúsculas, y muestra a cuál pertenece) y un árbol que se abre en todos los niveles con **una sola flechita**: tocar una categoría con subcategorías la despliega (con una línea "Ver todo en…"), y una sin subcategorías lleva a su página.
 
 ### 3.6 Buscador
 
@@ -184,6 +188,10 @@ El carrito se conserva en el navegador y permite:
 - Consultar el subtotal.
 - Ver recomendaciones relacionadas.
 - Continuar hacia el checkout.
+
+**Cierre automático.** Al agregar un producto, el carrito se muestra un momento y se **cierra solo a los 2 segundos**, para seguir comprando; si el cliente toca algo dentro, se queda abierto. El tiempo se cambia en **Configuración → General → Carrito al agregar un producto** (de 0 a 10 segundos; 0 = no se cierra solo).
+
+Al tocar **Finalizar compra**, la página baja suavemente hasta el formulario.
 
 ### 4.2 Datos del comprador
 

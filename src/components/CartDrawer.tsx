@@ -8,7 +8,7 @@ import { CartRecommendations } from "@/components/CartRecommendations";
 
 export function CartDrawer() {
   const { formatMoney } = useMoney();
-  const { items, removeItem, setQuantity, total, isOpen, closeCart } = useCart();
+  const { items, removeItem, setQuantity, total, isOpen, closeCart, keepCartOpen } = useCart();
 
   return (
     <AnimatePresence>
@@ -25,6 +25,7 @@ export function CartDrawer() {
 
           <motion.div
             key="panel"
+            onPointerDownCapture={keepCartOpen}
             className="fixed right-0 top-0 z-[70] flex h-[100dvh] w-full max-w-[450px] flex-col bg-white shadow-xl"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}

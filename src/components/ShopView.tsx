@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAllCategories } from "@/lib/categories";
 import { getProductsPage, getProductCountsByCategory } from "@/lib/products";
+import { getStoreSettingsRow } from "@/lib/settings";
 import { CategorySidebar } from "@/components/CategorySidebar";
 import { ShopControls } from "@/components/ShopControls";
 import { ProductCard } from "@/components/ProductCard";
@@ -21,7 +22,11 @@ export async function ShopView({
   const page = Math.max(1, Number(searchParams.page) || 1);
   const tagSlug = /^[a-z0-9-]{1,80}$/.test(searchParams.etiqueta ?? "") ? searchParams.etiqueta : undefined;
   const onlyOffers = searchParams.ofertas === "1";
-  const categories = await getAllCategories();
+  const [categories, settings] = await Promise.all([getAllCategories(), getStoreSettingsRow()]);
+  // Orden elegido en Configuración: solo en la vista general (sin categoría, búsqueda ni filtros) y solo con
+  // categorías que todavía existen
+  const known = new Set(categories.map((c) => c.id));
+  const priorityCategoryIds = !categoryId && !query && !tagSlug && !onlyOffers ? settings.shopPriorityCategoryIds.filter((id) => known.has(id)) : [];
 
   let category = null;
   if (categoryId) {
@@ -40,6 +45,7 @@ export async function ShopView({
       onlyOffers,
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
+      priorityCategoryIds,
     }),
   ]);
 
@@ -47,18 +53,12 @@ export async function ShopView({
   // Búsqueda enviada (solo la primera página: paginar no es otra búsqueda)
   if (query && page === 1) logSearch(query, total);
 
-  // Suma solo las categorías de nivel superior para evitar contar productos dos veces
-  // (los conteos ya están "enrollados" con sus descendientes).
-  const topLevelTotal = categories
-    .filter((c) => c.parentId === null)
-    .reduce((sum, c) => sum + (counts.get(c.id) ?? 0), 0);
-
   return (
-    <div className="min-h-screen bg-white px-3 py-8 sm:px-6 sm:py-12">
+    <div className="min-h-screen bg-white px-3 py-3 sm:px-6 sm:py-4">
       <ScrollToTop watch={`${categoryId ?? "all"}-${query}-${page}`} />
       <main className="mx-auto max-w-6xl">
-        <h1 className="mb-1 text-3xl font-bold text-brand-ink">{category ? category.name : "Tienda"}</h1>
-        <p className="mb-8 text-brand-muted">
+        <h1 className="mb-1 text-2xl font-bold text-brand-ink">{category ? category.name : "Tienda"}</h1>
+        <p className="mb-5 text-brand-muted">
           {category ? `${total} productos` : "Elegí una categoría para ver los productos."}
         </p>
 
@@ -66,7 +66,6 @@ export async function ShopView({
           <CategorySidebar
             categories={categories}
             counts={counts}
-            grandTotal={topLevelTotal}
             activeCategoryId={categoryId}
           />
 
