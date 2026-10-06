@@ -37,7 +37,7 @@ const LINKS = [
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { pendingOrders: number; unreadMessages: number } }) {
+export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { pendingOrders: number; unreadMessages: number; showMessages?: boolean } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -45,15 +45,19 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
   const [highlight, setHighlight] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // Mensajes solo aparece si existe un formulario de contacto o ya hay mensajes (ver lib/adminCounts.ts)
+  const showMessages = counts?.showMessages !== false;
+  const visibleLinks = useMemo(() => LINKS.filter((l) => l.href !== "/admin/mensajes" || showMessages), [showMessages]);
+
   // Buscador predictivo del menú: filtra por el nombre de la sección y por palabras relacionadas (ej. "pedidos" → Ventas)
   const matches = useMemo(() => {
     const terms = norm(query).split(/\s+/).filter(Boolean);
     if (terms.length === 0) return [];
-    return LINKS.filter((l) => {
+    return visibleLinks.filter((l) => {
       const hay = norm(`${l.label} ${l.keywords}`);
       return terms.every((t) => hay.includes(t));
     }).sort((a, b) => Number(norm(b.label).startsWith(norm(query))) - Number(norm(a.label).startsWith(norm(query))));
-  }, [query]);
+  }, [query, visibleLinks]);
 
   // Ctrl/Cmd + K enfoca el buscador
   useEffect(() => {
@@ -75,7 +79,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
   }
 
   const searching = query.trim().length > 0;
-  const list = searching ? matches : LINKS;
+  const list = searching ? matches : visibleLinks;
 
   return (
     <aside className="relative z-50 flex w-full shrink-0 flex-col border-b border-black/5 bg-white px-3 py-2 md:h-full md:w-56 md:border-0 md:border-r md:border-black/10 md:bg-white md:py-3">
