@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useCart } from "@/lib/cart";
 import type { SiteSettings } from "@/lib/settings";
 import type { AssistantProduct } from "@/lib/ai/types";
-import { WhatsAppIcon } from "@/components/icons";
+import { ChatIcon, WhatsAppIcon } from "@/components/icons";
 
 type AssistantSettings = SiteSettings["assistant"];
 type ChatMessage = {
@@ -255,10 +255,16 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
           aria-label={liveSettings.name}
           className="absolute bottom-14 right-0 flex h-[min(560px,calc(100dvh-6.5rem))] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl"
         >
-          <header className="flex min-h-14 items-center justify-between gap-1.5 bg-brand-pink px-3 py-2.5 text-white sm:px-4 sm:py-3">
+          <header className="flex items-center gap-3 bg-brand-pink px-3.5 py-3 text-white">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20" aria-hidden="true">
+              <ChatIcon className="h-5 w-5" />
+            </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold sm:text-base">{liveSettings.name}</p>
-              <p className="hidden truncate text-xs text-white/85 min-[350px]:block">Te ayudo a encontrar lo que buscás</p>
+              <p className="line-clamp-2 text-sm font-semibold leading-tight">{liveSettings.name}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/85">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden="true" />
+                En línea
+              </p>
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
               <button
@@ -266,26 +272,18 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                 onClick={clearChat}
                 disabled={sending}
                 title="Empezar una conversación nueva"
-                aria-label="Limpiar chat"
-                className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-white/35 bg-white/10 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:border-white/60 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Nueva conversación"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-3.5 w-3.5"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-[18px] w-[18px]" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6M5.6 15a8 8 0 0 0 13.4 2.4L20 14M18.4 9A8 8 0 0 0 5 6.6L4 10" />
                 </svg>
-                <span className="hidden min-[350px]:inline">Limpiar</span>
               </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar asistente"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-2xl leading-none hover:bg-white/15"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-2xl leading-none text-white/90 transition-colors hover:bg-white/15 hover:text-white"
               >
                 ×
               </button>
@@ -293,7 +291,10 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
           </header>
 
           <div className="flex-1 touch-pan-y space-y-3 overflow-y-auto overscroll-contain bg-brand-soft/35 p-2.5 sm:p-3" aria-live="polite">
-            {messages.map((message) => (
+            {/* El saludo aparece después de que el cliente deja sus datos (o elige "Ahora no"): antes solo se ve la tarjeta */}
+            {messages
+              .filter((message) => !(message.id === "welcome" && (!contactLoaded || contact === null)))
+              .map((message) => (
               <div key={message.id} className={message.role === "user" ? "ml-6 sm:ml-9" : "mr-3 sm:mr-5"}>
                 <div
                   className={`whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
@@ -358,53 +359,43 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
               </div>
             ))}
             {contactLoaded && contact === null && messages.length <= 1 && (
-              <form onSubmit={submitContact} className="mr-3 space-y-2.5 rounded-2xl rounded-bl-sm border border-brand-pink/30 bg-white p-3.5 shadow-sm sm:mr-5">
-                <p className="text-sm leading-relaxed text-brand-ink">
-                  Antes de empezar, dejanos tu <strong>nombre y teléfono</strong>: si no logro resolver tu consulta, te contactamos nosotros.
-                </p>
-                <input
-                  type="text"
-                  value={contactName || (authSession?.user?.name ?? "")}
-                  onChange={(event) => setContactName(event.target.value.slice(0, 80))}
-                  placeholder="Tu nombre"
-                  autoComplete="name"
-                  aria-label="Tu nombre"
-                  required
-                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
-                />
-                <input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(event) => setContactPhone(event.target.value.slice(0, 30))}
-                  placeholder="Tu teléfono (con código de área)"
-                  autoComplete="tel"
-                  aria-label="Tu teléfono"
-                  inputMode="tel"
-                  required
-                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
-                />
-                {contactError && <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{contactError}</p>}
+              <form onSubmit={submitContact} className="mr-4 rounded-2xl rounded-bl-sm border border-black/10 bg-white p-3.5 shadow-sm sm:mr-6">
+                <p className="text-[13px] leading-snug text-brand-ink">Para retomar tu consulta si hace falta, ¿nos dejás tus datos?</p>
+                <div className="mt-3 space-y-2">
+                  <input
+                    type="text"
+                    value={contactName || (authSession?.user?.name ?? "")}
+                    onChange={(event) => setContactName(event.target.value.slice(0, 80))}
+                    placeholder="Nombre"
+                    autoComplete="name"
+                    aria-label="Tu nombre"
+                    required
+                    className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-base text-brand-ink outline-none placeholder:text-brand-muted/70 focus:border-brand-pink sm:text-[13px]"
+                  />
+                  <input
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(event) => setContactPhone(event.target.value.slice(0, 30))}
+                    placeholder="Teléfono con código de área"
+                    autoComplete="tel"
+                    aria-label="Tu teléfono"
+                    inputMode="tel"
+                    required
+                    className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-base text-brand-ink outline-none placeholder:text-brand-muted/70 focus:border-brand-pink sm:text-[13px]"
+                  />
+                </div>
+                {contactError && <p className="mt-2 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{contactError}</p>}
                 <button
                   type="submit"
                   disabled={savingContact}
-                  className="w-full cursor-pointer rounded-full bg-brand-pink px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  className="mt-3 h-10 w-full cursor-pointer rounded-full bg-brand-pink text-[13px] font-medium text-white transition-colors hover:bg-brand-pink-dark disabled:opacity-60"
                 >
-                  {savingContact ? "Guardando…" : "Empezar a chatear"}
+                  {savingContact ? "Guardando…" : "Continuar"}
                 </button>
-                <button type="button" onClick={skipContact} className="block w-full cursor-pointer text-center text-[11px] text-brand-muted underline">
-                  Prefiero no dejar mis datos
+                <button type="button" onClick={skipContact} className="mt-2 block w-full cursor-pointer text-center text-[12px] text-brand-muted transition-colors hover:text-brand-ink">
+                  Ahora no
                 </button>
-                {liveSettings.humanSeller.whatsappUrl && (
-                  <a
-                    href={liveSettings.humanSeller.whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-3 py-2 text-xs font-semibold text-white"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" />
-                    O escribinos directo por WhatsApp
-                  </a>
-                )}
+                <p className="mt-2 border-t border-black/5 pt-2 text-[10.5px] leading-snug text-brand-muted/80">Usamos tus datos solo para contactarte por esta consulta.</p>
               </form>
             )}
             {sending && (
@@ -448,7 +439,7 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
               }}
               rows={1}
               maxLength={600}
-              placeholder={contactLoaded && contact === null ? "Completá tus datos para empezar" : "¿Qué estás buscando?"}
+              placeholder="Escribí tu consulta…"
               disabled={!contactLoaded || contact === null}
               aria-label="Mensaje"
               className="min-h-11 max-h-24 min-w-0 flex-1 resize-none rounded-xl border border-black/10 px-3 py-2.5 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
