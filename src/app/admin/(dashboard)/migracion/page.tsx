@@ -4,11 +4,14 @@ import { countPendingActivation } from "./actions";
 import { MigrationWizard } from "./MigrationWizard";
 import { UndoMigration } from "./UndoMigration";
 import { auth } from "@/lib/auth";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function MigracionPage() {
+  // La migración desde WooCommerce es una tarea técnica: solo la ve el superadministrador
   const isSuper = (await auth())?.user?.role === "superadmin";
+  if (!isSuper) notFound();
   const [latest, pendingActivation] = await Promise.all([
     prisma.migrationJob.findFirst({ orderBy: { createdAt: "desc" }, select: { id: true, status: true, sourceUrl: true } }),
     countPendingActivation(),
@@ -27,7 +30,7 @@ export default async function MigracionPage() {
         pendingActivation={pendingActivation}
       />
       {/* Solo el superadministrador: borra todo lo migrado, por si la migración no salió bien */}
-      {isSuper && <UndoMigration />}
+      <UndoMigration />
     </div>
   );
 }

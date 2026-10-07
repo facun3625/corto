@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireSuperAdmin } from "@/lib/adminAuth";
 import { getJob } from "@/lib/woo/jobs";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    await requireSuperAdmin();
   } catch {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }

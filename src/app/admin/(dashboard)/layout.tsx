@@ -17,7 +17,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
 
   return (
     <div className={`admin-panel ${montserrat.variable} flex h-[100dvh] flex-col overflow-hidden bg-white md:flex-row`}>
-      <AdminSidebar userLabel={userLabel} logoUrl={logoUrl} counts={counts} />
+      <AdminSidebar userLabel={userLabel} logoUrl={logoUrl} counts={counts} isSuper={session?.user?.role === "superadmin"} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AdminTopBar name={session?.user?.name ?? ""} email={session?.user?.email ?? ""} role={session?.user?.role ?? "admin"} counts={counts} />

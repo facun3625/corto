@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
+import { requireSuperAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { sendResetEmail } from "@/lib/passwordReset";
@@ -20,7 +20,7 @@ const message = (err: unknown) => (err instanceof WooError ? err.message : "No s
 export type PreviewResult = { ok: true; preview: WooPreview } | { ok: false; error: string };
 
 export async function previewWooAction(formData: FormData): Promise<PreviewResult> {
-  await requireAdmin();
+  await requireSuperAdmin();
   const creds = credsFrom(formData);
   if (!creds) return { ok: false, error: "Completá la URL y las dos claves" };
   try {
@@ -34,7 +34,7 @@ export async function previewWooAction(formData: FormData): Promise<PreviewResul
 export type StartResult = { ok: true; jobId: string } | { ok: false; error: string };
 
 export async function startWooMigrationAction(formData: FormData): Promise<StartResult> {
-  await requireAdmin();
+  await requireSuperAdmin();
   const creds = credsFrom(formData);
   if (!creds) return { ok: false, error: "Completá la URL y las dos claves" };
   try {
@@ -48,7 +48,7 @@ export async function startWooMigrationAction(formData: FormData): Promise<Start
 }
 
 export async function cancelWooMigration(jobId: string) {
-  await requireAdmin();
+  await requireSuperAdmin();
   await requestCancel(jobId);
 }
 
@@ -67,14 +67,14 @@ async function pendingActivationWhere() {
 }
 
 export async function countPendingActivation(): Promise<number> {
-  await requireAdmin();
+  await requireSuperAdmin();
   return prisma.user.count({ where: await pendingActivationWhere() });
 }
 
 export type ActivationResult = { ok: true; sent: number; failed: number; remaining: number } | { ok: false; error: string };
 
 export async function sendActivationEmailsAction(): Promise<ActivationResult> {
-  await requireAdmin();
+  await requireSuperAdmin();
   const users = await prisma.user.findMany({ where: await pendingActivationWhere(), orderBy: { createdAt: "asc" }, take: BATCH, select: { id: true, email: true, name: true } });
   let sent = 0;
   let failed = 0;

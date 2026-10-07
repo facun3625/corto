@@ -588,7 +588,7 @@ En **Configuración → General** se elige si toda la tienda trabaja en pesos (A
 
 ### 10.2.2 Migrar desde WooCommerce
 
-En **Migración Woo** se puede traer una tienda WooCommerce por única vez: categorías, atributos, productos con sus variantes e imágenes y, opcionalmente, clientes. Los pedidos, cupones y reseñas no se migran.
+En **Migración Woo** (solo la ve y la usa el superadministrador) se puede traer una tienda WooCommerce por única vez: categorías, atributos, productos con sus variantes e imágenes y, opcionalmente, clientes. Los pedidos, cupones y reseñas no se migran.
 
 1. Generá las claves en WooCommerce → Ajustes → Avanzado → API REST, con permiso de **solo lectura**.
 2. Cargá la URL de la tienda y las dos claves y apretá **Probar conexión y ver vista previa**. Se muestran los conteos de lo que se va a traer.

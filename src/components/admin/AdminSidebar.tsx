@@ -38,7 +38,7 @@ const LINKS = [
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { newOrders: number; unreadMessages: number; pendingConversations?: number; showMessages?: boolean } }) {
+export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSuper = false }: { userLabel: string; logoUrl?: string; isSuper?: boolean; counts?: { newOrders: number; unreadMessages: number; pendingConversations?: number; showMessages?: boolean } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -48,7 +48,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
 
   // Mensajes solo aparece si existe un formulario de contacto o ya hay mensajes (ver lib/adminCounts.ts)
   const showMessages = counts?.showMessages !== false;
-  const visibleLinks = useMemo(() => LINKS.filter((l) => l.href !== "/admin/mensajes" || showMessages), [showMessages]);
+  const visibleLinks = useMemo(() => LINKS.filter((l) => (l.href !== "/admin/mensajes" || showMessages) && (l.href !== "/admin/migracion" || isSuper)), [showMessages, isSuper]);
 
   // Buscador predictivo del menú: filtra por el nombre de la sección y por palabras relacionadas (ej. "pedidos" → Ventas)
   const matches = useMemo(() => {
