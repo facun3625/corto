@@ -167,7 +167,7 @@ Cuando un producto está agotado, el cliente puede dejar sus datos. El administr
 
 - Ver el producto solicitado.
 - Consultar nombre, email y teléfono.
-- Abrir una conversación por WhatsApp.
+- Abrir una conversación por WhatsApp. El panel anota la fecha, la hora y cuántas veces se le escribió (columna **WhatsApp**; el botón pasa a decir “Reenviar”).
 - Copiar los correos.
 - Eliminar registros atendidos.
 
@@ -427,7 +427,7 @@ El panel conserva la última actividad de los carritos y permite:
 - Diferenciar clientes registrados, invitados y anónimos.
 - Ver productos y valor estimado.
 - Copiar emails.
-- Abrir un mensaje de recuperación por WhatsApp.
+- Abrir un mensaje de recuperación por WhatsApp. Queda registrado cuándo y cuántas veces se escribió (columna **WhatsApp**; el botón pasa a “Reenviar”). Anotarlo no cuenta como actividad del cliente: no cambia la “última actividad” del carrito.
 - Eliminar registros.
 - Limpiar carritos antiguos.
 
@@ -700,7 +700,7 @@ node scripts/restore-backup.mjs <archivo> --url "postgresql://usuario:clave@loca
 
 ### 11.1 Temas y campañas
 
-En **Temas y campañas** se crean identidades visuales para fechas especiales (Navidad, Black Friday, Hot Sale, Día de la Madre, Día del Padre, Halloween, lanzamientos o campañas propias). Se puede partir de una **plantilla** o de cero. Cada tema guarda:
+En **Temas y campañas** se crean identidades visuales para fechas especiales (Navidad, Black Friday, Hot Sale, Día de la Madre, Día del Padre, Halloween, lanzamientos o campañas propias). No vienen temas creados: se arman con **+ Crear tema nuevo** (desde cero). Cada tema guarda:
 
 - **Colores:** principal, principal oscuro, texto, texto suave, fondo suave y fondo general.
 - **Tipografía de los títulos** (una lista de fuentes).
@@ -712,7 +712,9 @@ En **Temas y campañas** se crean identidades visuales para fechas especiales (N
 
 **Vista previa:** el botón *Vista previa* abre la tienda con el tema aplicado solo para vos (un cartel indica que es una vista previa y permite salir). Nadie más lo ve.
 
-**Activar:** *Activar ahora* lo deja vigente con un clic. **Programar:** si cargás una fecha de inicio y de fin, *Programar* hace que el tema entre y salga solo; al terminar, la tienda vuelve sola a su aspecto de siempre. Si hay varios temas vigentes a la vez, se muestra el que empezó más recientemente. El panel de administración nunca toma los colores de la campaña.
+**Un solo aspecto a la vez.** El *Aspecto base de la tienda* muestra la etiqueta **ACTIVO** cuando no hay ninguna campaña vigente. Al activar una campaña (*Activar ahora* o *Guardar y activar*) el aspecto base queda *Desactivado* y las demás campañas que se veían se apagan. Para volver, *Activar aspecto base* apaga la campaña (queda guardada para usarla otra vez). Las campañas programadas para más adelante no se tocan.
+
+**Activar:** *Activar ahora* lo deja vigente con un clic. **Programar:** si cargás una fecha de inicio y de fin, *Programar* hace que el tema entre y salga solo; al terminar, la tienda vuelve sola a su aspecto de siempre. El panel de administración nunca toma los colores de la campaña.
 En el editor, *Guardar y activar* (sin fechas) lo muestra desde ya, *Guardar y programar* (con fechas) lo deja armado y *Solo guardar* lo deja apagado. Un tema vencido se vuelve a encender con *Reactivar*.
 El **aspecto base** (el de siempre, que se ve cuando no hay ninguna campaña activa) se edita desde la tarjeta *Aspecto base de la tienda*, con *Editar aspecto base*; no tiene fechas, no se borra y *Restablecer* lo devuelve a los colores originales.
 

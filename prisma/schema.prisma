@@ -78,6 +78,9 @@ model WaitlistEntry {
   email        String
 
   createdAt DateTime @default(now())
+  // Último WhatsApp que el equipo abrió desde el panel para este aviso, y cuántas veces
+  whatsappSentAt DateTime?
+  whatsappCount  Int       @default(0)
 
   @@unique([productId, email])
 }
@@ -733,6 +736,9 @@ model AbandonedCart {
   createdAt  DateTime @default(now())
   // Cuándo se le mandó el mail automático de recuperación (null = nunca)
   recoveryEmailSentAt DateTime?
+  // Último WhatsApp que el equipo abrió desde el panel para este carrito, y cuántas veces (null / 0 = nunca)
+  whatsappSentAt DateTime?
+  whatsappCount  Int       @default(0)
 }
 
 // Personas que pidieron no recibir más recordatorios de carrito (link de baja del mail)

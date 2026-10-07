@@ -52,6 +52,21 @@ async function main() {
   await t.resetBaseTheme(b1.id);
   base = await prisma.theme.findUniqueOrThrow({ where: { id: b1.id } });
   assert.notEqual((base.config as { colors: { primary: string } }).colors.primary, '#123456');
+  // un solo aspecto a la vez: activar una campaña apaga la que se veía; "activar el base" las apaga a todas
+  await prisma.theme.deleteMany({ where: { isBase: false } });
+  const nav = await t.createThemeFromTemplate(''); const bf = await t.createThemeFromTemplate('');
+  const prog = await prisma.theme.create({ data: { name: 'Futura', enabled: true, startsAt: new Date(Date.now() + 5 * 86400_000), config: {} } });
+  await t.activateTheme(nav.id);
+  await t.activateTheme(bf.id);
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: nav.id } })).enabled, false, 'activar una campaña apaga la anterior');
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bf.id } })).enabled, true);
+  await t.activateTheme(nav.id);
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bf.id } })).enabled, false);
+  await t.activateBaseTheme();
+  assert.equal(await prisma.theme.count({ where: { isBase: false, enabled: true, startsAt: { lte: new Date() } } }), 0, 'el base apaga las campañas visibles');
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: prog.id } })).enabled, true, 'las programadas a futuro no se tocan');
+  const rest = await prisma.theme.findMany({ where: { isBase: false } });
+  assert.equal(pickActiveTheme(rest), null, 'sin campañas vigentes se ve el aspecto base');
   console.log('themes e2e OK');
   await prisma.$disconnect();
 }

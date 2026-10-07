@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { formatMoneyWith } from "@/lib/money";
 import { Badge } from "@/components/admin/Badge";
-import { WhatsAppIcon } from "@/components/icons";
+import { WhatsAppSendLink } from "@/components/admin/WhatsAppSendLink";
+import { WhatsAppSentCell } from "@/components/admin/WhatsAppSentCell";
 import { buildWhatsAppLink, isLikelyPhone } from "@/lib/whatsapp";
 import { siteUrl } from "@/lib/siteUrl";
 import { CopyEmailsButton } from "./CopyEmailsButton";
 import { UserTypeFilter } from "./UserTypeFilter";
-import { deleteAbandonedCart, cleanupOldAbandonedCarts } from "./actions";
+import { deleteAbandonedCart, cleanupOldAbandonedCarts, markCartWhatsApp } from "./actions";
 import { CartRecoveryPanel } from "./CartRecoveryPanel";
 import { getMailSender } from "@/lib/mailer";
 import { getUsageStatus } from "@/lib/usage";
@@ -101,7 +102,7 @@ export default async function AdminCarritosAbandonadosPage({
       </div>
 
       <div className="mt-6 min-h-0 flex-1 overflow-auto rounded-xl border border-black/10 bg-white">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-left text-sm">
           <thead className="sticky top-0 bg-white">
             <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-brand-muted">
               <th className="px-4 py-3 font-semibold">Cliente</th>
@@ -110,6 +111,7 @@ export default async function AdminCarritosAbandonadosPage({
               <th className="px-4 py-3 font-semibold">Total</th>
               <th className="px-4 py-3 font-semibold">Última actividad</th>
               <th className="px-4 py-3 font-semibold">Mail automático</th>
+              <th className="px-4 py-3 font-semibold">WhatsApp</th>
               <th className="px-4 py-3 font-semibold" />
             </tr>
           </thead>
@@ -150,22 +152,20 @@ export default async function AdminCarritosAbandonadosPage({
                   <td className="px-4 py-3 text-brand-pink-dark">{fm(cart.total)}</td>
                   <td className="px-4 py-3 text-brand-muted">{timeAgo(cart.lastActive)}</td>
                   <td className="px-4 py-3 text-xs text-brand-muted">{cart.recoveryEmailSentAt ? `Enviado ${timeAgo(cart.recoveryEmailSentAt)}` : "—"}</td>
+                  <td className="px-4 py-3 text-xs">
+                    <WhatsAppSentCell date={cart.whatsappSentAt} count={cart.whatsappCount} />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-3">
                       {phone && isLikelyPhone(phone) && (
-                        <a
+                        <WhatsAppSendLink
+                          sent={Boolean(cart.whatsappSentAt)}
+                          onSent={markCartWhatsApp.bind(null, cart.id)}
                           href={buildWhatsAppLink(
                             phone,
                             `Hola ${cart.user?.name ?? cart.name ?? ""}! Vimos que dejaste ${items.length === 1 ? items[0]?.name ?? "un producto" : `${items.length} productos`} en tu carrito de ${storeNameOf(settings)}. ¿Te ayudamos a completar la compra? ${base}/carrito?recuperar=${cart.id}`
                           )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Escribir por WhatsApp"
-                          className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
-                        >
-                          <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" />
-                          WhatsApp
-                        </a>
+                        />
                       )}
                       <form action={deleteAbandonedCart.bind(null, cart.id)}>
                         <button
@@ -182,7 +182,7 @@ export default async function AdminCarritosAbandonadosPage({
             })}
             {carts.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-brand-muted">
+                <td colSpan={8} className="px-4 py-8 text-center text-brand-muted">
                   No hay carritos abandonados por ahora.
                 </td>
               </tr>

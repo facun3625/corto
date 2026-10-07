@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { activateTheme, openBaseTheme, resetBaseTheme, createThemeFromTemplate, deactivateTheme, deleteTheme, duplicateTheme, scheduleTheme } from "./actions";
+import { activateBaseTheme, activateTheme, openBaseTheme, resetBaseTheme, createThemeFromTemplate, deactivateTheme, deleteTheme, duplicateTheme, scheduleTheme } from "./actions";
 import { useConfirm } from "@/lib/useConfirm";
 
 const btn = "cursor-pointer rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand-soft disabled:opacity-50";
@@ -52,31 +52,23 @@ export function ThemeCardActions({ id, enabled, hasSchedule, isLive, expired }: 
   );
 }
 
-export function NewFromTemplate({ templates }: { templates: { key: string; name: string; description: string }[] }) {
+export function NewTheme() {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const create = (key: string) => start(async () => { const { id } = await createThemeFromTemplate(key); router.push(`/admin/temas/${id}`); });
   return (
-    <div className="flex flex-wrap gap-2">
-      {templates.map((t) => (
-        <button key={t.key} disabled={pending} title={t.description} onClick={() => create(t.key)} className="cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink hover:border-brand-pink hover:text-brand-pink-dark disabled:opacity-50">
-          {t.name}
-        </button>
-      ))}
-      <button disabled={pending} onClick={() => create("")} className="cursor-pointer rounded-full border border-dashed border-black/20 px-4 py-2 text-sm text-brand-muted hover:border-brand-pink disabled:opacity-50">
-        En blanco
-      </button>
-    </div>
+    <button disabled={pending} onClick={() => start(async () => { const { id } = await createThemeFromTemplate(""); router.push(`/admin/temas/${id}`); })} className={btnPrimary}>
+      + Crear tema nuevo
+    </button>
   );
 }
 
-// Aspecto base: lo que se ve cuando no hay ninguna campaña activa. Se edita acá; no tiene fechas ni se puede borrar.
+// Aspecto base: lo que se ve cuando no hay ninguna campaña activa. Se edita acá; no tiene fechas ni se puede borrar. Si hay una campaña activa, "Activar aspecto base" la apaga y vuelve a este aspecto.
 export function BaseThemeCard({ baseId, colors, campaignActive }: { baseId: string | null; colors: string[] | null; campaignActive: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [confirm, dialog] = useConfirm();
   return (
-    <div className="mt-6 overflow-hidden rounded-xl border border-black/10 bg-white">
+    <div className={`mt-6 overflow-hidden rounded-xl border-2 bg-white ${campaignActive ? "border-black/10" : "border-green-600"}`}>
       {dialog}
       {colors && (
         <div className="flex h-8">
@@ -87,16 +79,26 @@ export function BaseThemeCard({ baseId, colors, campaignActive }: { baseId: stri
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="min-w-0">
-          <p className="font-semibold text-brand-ink">Aspecto base de la tienda</p>
-          <p className="text-xs text-brand-muted">
-            Es el aspecto de siempre: se ve cuando no hay ninguna campaña activa{campaignActive ? " (ahora hay una campaña encima)" : ""}. Cambiale colores, tipografía, barra de anuncio, portada y banners.
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold text-brand-ink">Aspecto base de la tienda</p>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${campaignActive ? "bg-gray-100 text-gray-600" : "bg-green-600 text-white"}`}>
+              {campaignActive ? "Desactivado (hay una campaña activa)" : "● ACTIVO en la tienda"}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-brand-muted">
+            Es el aspecto de siempre: se ve cuando no hay ninguna campaña activa. Cambiale colores, tipografía, barra de anuncio, portada y banners.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {campaignActive && (
+            <button disabled={pending} className={btnPrimary} title="Apaga la campaña que se está viendo y vuelve al aspecto base" onClick={() => start(async () => { await activateBaseTheme(); router.refresh(); })}>
+              Activar aspecto base
+            </button>
+          )}
           {baseId && <a href={`/api/admin/themes/preview?id=${baseId}`} className={btn}>Vista previa</a>}
           <button
             disabled={pending}
-            className={btnPrimary}
+            className={campaignActive ? btn : btnPrimary}
             onClick={() => start(async () => { const { id } = await openBaseTheme(); router.push(`/admin/temas/${id}`); })}
           >
             Editar aspecto base

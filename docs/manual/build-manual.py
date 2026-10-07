@@ -214,7 +214,7 @@ add(G4, "carritos", "Carritos abandonados", "/admin/carritos-abandonados",
     "Los clientes que pusieron productos en el carrito y no terminaron la compra. Podés contactarlos a mano o dejar que la tienda lo haga sola.",
     shot("carritos", "/admin/carritos-abandonados") + points([
         "Ver qué dejó cada persona, el total y hace cuánto fue su última actividad.",
-        "Escribirles por <b>WhatsApp</b> con un mensaje ya armado y el link para retomar el carrito.",
+        "Escribirles por <b>WhatsApp</b> con un mensaje ya armado y el link para retomar el carrito. Al tocar el botón queda registrado <b>la fecha, la hora y cuántas veces</b> se les escribió; si ya se les escribió, el botón dice “Reenviar”.",
         "Copiar los mails de la lista para una campaña.",
         "Limpiar los carritos viejos.",
     ]) + sub("Recuperación automática por mail", "Un interruptor: si alguien deja productos y no compra en las horas que elijas, recibe un mail con el link para retomar su carrito.", "carritos-auto", "", "mid") + callout(
@@ -224,7 +224,7 @@ add(G4, "lista-espera", "Lista de espera", "/admin/lista-espera",
     "Clientes que se anotaron con “Avisarme cuando haya stock” en un producto agotado.",
     shot("lista-espera", "/admin/lista-espera") + points([
         "Ver quién espera qué producto y desde cuándo.",
-        "Avisarles por WhatsApp o copiar sus mails.",
+        "Avisarles por WhatsApp (queda anotado cuándo y cuántas veces, en la columna <b>WhatsApp</b>) o copiar sus mails.",
         "El aviso automático por mail sale solo cuando reponés existencia (ver <a href=\"#mailing\">Mailing → Disponibilidad</a>).",
     ]))
 
@@ -289,12 +289,13 @@ add(G5, "puntos", "Puntos", "/admin/puntos", "Los clientes acumulan puntos con c
     ]))
 
 # ------------------------------------------------------------------ ASPECTO
-add(G6, "temas", "Temas y campañas", "/admin/temas", "Cambiá la identidad visual de la tienda para una campaña (Navidad, Black Friday, Hot Sale…) con programación automática.",
+add(G6, "temas", "Temas y campañas", "/admin/temas", "Cambiá la identidad visual de la tienda para una campaña (Navidad, Black Friday, Hot Sale…) con programación automática. Se ve un solo aspecto a la vez.",
     shot("temas", "/admin/temas") + points([
-        "Elegir una plantilla (Black Friday, Navidad, Día de la Madre…) o empezar de cero.",
-        "<b>Programar</b> con fecha de inicio y fin: la tienda cambia sola y vuelve a su aspecto base al terminar.",
-        "<b>Vista previa</b> antes de publicar, sin que los clientes lo vean.",
-        "Duplicar un tema, activarlo o apagarlo en cualquier momento.",
+        "<b>Aspecto base de la tienda:</b> es el de siempre. Muestra la etiqueta <b>ACTIVO</b> cuando no hay ninguna campaña vigente y se edita desde su tarjeta.",
+        "<b>Crear tema nuevo:</b> arma una campaña desde cero; queda apagada hasta que la actives.",
+        "<b>Guardar y activar</b> la muestra ya y apaga el aspecto base (y cualquier otra campaña). Con fechas, <b>Guardar y programar</b> la hace entrar y salir sola.",
+        "<b>Activar aspecto base</b> apaga la campaña que se ve y vuelve al aspecto de siempre; la campaña queda guardada para usarla otra vez.",
+        "<b>Vista previa</b> antes de publicar, sin que los clientes lo vean. También podés duplicar, apagar o eliminar cada tema.",
     ]) + sub("Editar el aspecto", "Colores, tipografías, botones, barra de anuncio, slider de portada y tarjetas destacadas, con vista previa en vivo.", "tema-editar", "", "mid"))
 
 add(G6, "paginas", "Páginas", "/admin/paginas", "Quiénes somos, contacto y textos legales. Las que activás aparecen en el pie de página.",
@@ -320,7 +321,7 @@ add(G7, "clientes", "Clientes y usuarios", "/admin/usuarios", "Todas las cuentas
     ]) + sub("Ficha del cliente", "Resumen de compras, segmentos a los que pertenece, pedidos, puntos y beneficios utilizados.", "cliente-ficha", "", "mid")
     + sub("Nuevo administrador", "Entra al panel con su mail y contraseña inicial. Si el mail ya tiene cuenta, esa cuenta pasa a ser administradora.", "nuevo-admin", "", "narrow")
     + sub("Restablecer contraseña", "Definí una contraseña nueva o mandá un link por mail para que la persona la cree.", "reset-password", "", "narrow")
-    + callout("<b>Roles:</b> <b>Cliente</b> (solo compra), <b>Administrador</b> (gestiona la tienda) y <b>Superadministrador</b> (además maneja correo, imágenes, copias de seguridad y consumo)."))
+    + callout("<b>Roles:</b> <b>Cliente</b> (solo compra), <b>Administrador</b> (gestiona la tienda) y <b>Superadministrador</b> (además maneja las copias de seguridad y el consumo)."))
 
 add(G7, "segmentos", "Segmentos", "/admin/segmentos", "Grupos de clientes que se arman solos según su comportamiento. Los usás para filtrar clientes y como audiencia en Mailing.",
     shot("segmentos", "/admin/segmentos", "mid") + points([
@@ -339,13 +340,11 @@ cfg = [
     ("config-general", "General", "cfg-general", "Logo del encabezado, logo del pie y <b>favicon</b> (el ícono de la pestaña y de la web app). También el modo mantenimiento: muestra una pantalla de “volvemos pronto” a los clientes, mientras los administradores siguen entrando."),
     ("config-beneficios", "Beneficios", "cfg-beneficios", "La franja de beneficios bajo el slider del inicio (envíos, cuotas, retiro…): de 1 a 6 ítems con ícono, título y subtítulo."),
     ("config-franquicia", "Franquicia", "cfg-franquicia", "El <b>nombre de la tienda</b> y la sucursal o lugar. Se usa en los mails, en el encabezado, en los mensajes y como nombre de la web app."),
-    ("config-correo", "Correo", "cfg-correo", "Con qué proveedor sale el mail de la tienda (SMTP propio o Resend), remitente y envío de prueba. Solo superadministrador."),
-    ("config-imagenes", "Imágenes (R2)", "cfg-imagenes", "Dónde se guardan las fotos y videos. Sin configurar se guardan en el servidor; con Cloudflare R2 se guardan en la nube con dominio propio. Botón para probar la conexión. Solo superadministrador."),
     ("config-copias", "Copias de seguridad", "cfg-copias", "Copias cifradas de toda la base (productos, pedidos, clientes y configuración). Hacés una copia al instante y se conservan las últimas; se descargan para guardarlas fuera del servidor. Solo superadministrador."),
     ("config-mail-compra", "Mail de compra", "cfg-mail-compra", "Texto de bienvenida del mail que recibe el cliente al comprar y las notas según el medio de pago. Lo que dejás vacío usa el texto por defecto."),
     ("config-checkout", "Checkout y mensajes", "cfg-checkout", "Un aviso opcional arriba del checkout (por ejemplo “los pedidos de después de las 18 h salen al día siguiente”) y los mensajes de la pantalla de pedido registrado."),
     ("config-telegram", "Telegram", "cfg-telegram", "Cada pedido nuevo te llega al instante a un grupo de Telegram. Cargás el token del bot y el ID del chat, y probás con un botón."),
-    ("config-ia", "Vendedora IA", "cfg-ia", "El asistente del chat de la tienda: elegís el proveedor y el modelo, cargás la clave (queda guardada en el servidor y no se muestra), el nombre, el saludo y las instrucciones de venta. La vendedora solo recomienda productos reales del catálogo y con existencia."),
+    ("config-ia", "Vendedora IA", "cfg-ia", "El asistente del chat de la tienda: lo prendés o apagás, y definís el nombre, el saludo, las instrucciones de venta y el horario de WhatsApp para hablar con una persona. La vendedora solo recomienda productos reales del catálogo y con existencia."),
     ("config-consumo", "Consumo", "cfg-consumo", "Cuántos mails y cuántos tokens de IA se usaron este mes frente al cupo. Podés poner un tope mensual; al llegar, se frenan las campañas o la IA. El contador arranca de cero el día 1. Solo superadministrador."),
     ("config-popup", "Pop-up", "cfg-popup", "Un cartel promocional al entrar: dónde se muestra (solo inicio o todo el sitio), con qué frecuencia, título y texto con formato."),
 ]

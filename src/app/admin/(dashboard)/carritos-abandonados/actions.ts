@@ -15,6 +15,16 @@ export async function deleteAbandonedCart(id: string) {
   revalidatePath("/admin/carritos-abandonados");
 }
 
+// Anota que se abrió un WhatsApp para este carrito. lastActive se reescribe tal cual: es @updatedAt y, si no, este
+// registro lo haría pasar por "actividad del cliente".
+export async function markCartWhatsApp(id: string) {
+  await requireAdmin();
+  const cart = await prisma.abandonedCart.findUnique({ where: { id }, select: { lastActive: true } });
+  if (!cart) return;
+  await prisma.abandonedCart.update({ where: { id }, data: { whatsappSentAt: new Date(), whatsappCount: { increment: 1 }, lastActive: cart.lastActive } });
+  revalidatePath("/admin/carritos-abandonados");
+}
+
 // Sin cron todavía — botón manual para limpiar lo que quedó viejo (+30 días
 // sin actividad, casi seguro que ya no sirve para contactar a nadie).
 export async function cleanupOldAbandonedCarts() {

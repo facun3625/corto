@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { createBaseTheme, ensureBaseTheme } from "@/lib/baseTheme";
-import { configFromTemplate, DEFAULT_THEME_CONFIG, sanitizeThemeConfig, THEME_TEMPLATES, type ThemeConfig } from "@/lib/themes";
+import { configFromTemplate, DEFAULT_THEME_CONFIG, isThemeLive, sanitizeThemeConfig, THEME_TEMPLATES, type ThemeConfig } from "@/lib/themes";
 
 export type ThemeInput = { id?: string; name: string; description: string; startsAt: string; endsAt: string; config: ThemeConfig };
 
@@ -18,6 +18,22 @@ const toDate = (v: string): Date | null => {
 function refresh() {
   revalidatePath("/admin/temas");
   revalidatePath("/", "layout");
+}
+
+// Solo puede haber un aspecto a la vez: al activar uno, se apagan las campañas que se estaban viendo (las programadas
+// para más adelante quedan como estaban). Activar el aspecto base es apagar todas las que se ven ahora.
+async function switchOffLiveCampaigns(exceptId?: string) {
+  const enabled = await prisma.theme.findMany({ where: { enabled: true, isBase: false, ...(exceptId ? { id: { not: exceptId } } : {}) }, select: { id: true, enabled: true, startsAt: true, endsAt: true } });
+  const liveIds = enabled.filter((t) => isThemeLive(t)).map((t) => t.id);
+  if (liveIds.length) await prisma.theme.updateMany({ where: { id: { in: liveIds } }, data: { enabled: false } });
+}
+
+// "Activar" el aspecto base: apaga la campaña que se ve y la tienda vuelve a su aspecto de siempre.
+export async function activateBaseTheme() {
+  await requireAdmin();
+  await switchOffLiveCampaigns();
+  await logAdminAction("theme.activate", { detail: "Aspecto base" });
+  refresh();
 }
 
 // activate = "Guardar y activar": además de guardar, deja el tema encendido. Sin fechas queda vigente desde ya (y pasa
@@ -60,6 +76,7 @@ export async function saveTheme(input: ThemeInput, activate = false): Promise<{ 
 
   const data = { name, description: input.description.trim().slice(0, 300) || null, startsAt, endsAt, config: sanitizeThemeConfig(input.config) as object, ...(activate ? { enabled: true, startsAt: startsAt ?? new Date() } : {}) };
   const theme = input.id ? await prisma.theme.update({ where: { id: input.id }, data }) : await prisma.theme.create({ data });
+  if (activate) await switchOffLiveCampaigns(theme.id);
   await logAdminAction(activate ? "theme.activate" : "theme.save", { targetType: "theme", targetId: theme.id, detail: name });
   refresh();
   return { ok: true, id: theme.id };
@@ -87,6 +104,7 @@ export async function activateTheme(id: string) {
   const theme = await prisma.theme.findFirst({ where: { id, isBase: false }, select: { name: true, endsAt: true } });
   if (!theme) return;
   await prisma.theme.update({ where: { id }, data: { enabled: true, startsAt: new Date(), endsAt: theme.endsAt && theme.endsAt > new Date() ? theme.endsAt : null } });
+  await switchOffLiveCampaigns(id);
   await logAdminAction("theme.activate", { targetType: "theme", targetId: id, detail: theme.name });
   refresh();
 }

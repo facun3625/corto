@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { pickActiveTheme, sanitizeThemeConfig, themeStatus, THEME_TEMPLATES, type ThemeStatus } from "@/lib/themes";
-import { ThemeCardActions, NewFromTemplate, BaseThemeCard } from "./ThemeActions";
+import { pickActiveTheme, sanitizeThemeConfig, themeStatus, type ThemeStatus } from "@/lib/themes";
+import { ThemeCardActions, NewTheme, BaseThemeCard } from "./ThemeActions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function TemasPage() {
       <p className="mt-1 text-sm text-brand-muted">
         Cambiá la identidad visual de la tienda para una campaña (Navidad, Black Friday, Hot Sale…): colores, tipografía de títulos,
         botones, fondo, barra de anuncio, portada y banners. Probalo con <b>Vista previa</b> (solo lo ves vos), activalo con un clic o
-        programá cuándo empieza y termina: cuando pasa la fecha, la tienda vuelve sola a su aspecto de siempre.
+        programá cuándo empieza y termina: cuando pasa la fecha, la tienda vuelve sola a su aspecto base. Se ve un solo aspecto a la vez.
       </p>
 
       <div className={`mt-5 rounded-xl border-2 p-5 ${active ? "border-green-600 bg-green-50" : "border-black/10 bg-white"}`}>
@@ -57,16 +57,16 @@ export default async function TemasPage() {
       <div className="mt-6 rounded-xl border border-black/10 bg-white p-4 text-sm text-brand-muted">
         <p className="font-semibold text-brand-ink">Cómo funciona</p>
         <ol className="mt-1 list-decimal pl-5">
-          <li>Elegí una plantilla (o “En blanco”): se crea un tema <b>apagado</b> y se abre para que lo ajustes.</li>
-          <li>Tocá <b>Guardar y activar</b> para que se vea ya, o cargá fechas y <b>Guardar y programar</b>.</li>
-          <li>Un tema <b>apagado no se ve</b> en la tienda. Solo el que dice <b className="text-green-700">ACTIVO</b> se está mostrando.</li>
+          <li>Creá un tema nuevo: queda <b>apagado</b> y se abre para que lo ajustes.</li>
+          <li>Tocá <b>Guardar y activar</b> para que se vea ya (el aspecto base y cualquier otra campaña se desactivan), o cargá fechas y <b>Guardar y programar</b>.</li>
+          <li>Para volver al aspecto de siempre, tocá <b>Activar aspecto base</b>: la campaña se apaga y queda guardada para usarla otra vez.</li>
         </ol>
       </div>
 
-      <h2 className="mb-2 mt-8 font-semibold text-brand-ink">1. Crear un tema nuevo</h2>
-      <NewFromTemplate templates={THEME_TEMPLATES.map((t) => ({ key: t.key, name: t.name, description: t.description }))} />
-
-      <h2 className="mb-2 mt-8 font-semibold text-brand-ink">2. Tus temas</h2>
+      <div className="mb-2 mt-8 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-semibold text-brand-ink">Tus campañas</h2>
+        <NewTheme />
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {themes.map((t) => {
           const config = sanitizeThemeConfig(t.config);
@@ -92,7 +92,7 @@ export default async function TemasPage() {
             </div>
           );
         })}
-        {themes.length === 0 && <p className="rounded-xl border border-dashed border-black/15 bg-white p-6 text-center text-sm text-brand-muted sm:col-span-2">Todavía no creaste ningún tema. Elegí una plantilla de arriba para empezar.</p>}
+        {themes.length === 0 && <p className="rounded-xl border border-dashed border-black/15 bg-white p-6 text-center text-sm text-brand-muted sm:col-span-2">Todavía no creaste ninguna campaña. Tocá “Crear tema nuevo” para empezar.</p>}
       </div>
     </div>
   );

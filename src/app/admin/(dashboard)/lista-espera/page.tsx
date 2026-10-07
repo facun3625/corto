@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { WhatsAppIcon } from "@/components/icons";
+import { WhatsAppSendLink } from "@/components/admin/WhatsAppSendLink";
+import { WhatsAppSentCell } from "@/components/admin/WhatsAppSentCell";
 import { buildWhatsAppLink, isLikelyPhone } from "@/lib/whatsapp";
 import { CopyEmailsButton } from "./CopyEmailsButton";
-import { deleteWaitlistEntry } from "./actions";
+import { deleteWaitlistEntry, markWaitlistWhatsApp } from "./actions";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { storeNameOf } from "@/lib/storeName";
 
@@ -32,6 +33,7 @@ export default async function AdminListaEsperaPage() {
               <th className="px-4 py-3 font-semibold">Categoría</th>
               <th className="px-4 py-3 font-semibold">Cliente</th>
               <th className="px-4 py-3 font-semibold">Fecha</th>
+              <th className="px-4 py-3 font-semibold">WhatsApp</th>
               <th className="px-4 py-3 font-semibold" />
             </tr>
           </thead>
@@ -48,22 +50,20 @@ export default async function AdminListaEsperaPage() {
                   </p>
                 </td>
                 <td className="px-4 py-3 text-brand-muted">{e.createdAt.toLocaleDateString("es-AR")}</td>
+                <td className="px-4 py-3 text-xs">
+                  <WhatsAppSentCell date={e.whatsappSentAt} count={e.whatsappCount} />
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-3">
                     {e.phone && isLikelyPhone(e.phone) && (
-                      <a
+                      <WhatsAppSendLink
+                        sent={Boolean(e.whatsappSentAt)}
+                        onSent={markWaitlistWhatsApp.bind(null, e.id)}
                         href={buildWhatsAppLink(
                           e.phone,
                           `Hola ${e.name}! Te escribimos de ${storeNameOf(settings)} porque estabas esperando que vuelva el stock de "${e.productName}" — ¡ya está disponible!`
                         )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Escribir por WhatsApp"
-                        className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
-                      >
-                        <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" />
-                        WhatsApp
-                      </a>
+                      />
                     )}
                     <form action={deleteWaitlistEntry.bind(null, e.id)}>
                       <button
@@ -79,7 +79,7 @@ export default async function AdminListaEsperaPage() {
             ))}
             {entries.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-brand-muted">
+                <td colSpan={6} className="px-4 py-8 text-center text-brand-muted">
                   Todavía no hay nadie anotado.
                 </td>
               </tr>
