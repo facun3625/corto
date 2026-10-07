@@ -68,53 +68,53 @@ export function BaseThemeCard({ baseId, colors, campaignActive }: { baseId: stri
   const [pending, start] = useTransition();
   const [confirm, dialog] = useConfirm();
   return (
-    <div className={`mt-6 overflow-hidden rounded-xl border-2 bg-white ${campaignActive ? "border-black/10" : "border-green-600"}`}>
+    <div className={`mt-6 rounded-xl border bg-white p-4 sm:p-5 ${campaignActive ? "border-black/10" : "border-green-600/50 ring-1 ring-green-600/20"}`}>
       {dialog}
-      {colors && (
-        <div className="flex h-8">
-          {colors.map((c, i) => (
-            <div key={i} className="flex-1" style={{ backgroundColor: c }} />
-          ))}
-        </div>
-      )}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
+        {colors && (
+          <div className="grid h-14 w-14 shrink-0 grid-cols-2 overflow-hidden rounded-lg border border-black/10">
+            {colors.slice(0, 4).map((c, i) => (
+              <div key={i} style={{ backgroundColor: c }} />
+            ))}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-semibold text-brand-ink">Aspecto base de la tienda</p>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${campaignActive ? "bg-gray-100 text-gray-600" : "bg-green-600 text-white"}`}>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${campaignActive ? "bg-gray-100 text-gray-600" : "bg-green-600 text-white"}`}>
               {campaignActive ? "Desactivado (hay una campaña activa)" : "● ACTIVO en la tienda"}
             </span>
           </div>
           <p className="mt-1 text-xs text-brand-muted">
             Es el aspecto de siempre: se ve cuando no hay ninguna campaña activa. Cambiale colores, tipografía, barra de anuncio, portada y banners.
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {campaignActive && (
-            <button disabled={pending} className={btnPrimary} title="Apaga la campaña que se está viendo y vuelve al aspecto base" onClick={() => start(async () => { await activateBaseTheme(); router.refresh(); })}>
-              Activar aspecto base
-            </button>
-          )}
-          {baseId && <a href={`/api/admin/themes/preview?id=${baseId}`} className={btn}>Vista previa</a>}
-          <button
-            disabled={pending}
-            className={campaignActive ? btn : btnPrimary}
-            onClick={() => start(async () => { const { id } = await openBaseTheme(); router.push(`/admin/temas/${id}`); })}
-          >
-            Editar aspecto base
-          </button>
-          {baseId && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {campaignActive && (
+              <button disabled={pending} className={btnPrimary} title="Apaga la campaña que se está viendo y vuelve al aspecto base" onClick={() => start(async () => { await activateBaseTheme(); router.refresh(); })}>
+                Activar aspecto base
+              </button>
+            )}
+            {baseId && <a href={`/api/admin/themes/preview?id=${baseId}`} className={btn}>Vista previa</a>}
             <button
               disabled={pending}
-              className={btn}
-              onClick={async () =>
-                (await confirm({ title: "¿Restablecer el aspecto base?", message: "Vuelve a los colores y estilos originales de la tienda.", confirmLabel: "Restablecer", danger: true })) &&
-                start(async () => { await resetBaseTheme(baseId); router.refresh(); })
-              }
+              className={campaignActive ? btn : btnPrimary}
+              onClick={() => start(async () => { const { id } = await openBaseTheme(); router.push(`/admin/temas/${id}`); })}
             >
-              Restablecer
+              Editar aspecto base
             </button>
-          )}
+            {baseId && (
+              <button
+                disabled={pending}
+                className={btn}
+                onClick={async () =>
+                  (await confirm({ title: "¿Restablecer el aspecto base?", message: "Vuelve a los colores y estilos originales de la tienda.", confirmLabel: "Restablecer", danger: true })) &&
+                  start(async () => { await resetBaseTheme(baseId); router.refresh(); })
+                }
+              >
+                Restablecer
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
