@@ -6,6 +6,8 @@ import { STOCK_MODE_LABEL, stockFieldsFor, stockModeOf, type StockMode } from "@
 const MODES: StockMode[] = ["available", "unavailable", "tracked"];
 
 const field = "w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
+// Versión de una sola línea (tabla de variantes): ancho fijo propio, sin el w-full de arriba que se pisaba con el ancho
+const compactField = "shrink-0 rounded-lg border border-black/10 px-2 py-1.5 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
 
 // Selector de existencia de un producto o variante: Hay existencia / No hay existencia / Controlar cantidad (con el número).
 // "compact" es la versión de una sola línea para la tabla de variantes.
@@ -34,7 +36,7 @@ export function StockModeControl({
       step="1"
       min={0}
       aria-label="Cantidad disponible"
-      className={compact ? `${field} w-20 px-2 py-1.5` : `${field} mt-2 w-32`}
+      className={compact ? `${compactField} w-16` : `${field} mt-2 w-32`}
       value={stock}
       onChange={(e) => onChange(stockFieldsFor("tracked", Number(e.target.value)))}
     />
@@ -42,8 +44,8 @@ export function StockModeControl({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1.5">
-        <select aria-label="Existencia" value={mode} onChange={(e) => pick(e.target.value as StockMode)} className={`${field} w-40 px-2 py-1.5`}>
+      <div className="flex items-center gap-1.5 whitespace-nowrap">
+        <select aria-label="Existencia" value={mode} onChange={(e) => pick(e.target.value as StockMode)} className={`${compactField} w-[11.5rem]`}>
           {MODES.map((m) => <option key={m} value={m}>{STOCK_MODE_LABEL[m]}</option>)}
         </select>
         {mode === "tracked" && quantity}

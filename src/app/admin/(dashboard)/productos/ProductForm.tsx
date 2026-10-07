@@ -116,6 +116,11 @@ export function ProductForm({
   });
 
   const tree = useMemo(() => flattenTree(categories), [categories]);
+  // Buscador de categorías (hay cientos) y nombres para mostrar las ya elegidas arriba de la lista
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const categoryNames = useMemo(() => new Map(tree.map(({ cat }) => [cat.id, cat.name])), [tree]);
+  const plain = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const visibleTree = categoryQuery.trim() ? tree.filter(({ cat }) => plain(cat.name).includes(plain(categoryQuery.trim()))) : tree;
   const termName = useMemo(() => new Map(attributes.flatMap((a) => a.terms.map((t) => [t.id, t.name] as const))), [attributes]);
   const isVariable = form.type === "variable";
 
@@ -269,174 +274,39 @@ export function ProductForm({
   }
 
   return (
-    <div className="flex flex-col gap-5 pb-24">
+    <div className="pb-24">
       {dialog}
-      <div className={card}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className={label}>Nombre</label>
-            <input className={field} value={form.name} onChange={(e) => set("name", e.target.value)} />
-          </div>
-          <div>
-            <label className={label}>Tipo</label>
-            <select className={field} value={form.type} onChange={(e) => set("type", e.target.value as ProductInput["type"])}>
-              <option value="simple">Simple (precio y stock únicos)</option>
-              <option value="variable">Variable (talle, color, etc.)</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>Estado</label>
-            <select className={field} value={form.status} onChange={(e) => set("status", e.target.value as ProductInput["status"])}>
-              <option value="published">Publicado</option>
-              <option value="draft">Borrador (no se ve en la tienda)</option>
-            </select>
-          </div>
-          <div>
-            <label className={label}>SKU</label>
-            <input className={field} value={form.sku} onChange={(e) => set("sku", e.target.value)} />
-          </div>
-          <div>
-            <label className={label}>URL amigable (slug)</label>
-            <input className={field} value={form.slug} placeholder="se genera del nombre" onChange={(e) => set("slug", e.target.value)} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Descripción corta</label>
-            <RichTextEditor
-              name="shortDescription"
-              compact
-              initialValue={initial.shortDescription}
-              onChange={(html) => set("shortDescription", html)}
-              uploadImage={uploadRichImage}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Descripción</label>
-            <RichTextEditor
-              name="description"
-              initialValue={initial.description}
-              onChange={(html) => set("description", html)}
-              uploadImage={uploadRichImage}
-            />
-          </div>
-        </div>
-      </div>
-
-      {!isVariable && (
-        <div className={card}>
-          <p className="mb-3 text-sm font-semibold text-brand-ink">Precio y stock ({currency})</p>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div>
-              <label className={label}>Precio</label>
-              <input type="number" min={0} step="0.01" className={field} value={form.price} onChange={(e) => set("price", Number(e.target.value))} />
-            </div>
-            <div>
-              <label className={label}>Precio anterior (tachado)</label>
-              <input type="number" min={0} step="0.01" className={field} value={form.compareAtPrice ?? ""} onChange={(e) => set("compareAtPrice", num(e.target.value))} />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={label}>Existencia</label>
-              <StockModeControl manageStock={form.manageStock} stock={form.stock} onChange={(f) => setForm((prev) => ({ ...prev, ...f }))} />
+      {/* Dos columnas: el contenido del producto a la izquierda (70 %) y su organización a la derecha (30 %); en pantallas
+          angostas se apilan */}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] xl:items-start">
+        <div className="flex min-w-0 flex-col gap-5">
+          <div className={card}>
+            <div className="grid gap-4">
+              <div>
+                <label className={label}>Nombre</label>
+                <input className={`${field} text-base`} value={form.name} onChange={(e) => set("name", e.target.value)} />
+              </div>
+              <div>
+                <label className={label}>Descripción corta</label>
+                <RichTextEditor
+                  name="shortDescription"
+                  compact
+                  initialValue={initial.shortDescription}
+                  onChange={(html) => set("shortDescription", html)}
+                  uploadImage={uploadRichImage}
+                />
+              </div>
+              <div>
+                <label className={label}>Descripción</label>
+                <RichTextEditor
+                  name="description"
+                  initialValue={initial.description}
+                  onChange={(html) => set("description", html)}
+                  uploadImage={uploadRichImage}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <div className={card}>
-        <p className="mb-1 text-sm font-semibold text-brand-ink">Costo y promoción</p>
-        <p className="mb-3 text-xs text-brand-muted">
-          El costo es solo para vos. El precio promocional se aplica solo entre las fechas elegidas (vacías = sin límite) y el
-          precio normal se muestra tachado.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div>
-            <label className={label}>Precio de costo</label>
-            <input type="number" min={0} step="0.01" className={field} value={form.costPrice ?? ""} onChange={(e) => set("costPrice", num(e.target.value))} />
-          </div>
-          {!isVariable && (
-            <div>
-              <label className={label}>Precio promocional</label>
-              <input type="number" min={0} step="0.01" className={field} value={form.promoPrice ?? ""} onChange={(e) => set("promoPrice", num(e.target.value))} />
-            </div>
-          )}
-          <div>
-            <label className={label}>Promoción desde</label>
-            <input type="datetime-local" className={field} value={isoToLocalInput(form.promoStartsAt)} onChange={(e) => set("promoStartsAt", localInputToIso(e.target.value))} />
-          </div>
-          <div>
-            <label className={label}>Promoción hasta</label>
-            <input type="datetime-local" className={field} value={isoToLocalInput(form.promoEndsAt)} onChange={(e) => set("promoEndsAt", localInputToIso(e.target.value))} />
-          </div>
-        </div>
-        {isVariable && <p className="mt-2 text-xs text-brand-muted">En los productos variables el precio promocional se carga en cada variante (columna “Promo”) y usa estas fechas.</p>}
-      </div>
-
-      {isVariable && (
-        <div className={card}>
-          <p className="mb-1 text-sm font-semibold text-brand-ink">Variantes</p>
-          <p className="mb-4 text-xs text-brand-muted">
-            Elegí los atributos y sus valores, y generá las combinaciones. Cada una tiene su precio, stock y SKU.
-            {attributes.length === 0 && " Todavía no hay atributos: creálos en Atributos."}
-          </p>
-
-          <AttributePicker
-            attributes={attributes}
-            selectedIds={form.attributeIds}
-            chosen={chosen}
-            onAddAttribute={toggleAttribute}
-            onRemoveAttribute={removeAttribute}
-            onToggleTerm={toggleTerm}
-            onSetTerms={setTerms}
-          />
-
-          <button type="button" onClick={generateVariants} className="mt-4 cursor-pointer rounded-lg bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-pink-dark">
-            Generar variantes
-          </button>
-
-          {form.variants.length > 0 && (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-black/10 text-xs uppercase text-brand-muted">
-                    <th className="py-2 pr-2">Variante</th>
-                    <th className="px-2">SKU</th>
-                    <th className="px-2">Precio</th>
-                    <th className="px-2">Anterior</th>
-                    <th className="px-2">Promo</th>
-                    <th className="px-2">Stock</th>
-                    <th className="px-2">Imagen</th>
-                    <th className="px-2">Activa</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {form.variants.map((v, i) => (
-                    <tr key={v.id ?? v.termIds.join("-")} className="border-b border-black/5">
-                      <td className="py-2 pr-2 font-medium text-brand-ink">{v.termIds.map((t) => termName.get(t) ?? "?").join(" / ")}</td>
-                      <td className="px-2"><input className={field} value={v.sku} onChange={(e) => updateVariant(i, { sku: e.target.value })} /></td>
-                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.price} onChange={(e) => updateVariant(i, { price: Number(e.target.value) })} /></td>
-                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.compareAtPrice ?? ""} onChange={(e) => updateVariant(i, { compareAtPrice: num(e.target.value) })} /></td>
-                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.promoPrice ?? ""} onChange={(e) => updateVariant(i, { promoPrice: num(e.target.value) })} /></td>
-                      <td className="w-64 px-2"><StockModeControl compact manageStock={v.manageStock} stock={v.stock} onChange={(f) => updateVariant(i, f)} /></td>
-                      <td className="w-32 px-2">
-                        <select className={field} value={v.imageUrl ?? ""} onChange={(e) => updateVariant(i, { imageUrl: e.target.value || null })}>
-                          <option value="">—</option>
-                          {form.images.map((img, n) => (
-                            <option key={img.url} value={img.url}>Imagen {n + 1}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2"><input type="checkbox" checked={v.enabled} onChange={(e) => updateVariant(i, { enabled: e.target.checked })} /></td>
-                      <td className="px-2">
-                        <button type="button" onClick={() => set("variants", form.variants.filter((_, n) => n !== i))} className="cursor-pointer text-xs text-red-600 hover:underline">Quitar</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className={card}>
         <p className="mb-1 text-sm font-semibold text-brand-ink">Imágenes y videos</p>
@@ -474,46 +344,122 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className={card}>
-        <p className="mb-3 text-sm font-semibold text-brand-ink">Categorías</p>
-        {tree.length === 0 ? (
-          <p className="text-xs text-brand-muted">Todavía no hay categorías: creálas en Categorías.</p>
-        ) : (
-          <div className="flex max-h-64 flex-col gap-1 overflow-auto">
-            {tree.map(({ cat, depth }) => (
-              <label key={cat.id} className="flex items-center gap-2 text-sm text-brand-ink" style={{ paddingLeft: depth * 18 }}>
-                <input
-                  type="checkbox"
-                  checked={form.categoryIds.includes(cat.id)}
-                  onChange={(e) => set("categoryIds", e.target.checked ? [...form.categoryIds, cat.id] : form.categoryIds.filter((c) => c !== cat.id))}
-                />
-                {cat.name}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
 
-      <div className={card}>
-        <p className="mb-1 text-sm font-semibold text-brand-ink">Programar publicación</p>
-        <p className="mb-3 text-xs text-brand-muted">
-          Un producto en estado “Publicado” se ve desde la fecha de publicación hasta la de despublicación. Vacías = visible siempre.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={label}>Mostrar desde</label>
-            <input type="datetime-local" className={field} value={isoToLocalInput(form.publishAt)} onChange={(e) => set("publishAt", localInputToIso(e.target.value))} />
-          </div>
-          <div>
-            <label className={label}>Ocultar desde</label>
-            <input type="datetime-local" className={field} value={isoToLocalInput(form.unpublishAt)} onChange={(e) => set("unpublishAt", localInputToIso(e.target.value))} />
+      {!isVariable && (
+        <div className={card}>
+          <p className="mb-3 text-sm font-semibold text-brand-ink">Precio y existencia ({currency})</p>
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div>
+              <label className={label}>Precio</label>
+              <input type="number" min={0} step="0.01" className={field} value={form.price} onChange={(e) => set("price", Number(e.target.value))} />
+            </div>
+            <div>
+              <label className={label}>Precio anterior (tachado)</label>
+              <input type="number" min={0} step="0.01" className={field} value={form.compareAtPrice ?? ""} onChange={(e) => set("compareAtPrice", num(e.target.value))} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={label}>Existencia</label>
+              <StockModeControl manageStock={form.manageStock} stock={form.stock} onChange={(f) => setForm((prev) => ({ ...prev, ...f }))} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {isVariable && (
+        <div className={card}>
+          <p className="mb-1 text-sm font-semibold text-brand-ink">Variantes</p>
+          <p className="mb-4 text-xs text-brand-muted">
+            Elegí los atributos y sus valores, y generá las combinaciones. Cada una tiene su precio, existencia y SKU.
+            {attributes.length === 0 && " Todavía no hay atributos: creálos en Atributos."}
+          </p>
+
+          <AttributePicker
+            attributes={attributes}
+            selectedIds={form.attributeIds}
+            chosen={chosen}
+            onAddAttribute={toggleAttribute}
+            onRemoveAttribute={removeAttribute}
+            onToggleTerm={toggleTerm}
+            onSetTerms={setTerms}
+          />
+
+          <button type="button" onClick={generateVariants} className="mt-4 cursor-pointer rounded-lg bg-brand-pink px-4 py-2 text-sm font-semibold text-white hover:bg-brand-pink-dark">
+            Generar variantes
+          </button>
+
+          {form.variants.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[900px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-black/10 text-xs uppercase text-brand-muted">
+                    <th className="py-2 pr-2">Variante</th>
+                    <th className="px-2">SKU</th>
+                    <th className="px-2">Precio</th>
+                    <th className="px-2">Anterior</th>
+                    <th className="px-2">Promo</th>
+                    <th className="px-2">Existencia</th>
+                    <th className="px-2">Imagen</th>
+                    <th className="px-2">Activa</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.variants.map((v, i) => (
+                    <tr key={v.id ?? v.termIds.join("-")} className="border-b border-black/5">
+                      <td className="py-2 pr-2 font-medium text-brand-ink">{v.termIds.map((t) => termName.get(t) ?? "?").join(" / ")}</td>
+                      <td className="min-w-[8rem] px-2"><input className={field} value={v.sku} onChange={(e) => updateVariant(i, { sku: e.target.value })} /></td>
+                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.price} onChange={(e) => updateVariant(i, { price: Number(e.target.value) })} /></td>
+                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.compareAtPrice ?? ""} onChange={(e) => updateVariant(i, { compareAtPrice: num(e.target.value) })} /></td>
+                      <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.promoPrice ?? ""} onChange={(e) => updateVariant(i, { promoPrice: num(e.target.value) })} /></td>
+                      <td className="min-w-[17.5rem] px-2"><StockModeControl compact manageStock={v.manageStock} stock={v.stock} onChange={(f) => updateVariant(i, f)} /></td>
+                      <td className="w-32 px-2">
+                        <select className={field} value={v.imageUrl ?? ""} onChange={(e) => updateVariant(i, { imageUrl: e.target.value || null })}>
+                          <option value="">—</option>
+                          {form.images.map((img, n) => (
+                            <option key={img.url} value={img.url}>Imagen {n + 1}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-2"><input type="checkbox" checked={v.enabled} onChange={(e) => updateVariant(i, { enabled: e.target.checked })} /></td>
+                      <td className="px-2">
+                        <button type="button" onClick={() => set("variants", form.variants.filter((_, n) => n !== i))} className="cursor-pointer text-xs text-red-600 hover:underline">Quitar</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={card}>
-        <p className="mb-3 text-sm font-semibold text-brand-ink">Etiquetas</p>
-        <TagsInput tags={form.tags} onChange={(tags) => set("tags", tags)} suggestions={allTags} />
+        <p className="mb-1 text-sm font-semibold text-brand-ink">Costo y promoción</p>
+        <p className="mb-3 text-xs text-brand-muted">
+          El costo es solo para vos. El precio promocional se aplica solo entre las fechas elegidas (vacías = sin límite) y el
+          precio normal se muestra tachado.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div>
+            <label className={label}>Precio de costo</label>
+            <input type="number" min={0} step="0.01" className={field} value={form.costPrice ?? ""} onChange={(e) => set("costPrice", num(e.target.value))} />
+          </div>
+          {!isVariable && (
+            <div>
+              <label className={label}>Precio promocional</label>
+              <input type="number" min={0} step="0.01" className={field} value={form.promoPrice ?? ""} onChange={(e) => set("promoPrice", num(e.target.value))} />
+            </div>
+          )}
+          <div>
+            <label className={label}>Promoción desde</label>
+            <input type="datetime-local" className={field} value={isoToLocalInput(form.promoStartsAt)} onChange={(e) => set("promoStartsAt", localInputToIso(e.target.value))} />
+          </div>
+          <div>
+            <label className={label}>Promoción hasta</label>
+            <input type="datetime-local" className={field} value={isoToLocalInput(form.promoEndsAt)} onChange={(e) => set("promoEndsAt", localInputToIso(e.target.value))} />
+          </div>
+        </div>
+        {isVariable && <p className="mt-2 text-xs text-brand-muted">En los productos variables el precio promocional se carga en cada variante (columna “Promo”) y usa estas fechas.</p>}
       </div>
 
       <div className={card}>
@@ -523,27 +469,135 @@ export function ProductForm({
       </div>
 
       <div className={card}>
-        <p className="mb-3 text-sm font-semibold text-brand-ink">Envío y otros datos</p>
-        <div className="grid gap-4 sm:grid-cols-4">
-          {(["weight", "width", "height", "length"] as const).map((key) => (
-            <div key={key}>
-              <label className={label}>{{ weight: "Peso (kg)", width: "Ancho (cm)", height: "Alto (cm)", length: "Largo (cm)" }[key]}</label>
-              <input type="number" min={0} step="0.01" className={field} value={form[key] ?? ""} onChange={(e) => set(key, num(e.target.value))} />
+            <p className="mb-1 text-sm font-semibold text-brand-ink">Posicionamiento en buscadores (SEO)</p>
+            <p className="mb-3 text-xs text-brand-muted">Cómo aparece el producto en Google. Si lo dejás vacío se usa el nombre y la descripción.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={label}>Título SEO</label>
+                <input className={field} value={form.seoTitle} onChange={(e) => set("seoTitle", e.target.value)} />
+              </div>
+              <div>
+                <label className={label}>Descripción SEO</label>
+                <input className={field} value={form.seoDescription} onChange={(e) => set("seoDescription", e.target.value)} />
+              </div>
             </div>
-          ))}
-          <label className="flex items-end gap-2 pb-2 text-sm text-brand-ink sm:col-span-2">
-            <input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} />
-            Producto destacado
-          </label>
-          <div className="sm:col-span-2">
-            <label className={label}>Título SEO</label>
-            <input className={field} value={form.seoTitle} onChange={(e) => set("seoTitle", e.target.value)} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Descripción SEO</label>
-            <input className={field} value={form.seoDescription} onChange={(e) => set("seoDescription", e.target.value)} />
           </div>
         </div>
+
+        <aside className="flex min-w-0 flex-col gap-5">
+          <div className={card}>
+            <p className="mb-3 text-sm font-semibold text-brand-ink">Publicación</p>
+            <div className="grid gap-4">
+              <div>
+                <label className={label}>Estado</label>
+                <select className={field} value={form.status} onChange={(e) => set("status", e.target.value as ProductInput["status"])}>
+                  <option value="published">Publicado</option>
+                  <option value="draft">Borrador (no se ve en la tienda)</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-brand-ink">
+                <input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} />
+                Producto destacado
+              </label>
+              <details className="group rounded-lg border border-black/10 p-3" open={Boolean(form.publishAt || form.unpublishAt)}>
+                <summary className="cursor-pointer text-xs font-medium text-brand-ink">Programar publicación</summary>
+                <p className="mb-3 mt-2 text-xs text-brand-muted">
+                  Un producto “Publicado” se ve desde la fecha de publicación hasta la de despublicación. Vacías = visible siempre.
+                </p>
+                <div className="grid gap-3">
+                  <div>
+                    <label className={label}>Mostrar desde</label>
+                    <input type="datetime-local" className={field} value={isoToLocalInput(form.publishAt)} onChange={(e) => set("publishAt", localInputToIso(e.target.value))} />
+                  </div>
+                  <div>
+                    <label className={label}>Ocultar desde</label>
+                    <input type="datetime-local" className={field} value={isoToLocalInput(form.unpublishAt)} onChange={(e) => set("unpublishAt", localInputToIso(e.target.value))} />
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <div className={card}>
+            <p className="mb-3 text-sm font-semibold text-brand-ink">Organización</p>
+            <div className="grid gap-4">
+              <div>
+                <label className={label}>Tipo</label>
+                <select className={field} value={form.type} onChange={(e) => set("type", e.target.value as ProductInput["type"])}>
+                  <option value="simple">Simple (precio y existencia únicos)</option>
+                  <option value="variable">Variable (talle, color, etc.)</option>
+                </select>
+              </div>
+              <div>
+                <label className={label}>SKU</label>
+                <input className={field} value={form.sku} onChange={(e) => set("sku", e.target.value)} />
+              </div>
+              <div>
+                <label className={label}>URL amigable (slug)</label>
+                <input className={field} value={form.slug} placeholder="se genera del nombre" onChange={(e) => set("slug", e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div className={card}>
+            <p className="mb-3 text-sm font-semibold text-brand-ink">Categorías</p>
+            {tree.length === 0 ? (
+              <p className="text-xs text-brand-muted">Todavía no hay categorías: creálas en Categorías.</p>
+            ) : (
+              <>
+                {form.categoryIds.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {form.categoryIds.map((id) => (
+                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-brand-pink/10 px-2.5 py-1 text-xs font-medium text-brand-pink-dark">
+                        {categoryNames.get(id) ?? "—"}
+                        <button type="button" aria-label={`Quitar ${categoryNames.get(id) ?? "categoría"}`} onClick={() => set("categoryIds", form.categoryIds.filter((c) => c !== id))} className="cursor-pointer leading-none hover:text-brand-ink">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="search"
+                  value={categoryQuery}
+                  onChange={(e) => setCategoryQuery(e.target.value)}
+                  placeholder="Buscar categoría…"
+                  aria-label="Buscar categoría"
+                  className={`${field} mb-2 py-1.5`}
+                />
+              <div className="flex max-h-72 flex-col gap-1 overflow-auto">
+                {visibleTree.length === 0 && <p className="text-xs text-brand-muted">Ninguna categoría coincide.</p>}
+                {visibleTree.map(({ cat, depth }) => (
+                  <label key={cat.id} className="flex items-center gap-2 text-sm text-brand-ink" style={{ paddingLeft: categoryQuery.trim() ? 0 : depth * 18 }}>
+                    <input
+                      type="checkbox"
+                      checked={form.categoryIds.includes(cat.id)}
+                      onChange={(e) => set("categoryIds", e.target.checked ? [...form.categoryIds, cat.id] : form.categoryIds.filter((c) => c !== cat.id))}
+                    />
+                    {cat.name}
+                  </label>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
+
+          <div className={card}>
+            <p className="mb-3 text-sm font-semibold text-brand-ink">Etiquetas</p>
+            <TagsInput tags={form.tags} onChange={(tags) => set("tags", tags)} suggestions={allTags} />
+          </div>
+
+          <div className={card}>
+            <p className="mb-1 text-sm font-semibold text-brand-ink">Envío</p>
+            <p className="mb-3 text-xs text-brand-muted">Peso y medidas para cotizar el envío por correo.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {(["weight", "width", "height", "length"] as const).map((key) => (
+                <div key={key}>
+                  <label className={label}>{{ weight: "Peso (kg)", width: "Ancho (cm)", height: "Alto (cm)", length: "Largo (cm)" }[key]}</label>
+                  <input type="number" min={0} step="0.01" className={field} value={form[key] ?? ""} onChange={(e) => set(key, num(e.target.value))} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-10 flex items-center gap-3 border-t border-black/10 bg-white px-4 py-3 sm:left-auto md:left-56">
