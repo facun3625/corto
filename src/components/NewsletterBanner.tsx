@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MailIcon } from "@/components/icons";
 
-export function NewsletterBanner() {
+export function NewsletterBanner({ storeName }: { storeName: string }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
 
@@ -35,7 +35,7 @@ export function NewsletterBanner() {
             <div>
               <h2 className="text-xl font-bold text-brand-pink-dark">Sumate a nuestro newsletter</h2>
               <p className="mt-1 text-sm text-brand-muted">
-                Enterate primero de los nuevos ingresos y novedades de Cortopassi - Tienda.
+                Enterate primero de los nuevos ingresos y novedades de {storeName}.
               </p>
             </div>
           </div>

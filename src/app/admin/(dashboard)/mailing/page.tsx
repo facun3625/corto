@@ -12,6 +12,7 @@ import { MailHistoryPoller } from "./MailHistoryPoller";
 import { SectionSidebar } from "@/components/admin/SectionSidebar";
 import { deleteCampaign } from "./actions";
 
+import { storeNameOf } from "@/lib/storeName";
 const STATUS_LABELS: Record<string, string> = {
   sending: "Enviando...",
   done: "Enviado",
@@ -50,7 +51,7 @@ export default async function AdminMailingPage() {
       <MailComposer
         audienceCounts={audienceCounts}
         segmentCounts={segmentCounts}
-        franchiseName={settings.franchiseName || "Cortopassi - Tienda"}
+        franchiseName={storeNameOf(settings)}
         franchiseLocation={settings.franchiseLocation}
         logoUrl={resolveLogos(settings).header}
         quotaRemaining={quota.remaining}

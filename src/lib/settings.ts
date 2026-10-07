@@ -9,6 +9,7 @@ import { getContactCards } from "@/lib/contactCards";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
 import { monthKey } from "@/lib/monthKey";
 
+import { storeNameOf } from "@/lib/storeName";
 export async function getStoreSettingsRow() {
   return prisma.storeSettings.upsert({
     where: { id: "global" },
@@ -17,7 +18,7 @@ export async function getStoreSettingsRow() {
   });
 }
 
-const DEFAULT_MARQUEE = ["Nueva colección", "Promociones", "Cortopassi - Tienda"];
+const DEFAULT_MARQUEE = ["Nueva colección", "Promociones"];
 
 // Vacío = el admin todavía no eligió categorías destacadas: el home usa las
 // primeras categorías de nivel superior (ver app/page.tsx).
@@ -42,6 +43,7 @@ export async function getSiteSettings() {
   const franchiseLocation = row.franchiseLocation || DEFAULT_FRANCHISE_LOCATION;
   const contact = resolveContact(row, contactCards, franchiseLocation);
   const humanSeller = getHumanSellerAvailability({
+    franchiseName: row.franchiseName,
     aiHumanHandoffEnabled: true,
     aiHumanDays: row.aiHumanDays,
     aiHumanStartTime: row.aiHumanStartTime,
@@ -51,7 +53,7 @@ export async function getSiteSettings() {
 
   return {
     currency: row.currency,
-    franchiseName: row.franchiseName || "Cortopassi - Tienda",
+    franchiseName: storeNameOf(row),
     footerText: row.footerText?.trim() || DEFAULT_FOOTER_TEXT,
     logos: resolveLogos(row),
     footerPages: await getFooterPages(),

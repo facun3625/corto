@@ -7,6 +7,7 @@ import { getAllShippingMethods } from "@/lib/shipping";
 import { optionalNumber, optionalText, safeToolArgs } from "@/lib/ai/validation";
 import type { AssistantProduct } from "@/lib/ai/types";
 import { getHumanSellerAvailability } from "@/lib/ai/availability";
+import { storeNameOf } from "@/lib/storeName";
 import {
   DEFAULT_FRANCHISE_LOCATION,
 } from "@/lib/contact";
@@ -141,6 +142,7 @@ export async function executeAssistantTool(
     const cards = await getContactCards();
     const contact = resolveContact(settings ?? {}, cards, settings?.franchiseLocation?.trim() || DEFAULT_FRANCHISE_LOCATION);
     const humanSupport = getHumanSellerAvailability({
+      franchiseName: settings?.franchiseName,
       aiHumanHandoffEnabled: settings?.aiHumanHandoffEnabled ?? true,
       aiHumanDays: settings?.aiHumanDays ?? [1, 2, 3, 4, 5, 6],
       aiHumanStartTime: settings?.aiHumanStartTime ?? "09:00",
@@ -150,7 +152,7 @@ export async function executeAssistantTool(
     return {
       output: JSON.stringify({
         store: {
-          name: settings?.franchiseName?.trim() || "Cortopassi - Tienda",
+          name: storeNameOf(settings),
           branch: settings?.franchiseLocation?.trim() || DEFAULT_FRANCHISE_LOCATION,
           address: contact.address || undefined,
           // Cada local con su dirección, teléfono, WhatsApp e Instagram (las tarjetas de Contacto)

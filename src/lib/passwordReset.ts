@@ -6,6 +6,7 @@ import { getMailSender } from "@/lib/mailer";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { buildMailHtml } from "@/lib/mailTemplate";
 
+import { storeNameOf } from "@/lib/storeName";
 // Recuperación / creación de contraseña por email. El token se manda por mail
 // y en la base solo queda su hash SHA-256: ni un volcado de la base permite
 // usarlo. Es de un solo uso y vence.
@@ -34,7 +35,7 @@ export async function sendResetEmail(user: { id: string; email: string; name: st
   const base = (process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "");
   const link = `${base}/recuperar?token=${encodeURIComponent(token)}`;
   const name = user.name?.split(" ")[0] || "";
-  const store = settings.franchiseName || "Cortopassi - Tienda";
+  const store = storeNameOf(settings);
   const subject = kind === "activation" ? `Activá tu cuenta en ${store}` : `Restablecé tu contraseña de ${store}`;
   const intro =
     kind === "activation"

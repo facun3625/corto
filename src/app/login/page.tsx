@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
       <h1 className="text-2xl font-bold text-brand-ink">Iniciar sesión</h1>
-      <p className="mt-1 text-sm text-brand-muted">Accedé a tu cuenta de Cortopassi - Tienda.</p>
+      <p className="mt-1 text-sm text-brand-muted">Accedé a tu cuenta.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <div>

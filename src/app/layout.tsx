@@ -11,6 +11,7 @@ import { getThemeForRequest } from "@/lib/themeRuntime";
 import { themeCss, themeFontHref } from "@/lib/themes";
 import "./globals.css";
 
+import { storeNameOf } from "@/lib/storeName";
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
@@ -19,11 +20,13 @@ const poppins = Poppins({
 
 // Título y descripción fijos; el ícono (favicon) es el que subió el admin, o el original de la instalación
 export async function generateMetadata(): Promise<Metadata> {
-  const { favicon } = resolveLogos(await getStoreSettingsRow());
+  const row = await getStoreSettingsRow();
+  const { favicon } = resolveLogos(row);
   const v = iconVersion(favicon);
+  const name = storeNameOf(row);
   return {
-    title: "Cortopassi - Tienda",
-    description: "Cortopassi - Tienda — descubrí el catálogo completo y comprá online.",
+    title: name,
+    description: `${name} — descubrí el catálogo completo y comprá online.`,
     manifest: "/manifest.webmanifest",
     // capable: true es lo que hace que, instalada, abra sin la barra de
     // Safari. Sin icons.apple, Safari muestra una captura de pantalla en vez

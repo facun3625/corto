@@ -7,6 +7,7 @@ import { addOrderEvent } from "@/lib/orderFlow";
 import type { OrderStatus } from "@/generated/prisma/enums";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 
+import { storeNameOf } from "@/lib/storeName";
 // Mail automático al comprador cuando el admin cambia el estado de su pedido. Cada estado se puede
 // apagar y su texto se edita en /admin/configuracion → "Mail de compra". {nombre} y {pedido} se reemplazan.
 export const STATUS_EMAIL_DEFAULTS: Partial<Record<OrderStatus, { subject: string; text: string }>> = {
@@ -50,7 +51,7 @@ export async function sendOrderStatusEmail(orderId: string, status: OrderStatus,
   const subject = fill(defaults.subject);
   const html = buildMailHtml({
     logoUrl: absoluteUrl(resolveLogos(settings).header),
-    franchiseName: settings.franchiseName || "Cortopassi - Tienda",
+    franchiseName: storeNameOf(settings),
     franchiseLocation: settings.franchiseLocation,
     subject,
     title: `Pedido ${formatOrderNumber(order.number)}`,

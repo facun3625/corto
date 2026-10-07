@@ -1,8 +1,10 @@
+import { storeNameOf } from "@/lib/storeName";
 const STORE_TIME_ZONE = "America/Argentina/Cordoba";
 const DAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 const DAY_LABELS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
 type AvailabilitySettings = {
+  franchiseName?: string | null;
   aiHumanHandoffEnabled?: boolean;
   aiHumanDays?: number[];
   aiHumanStartTime?: string;
@@ -56,7 +58,7 @@ export function getHumanSellerAvailability(settings: AvailabilitySettings, now =
     available,
     scheduleText: `${dayText}, de ${start} a ${end} h`,
     whatsappUrl: available
-      ? `https://wa.me/${phone}?text=${encodeURIComponent("Hola, vengo del asistente de Cortopassi - Tienda y quiero hablar con una persona.")}`
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(`Hola, vengo del asistente de ${storeNameOf(settings)} y quiero hablar con una persona.`)}`
       : null,
   };
 }

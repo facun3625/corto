@@ -16,6 +16,7 @@ import { sanitizeThemeConfig, type ThemeSlide } from "@/lib/themes";
 import { StoreMap, type StoreLocation } from "@/components/StoreMap";
 import type { ProductListItem } from "@/types/catalog";
 
+import { storeNameOf } from "@/lib/storeName";
 // Cantidad de categorías de nivel superior que se usan como fallback del slide
 // de ejemplo y de "Explorá por categoría" cuando el admin no eligió ninguna.
 const FALLBACK_CATEGORY_COUNT = 4;
@@ -120,7 +121,7 @@ const MARQUEE_ITEMS = settings.marqueeItems;
       : [
           {
             image: "/hero-bg.jpg",
-            eyebrow: "Cortopassi - Tienda",
+            eyebrow: storeNameOf(settings),
             title: "Bienvenido\na la tienda",
             subtitle: "Descubrí el catálogo completo y comprá online.",
             promoText: "Nueva\nColección",
@@ -132,7 +133,7 @@ const MARQUEE_ITEMS = settings.marqueeItems;
         ];
 
   const base = siteUrl();
-  const storeName = settings.franchiseName || "Cortopassi - Tienda";
+  const storeName = storeNameOf(settings);
 
   return (
     <div>
@@ -304,7 +305,7 @@ const MARQUEE_ITEMS = settings.marqueeItems;
       )}
 
       {/* Newsletter */}
-      <NewsletterBanner />
+      <NewsletterBanner storeName={storeName} />
     </div>
   );
 }

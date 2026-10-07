@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
+import { loader } from "./helpers/loader.mjs";
 
 function load(relativePath) {
   const source = readFileSync(relativePath, "utf8");
@@ -14,7 +15,8 @@ function load(relativePath) {
   return loadedModule.exports;
 }
 
-const availability = load("src/lib/ai/availability.ts");
+// availability importa el nombre de la tienda: se carga con el cargador compartido, que resuelve "@/..."
+const availability = loader()("@/lib/ai/availability");
 const validation = load("src/lib/ai/validation.ts");
 const prompt = load("src/lib/ai/prompt.ts");
 

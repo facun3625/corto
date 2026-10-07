@@ -93,7 +93,7 @@ export function ContactCardForm({ initial, canUp = false, canDown = false }: { i
         </div>
         <div className="sm:col-span-2">
           <label className={label}>Instagram</label>
-          <input className={field} value={form.instagram} maxLength={100} onChange={(e) => set({ instagram: e.target.value })} placeholder="@cortopassicotillon" />
+          <input className={field} value={form.instagram} maxLength={100} onChange={(e) => set({ instagram: e.target.value })} placeholder="@tutienda" />
         </div>
       </div>
       <p className="mt-2 text-xs text-brand-muted">Dejá vacío lo que no corresponda: solo se muestran los datos que cargues.</p>

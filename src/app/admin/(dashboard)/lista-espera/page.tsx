@@ -3,9 +3,11 @@ import { WhatsAppIcon } from "@/components/icons";
 import { buildWhatsAppLink, isLikelyPhone } from "@/lib/whatsapp";
 import { CopyEmailsButton } from "./CopyEmailsButton";
 import { deleteWaitlistEntry } from "./actions";
+import { getStoreSettingsRow } from "@/lib/settings";
+import { storeNameOf } from "@/lib/storeName";
 
 export default async function AdminListaEsperaPage() {
-  const entries = await prisma.waitlistEntry.findMany({ orderBy: { createdAt: "desc" } });
+  const [entries, settings] = await Promise.all([prisma.waitlistEntry.findMany({ orderBy: { createdAt: "desc" } }), getStoreSettingsRow()]);
   const emails = [...new Set(entries.map((e) => e.email))];
 
   return (
@@ -52,7 +54,7 @@ export default async function AdminListaEsperaPage() {
                       <a
                         href={buildWhatsAppLink(
                           e.phone,
-                          `Hola ${e.name}! Te escribimos de Cortopassi - Tienda porque estabas esperando que vuelva el stock de "${e.productName}" — ¡ya está disponible!`
+                          `Hola ${e.name}! Te escribimos de ${storeNameOf(settings)} porque estabas esperando que vuelva el stock de "${e.productName}" — ¡ya está disponible!`
                         )}
                         target="_blank"
                         rel="noopener noreferrer"

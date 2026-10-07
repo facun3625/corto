@@ -5,6 +5,7 @@ import { buildMailHtml } from "@/lib/mailTemplate";
 import { createCampaign, uploadMailImage } from "./actions";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
+import { DEFAULT_STORE_NAME } from "@/lib/storeName";
 type MailAudience = "abandoned_carts" | "waitlist" | "users" | "subscribers";
 
 const AUDIENCE_OPTIONS: { value: MailAudience; label: string }[] = [
@@ -67,7 +68,7 @@ export function MailComposer({
   const previewHtml = useMemo(() => {
     return buildMailHtml({
       logoUrl: /^https?:\/\//i.test(logoUrl) ? logoUrl : `${origin}${logoUrl}`,
-      franchiseName: franchiseName || "Cortopassi - Tienda",
+      franchiseName: franchiseName || DEFAULT_STORE_NAME,
       franchiseLocation,
       subject: subject || "Asunto del mail",
       title: title || "Título del mail",

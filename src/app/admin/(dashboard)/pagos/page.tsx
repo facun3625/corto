@@ -209,7 +209,7 @@ export default async function AdminPagosPage() {
                         type="text"
                         name="bankAlias"
                         defaultValue={config.bankAlias ?? ""}
-                        placeholder="cortopassi.mp"
+                        placeholder="tutienda.mp"
                         className={fieldClasses}
                       />
                     </div>

@@ -8,6 +8,7 @@ import { buildMailSender } from "@/lib/mailer";
 import { DEFAULT_AI_MODELS } from "@/lib/ai/types";
 import type { AiProvider } from "@/generated/prisma/enums";
 
+import { storeNameOf } from "@/lib/storeName";
 function textField(formData: FormData, name: string, maxLength: number): string | null {
   const value = formData.get(name);
   if (typeof value !== "string") return null;
@@ -128,7 +129,7 @@ export async function testMailSending(to: string, form: Record<string, string>):
 
   const result = await sender.send(
     email,
-    "Prueba de Cortopassi - Tienda",
+    `Prueba de ${storeNameOf(saved)}`,
     "<p>✅ Si ves este mail, el envío está funcionando bien.</p>"
   );
   return result.ok ? { ok: true } : { ok: false, error: result.error };

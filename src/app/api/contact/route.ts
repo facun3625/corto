@@ -5,6 +5,7 @@ import { getMailSender } from "@/lib/mailer";
 import { buildMailHtml } from "@/lib/mailTemplate";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 
+import { storeNameOf } from "@/lib/storeName";
 // Límite simple por IP en memoria (en un proceso persistente alcanza para frenar el abuso casual)
 const hits = ((globalThis as unknown as { __contactHits?: Map<string, number[]> }).__contactHits ??= new Map<string, number[]>());
 const WINDOW_MS = 10 * 60 * 1000;
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
         subject,
         buildMailHtml({
           logoUrl: absoluteUrl(resolveLogos(settings).header),
-          franchiseName: settings.franchiseName || "Cortopassi - Tienda",
+          franchiseName: storeNameOf(settings),
           subject,
           title: "Nuevo mensaje de contacto",
           body: `${name} (${email}${phone ? `, ${phone}` : ""}) escribió:\n\n${message}\n\nPodés verlo en el panel: ${(process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "")}/admin/mensajes`,

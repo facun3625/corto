@@ -10,6 +10,7 @@ import { siteUrl } from "@/lib/siteUrl";
 import { recoverCartItems } from "@/lib/cartRecovery";
 import type { CartItem } from "@/lib/cart";
 
+import { storeNameOf } from "@/lib/storeName";
 // Recuperación automática de carritos por mail. La prende y apaga el interruptor de
 // Carritos abandonados; la dispara instrumentation.ts cada pocos minutos.
 //
@@ -58,7 +59,7 @@ type MailSettings = Awaited<ReturnType<typeof getStoreSettingsRow>>;
 
 export function buildRecoveryMail(opts: { settings: MailSettings; name: string | null; email: string; items: CartItem[]; link: string; preview?: boolean }) {
   const { settings, items } = opts;
-  const store = settings.franchiseName || "Cortopassi - Tienda";
+  const store = storeNameOf(settings);
   const base = siteUrl();
   const subject = settings.cartRecoverySubject?.trim() || DEFAULT_SUBJECT;
   const intro = settings.cartRecoveryMessage?.trim() || DEFAULT_MESSAGE;

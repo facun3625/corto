@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { addUsage } from "@/lib/usage";
 
+import { storeNameOf } from "@/lib/storeName";
 export type MailSendResult = { ok: boolean; error?: string };
 
 // Sender reusable: resuelve el proveedor configurado (SMTP o Resend) una sola
@@ -47,7 +48,7 @@ export function friendlySmtpError(message: string): string {
 export function buildMailSender(settings: MailSenderConfig): MailSender | null {
   if (!settings.mailFromEmail) return null;
 
-  const fromName = settings.mailFromName || settings.franchiseName || "Cortopassi - Tienda";
+  const fromName = settings.mailFromName || storeNameOf(settings);
   const from = `"${fromName}" <${settings.mailFromEmail}>`;
 
   if (settings.mailProvider === "resend") {

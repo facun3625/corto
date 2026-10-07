@@ -4,6 +4,7 @@ import { getCustomerRows } from "@/lib/customers";
 import { getUsageStatus } from "@/lib/usage";
 import type { OrderStatus } from "@/generated/prisma/enums";
 
+import { storeNameOf } from "@/lib/storeName";
 // "Vendido" = pedidos con el pago confirmado o ya entregados
 const PAID: OrderStatus[] = ["confirmed", "delivered"];
 
@@ -186,7 +187,7 @@ export async function getDashboardStats() {
 
   return {
     currency: settings.currency,
-    userLabel: settings.franchiseName || "Cortopassi - Tienda",
+    userLabel: storeNameOf(settings),
     maintenanceMode: settings.maintenanceMode,
     userCount,
     newUsersThisWeek,

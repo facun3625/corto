@@ -7,6 +7,7 @@ import { formatOrderNumber } from "@/lib/orderNumber";
 import { addOrderEvent } from "@/lib/orderFlow";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 
+import { storeNameOf } from "@/lib/storeName";
 // Modalidad "Sin pago online": además de entrar al panel, el pedido le llega por mail a la tienda
 // (si el admin dejó activada esa opción en Pagos), con todos los datos para coordinar.
 export async function sendOrderToStore(orderId: string): Promise<boolean> {
@@ -34,7 +35,7 @@ export async function sendOrderToStore(orderId: string): Promise<boolean> {
     subject,
     buildMailHtml({
       logoUrl: absoluteUrl(resolveLogos(settings).header),
-      franchiseName: settings.franchiseName || "Cortopassi - Tienda",
+      franchiseName: storeNameOf(settings),
       franchiseLocation: settings.franchiseLocation,
       subject,
       title: `Pedido ${number}`,

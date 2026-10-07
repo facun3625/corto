@@ -3,13 +3,14 @@ import { getStoreSettingsRow } from "@/lib/settings";
 import { resolveLogos } from "@/lib/logo";
 import { iconVersion } from "@/lib/appIcon";
 
+import { storeNameOf } from "@/lib/storeName";
 export const dynamic = "force-dynamic";
 
 // Manifiesto de la app instalable. El nombre es el de la tienda (Configuración → Franquicia) y los íconos salen del favicon
 // cargado en Configuración → General → Logo e íconos (ver lib/appIcon.ts).
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const settings = await getStoreSettingsRow();
-  const name = settings.franchiseName?.trim() || "Cortopassi - Tienda";
+  const name = storeNameOf(settings);
   const v = iconVersion(resolveLogos(settings).favicon);
   return {
     name,

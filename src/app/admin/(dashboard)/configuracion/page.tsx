@@ -252,7 +252,7 @@ export default async function AdminConfiguracionPage({
                 type="text"
                 name="instagramHandle"
                 defaultValue={settings.instagramHandle ?? ""}
-                placeholder="cortopassi"
+                placeholder="tutienda"
                 className={fieldClasses}
               />
             </div>
@@ -294,7 +294,7 @@ export default async function AdminConfiguracionPage({
               name="marqueeText"
               rows={3}
               defaultValue={settings.marqueeText ?? ""}
-              placeholder={"Nueva colección\nPromociones\nCortopassi - Tienda"}
+              placeholder={"Nueva colección\nPromociones\nEnvíos a todo el país"}
               className={fieldClasses}
             />
             <p className="mt-1 text-xs text-brand-muted">Es la franja que se desplaza debajo del slider del home.</p>
@@ -390,7 +390,7 @@ export default async function AdminConfiguracionPage({
             type="text"
             name="franchiseName"
             defaultValue={settings.franchiseName ?? ""}
-            placeholder="Cortopassi - Tienda"
+            placeholder="Mi tienda"
             className={fieldClasses}
           />
           <p className="mt-1 text-xs text-brand-muted">Encabezado de los mailings.</p>
@@ -481,7 +481,7 @@ export default async function AdminConfiguracionPage({
       <div className="flex flex-wrap gap-4">
         <div className="w-56">
           <label className={labelClasses}>Nombre del remitente</label>
-          <input type="text" name="mailFromName" defaultValue={settings.mailFromName ?? ""} placeholder="Cortopassi - Tienda" className={fieldClasses} />
+          <input type="text" name="mailFromName" defaultValue={settings.mailFromName ?? ""} placeholder="Mi tienda" className={fieldClasses} />
         </div>
         <div className="min-w-[200px] flex-1">
           <label className={labelClasses}>Email remitente</label>

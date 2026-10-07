@@ -12,6 +12,7 @@ import type { OrderCustomer } from "@/lib/orderCustomer";
 import { createPaywayPayment, refundPaywayPayment, type PaywayBillTo } from "@/lib/payway";
 import { auth } from "@/lib/auth";
 
+import { storeNameOf } from "@/lib/storeName";
 // El pedido y su reserva se guardan antes de cobrar. Solo una aprobación
 // confirma la compra y dispara los avisos. Un resultado
 // incierto conserva el pedido pendiente para que el equipo concilie el pago.
@@ -118,7 +119,8 @@ export async function POST(req: Request) {
     });
     if (!priced.ok) return NextResponse.json({ error: priced.error }, { status: priced.status });
     const total = priced.total;
-    const { currency } = await getStoreSettingsRow();
+    const storeSettings = await getStoreSettingsRow();
+    const { currency } = storeSettings;
 
     // Persist the order and reserve stock before making any charge. Its ID
     // is also the provider reference, so an uncertain payment can be reconciled.
@@ -179,7 +181,7 @@ export async function POST(req: Request) {
       paymentMethodId: paywayPaymentMethodId,
       amount: total,
       siteTransactionId: orderId,
-      description: `Pedido Cortopassi - Tienda — ${customer.email}`,
+      description: `Pedido ${storeNameOf(storeSettings)} — ${customer.email}`,
       customerEmail: customer.email,
       billTo: paywayBillTo,
       items: items.map((i) => ({ name: i.name, sku: String(i.productId), quantity: i.quantity, unitPrice: i.price })),

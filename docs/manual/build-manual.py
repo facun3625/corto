@@ -1,0 +1,402 @@
+#!/usr/bin/env python3
+"""Arma el manual del panel (HTML de un solo archivo, capturas incrustadas) -> src/content/manual-panel.html
+Uso: python3 docs/manual/build-manual.py
+Las capturas salen de docs/manual/shots (ver capturas.cjs / capturas-2.cjs). El texto es genérico: "tienda modelo"."""
+import base64, html, os, re, sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "..", "..", "src", "content", "manual-panel.html")
+CSS = open(os.path.join(HERE, "manual.css")).read()
+used = set()
+
+
+def shot(name, path="", cls="", alt=""):
+    f = os.path.join(HERE, "shots", name + ".webp")
+    if not os.path.exists(f):
+        sys.exit("Falta la captura: " + name)
+    used.add(name)
+    b64 = base64.b64encode(open(f, "rb").read()).decode()
+    url = f'<span style="margin-left:.6rem;font-size:.7rem;color:rgba(255,255,255,.55)">{html.escape(path)}</span>' if path else ""
+    return (f'<div class="shot {cls}"><div class="bar"><span></span><span></span><span></span>{url}</div>'
+            f'<img loading="lazy" alt="{html.escape(alt or name)}" src="data:image/webp;base64,{b64}"></div>')
+
+
+def sub(title, desc, name, path="", cls=""):
+    return f'<div class="subshot"><h3>{title}</h3><p class="sub-desc">{desc}</p>{shot(name, path, cls, title)}</div>'
+
+
+def points(items, label="Qué podés hacer"):
+    lis = "".join(f"<li>{i}</li>" for i in items)
+    return f'<div class="keypoints"><div class="keypoints-label">{label}</div><ul class="checks">{lis}</ul></div>'
+
+
+def callout(*ps):
+    return '<div class="callout">' + "".join(f"<p>{p}</p>" for p in ps) + "</div>"
+
+
+def steps(items):
+    return '<ol class="steps">' + "".join(f"<li>{i}</li>" for i in items) + "</ol>"
+
+
+def table(head, rows):
+    h = "".join(f"<th>{c}</th>" for c in head)
+    r = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>" for row in rows)
+    return f'<table class="t"><thead><tr>{h}</tr></thead><tbody>{r}</tbody></table>'
+
+
+def panel(id, title, path, summary, body):
+    p = f'<span class="panel-path">{path}</span>' if path else ""
+    return (f'<section class="panel" id="{id}"><div class="panel-head"><h2>{title}</h2>{p}</div>'
+            f'<p class="panel-summary">{summary}</p>{body}</section>')
+
+
+# (grupo, [(id, título, es_sub)])
+TOC = [("Empezar", [("intro", "Cómo entrar", False)])]
+SECTIONS = []
+
+
+def add(group, id, title, path, summary, body, sub_=False):
+    g = next((x for x in TOC if x[0] == group), None)
+    if g is None:
+        g = (group, [])
+        TOC.append(g)
+    g[1].append((id, title, sub_))
+    SECTIONS.append(panel(id, title, path, summary, body))
+
+
+G1, G2, G3, G4, G5, G6, G7, G8 = "Empezar", "Catálogo", "Ventas del día a día", "Recuperar clientes", "Reglas de la tienda", "Aspecto y contenido", "Clientes y equipo", "Configuración"
+
+# ------------------------------------------------------------------ EMPEZAR
+add(G1, "inicio", "Inicio", "/admin/inicio",
+    "Es lo primero que ves al entrar: cómo viene el día de un vistazo y atajos a lo que más se usa.",
+    shot("inicio", "/admin/inicio") + points([
+        "Ver las ventas y los pedidos del período, y lo que está pendiente de atender.",
+        "Crear un <b>cupón rápido</b> sin salir de la pantalla (porcentaje, vigencia y, si querés, mandarlo por WhatsApp).",
+        "Entrar a cualquier sección desde el menú de la izquierda.",
+        "Buscar una sección del panel escribiendo su nombre (atajo <code>Ctrl</code>/<code>⌘</code> + <code>K</code>).",
+    ]) + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
+    + sub("La campanita", "Avisa cuando entra un pedido nuevo, un mensaje o una consulta de la vendedora IA. Al abrirla se marcan como vistos.", "campanita", "", "mid"))
+
+add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
+    "La tienda se puede instalar en el celular o la computadora como una aplicación, sin pasar por ninguna tienda de apps. Se llama web app progresiva (PWA): es la misma tienda, pero con ícono propio, pantalla completa y avisos.",
+    shot("tienda-movil", "Tienda en el celular", "narrow") + steps([
+        "<b>Android / Chrome:</b> tocá el ícono de descarga que aparece arriba, junto al carrito (“Descargar Web App”) y confirmá <b>Instalar</b>.",
+        "<b>iPhone / iPad:</b> abrí la tienda en <b>Safari</b> (en Chrome o Firefox de iPhone no se puede instalar), tocá el botón <b>Compartir</b> y elegí <b>Agregar a pantalla de inicio</b>. El botón de la tienda te muestra este mismo paso a paso.",
+        "<b>Computadora (Chrome / Edge):</b> usá el mismo botón o el ícono de instalar que aparece a la derecha de la barra de direcciones.",
+        "Si el navegador no permite instalar, la tienda lo avisa en lugar de no hacer nada. Cuando la app ya está instalada, el botón desaparece.",
+    ]) + points([
+        "<b>El ícono</b> sale automáticamente del <b>Favicon</b> que cargues en Configuración → General (se genera en todos los tamaños). Subí una imagen cuadrada de 512×512 para que se vea nítida.",
+        "<b>El nombre</b> debajo del ícono es el <b>Nombre de la franquicia</b> de Configuración → Franquicia.",
+        "<b>Notificaciones push:</b> quien instala la app puede aceptar recibir avisos. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
+        "No requiere ningún trabajo tuyo: la tienda ya está preparada. Conviene contarles a tus clientes que pueden instalarla.",
+    ], "Qué tenés que saber") + callout("<b>Tip:</b> si cambiás el favicon o el nombre, quienes ya instalaron la app ven el cambio la próxima vez que la abran (a veces hace falta cerrarla y volver a abrirla)."))
+
+# ------------------------------------------------------------------ TIENDA PÚBLICA
+add(G1, "tienda", "Cómo la ve el cliente", "/", "Lo que configurás en el panel se ve así en la tienda.",
+    shot("tienda-home", "/") + sub("Listado de productos", "Categorías a la izquierda (primero), buscador y productos con existencia primero.", "tienda-listado") + sub("Ficha de producto", "Fotos o video, precio, variantes, existencia y botón de compra.", "tienda-ficha"))
+
+# ------------------------------------------------------------------ CATÁLOGO
+prod_body = (
+    shot("productos-lista", "/admin/productos") +
+    points([
+        "Ver todo el catálogo: foto, nombre, tipo (simple o variable), precio, existencia y estado.",
+        "<b>Buscar mientras escribís</b> por nombre o SKU. El listado se filtra solo, sin apretar Enter.",
+        "Ordenar (alfabético real, más nuevos, precio…) y elegir <b>cuántos productos por página</b>; todo el centro se desplaza junto.",
+        "Filtrar por categoría, tipo, estado y disponibilidad.",
+        "Editar un producto con un clic, o crear uno con <b>Nuevo producto</b>.",
+        "Aplicar <b>acciones masivas</b> a varios productos a la vez.",
+    ]) +
+    sub("Filtros", "Combiná los filtros: por ejemplo, solo productos con variantes y con existencia.", "productos-filtros", "", "mid") +
+    sub("Acciones masivas", "Tildá varios productos y aparece la barra de acciones: cambiar estado, mover de categoría, activar/desactivar existencia o eliminar. Antes de aplicar te pide confirmación.", "productos-masivas", "", "mid") +
+    '<h3 class="sec">Crear y editar un producto</h3>'
+    '<p class="panel-summary">La pantalla de edición tiene dos columnas: a la izquierda el contenido (nombre, descripción, imágenes, precio, variantes) y a la derecha el estado, la categoría y los ajustes secundarios.</p>' +
+    shot("producto-editar-a", "/admin/productos/…") +
+    points([
+        "<b>Nombre</b> y <b>Descripción corta / completa</b>, con editor de texto (negrita, listas, colores, enlaces).",
+        "<b>URL amigable (slug)</b>: se arma sola desde el nombre; podés cambiarla.",
+        "<b>SKU</b>, el código interno del producto: es la clave para actualizar precios y stock por CSV.",
+        "<b>Estado</b>: Publicado, Borrador (no se ve) o Programado con fecha de <i>Mostrar desde</i> y <i>Ocultar desde</i>.",
+        "<b>Título y descripción SEO</b>: cómo se muestra en Google. Si lo dejás vacío se usa el nombre del producto.",
+    ]) +
+    sub("Precio y existencia", "Precio, precio anterior (se muestra tachado como oferta) y la existencia en tres modos simples.", "producto-existencia", "", "mid") +
+    table(["Modo de existencia", "Qué hace"], [
+        ["<b>Hay</b>", "Siempre se puede comprar. No se lleva la cuenta de unidades (ideal para productos que hacés a pedido o que nunca se agotan)."],
+        ["<b>No hay</b>", "No se puede comprar. En la tienda figura “Sin stock” y el cliente puede anotarse en la <a href=\"#lista-espera\">lista de espera</a>."],
+        ["<b>Controlar cantidad</b>", "Cargás las unidades; cada venta descuenta y con 0 el producto queda sin existencia solo."],
+    ]) +
+    sub("Imágenes y videos", "Subí hasta varias fotos (la primera es la principal) y, si querés, un <b>video</b>. Se puede reordenar con las flechas, quitar, o cargar un video solo. Para los videos el panel toma un cuadro como imagen de portada.", "producto-imagenes", "", "mid") +
+    sub("Categorías", "Marcá una o varias categorías. El buscador predictivo filtra mientras escribís, útil cuando hay muchas.", "producto-categorias", "", "mid") +
+    sub("Costo y promoción", "El <b>precio de costo</b> es solo para vos (alimenta las estadísticas). El <b>precio promocional</b> puede tener fechas de inicio y fin.", "producto-costo-promo", "", "mid") +
+    sub("Columna lateral", "Estado, tipo de producto (simple o variable), URL y programación de publicación.", "producto-lateral", "", "narrow") +
+    '<h3 class="sec">Productos con variantes</h3>'
+    '<p class="panel-summary">Cuando un mismo producto viene en talles, colores u otras opciones, cambiá el <b>Tipo</b> a <b>Variable</b>. Elegí los atributos (por ejemplo Talle y Color) y el panel genera todas las combinaciones. Cada variante tiene su propio SKU, precio y existencia.</p>' +
+    shot("producto-variable", "Tipo: Variable") +
+    steps([
+        "Cambiá el <b>Tipo</b> a <b>Variable</b>.",
+        "Elegí los <b>atributos</b> que usa el producto (se crean en <a href=\"#atributos\">Atributos</a>) y tildá los valores que aplican.",
+        "Generá las variantes y completá <b>precio, SKU y existencia</b> de cada una. Dejá en blanco el precio para que use el del producto.",
+        "Guardá. En la tienda el cliente elige talle/color y ve la existencia de esa variante.",
+    ]) +
+    callout("<b>Importante:</b> si una variante no tiene existencia, el cliente la ve deshabilitada pero puede elegir las demás. El producto figura “Sin stock” solo cuando se agotan todas.")
+)
+add(G2, "productos", "Productos", "/admin/productos", "El corazón de la tienda: crear, ordenar, ocultar y actualizar todo el catálogo.", prod_body)
+
+add(G2, "productos-csv", "Precios y stock por CSV", "/admin/productos → Importar",
+    "Para actualizar muchos productos de una vez: descargás el catálogo, lo editás en Excel o Google Sheets y lo subís de nuevo.",
+    shot("productos-csv", "/admin/productos/importar") + steps([
+        "Tocá <b>Descargar productos.csv</b>.",
+        "Abrilo en Excel o Google Sheets y cambiá <b>precio</b>, <b>precio_anterior</b> y/o <b>stock</b>. No toques la columna <code>sku</code>: es la que identifica cada producto o variante.",
+        "Guardalo como CSV y subilo con <b>Importar</b>. El panel te dice cuántos productos actualizó y cuáles no encontró.",
+    ]) + points([
+        "Las celdas <b>vacías no se modifican</b>: podés actualizar solo los precios, o solo el stock.",
+        "Las demás columnas se ignoran; no se pueden crear productos por este medio.",
+        "Funciona con productos simples y con variantes (cada variante por su SKU).",
+    ], "Reglas") + callout("<b>Tip:</b> antes de un cambio grande de precios, descargá el CSV y guardalo como respaldo: si algo sale mal podés volver a subirlo."))
+
+add(G2, "categorias", "Categorías", "/admin/categorias",
+    "Ordenan el catálogo. Pueden tener subcategorías sin límite de niveles, imagen propia y datos para Google.",
+    shot("categorias-lista", "/admin/categorias") + points([
+        "Crear una categoría con nombre y <b>categoría padre</b> (para hacerla subcategoría). La ves indentada en el árbol.",
+        "Buscar categorías mientras escribís.",
+        "Ver la URL (slug) y cuántos productos tiene cada una, incluyendo cuántas subcategorías.",
+        "Eliminar una categoría: sus subcategorías suben un nivel y los productos <b>no se borran</b>, solo quedan sin esa categoría.",
+    ]) + sub("Editar una categoría", "Nombre, URL, categoría padre, orden, descripción, imagen (aparece en el inicio y en los listados) y SEO.", "categoria-editar", "", "mid")
+    + callout("<b>En la tienda:</b> el menú muestra primero las categorías y, al elegir una, sus subcategorías. No se muestran las cantidades de productos para que el menú quede limpio."))
+
+add(G2, "atributos", "Atributos", "/admin/atributos",
+    "Talle, color, material… Cada atributo tiene sus valores y se usan en los productos variables para armar las variantes.",
+    shot("atributos-lista", "/admin/atributos") + points([
+        "Crear un atributo (por ejemplo <b>Talle</b>) con sus valores, uno por línea: S, M, L, XL.",
+        "Para un <b>color</b> agregá el código hexadecimal después de dos puntos: <code>Rojo|#C0392B</code>. Así se muestra el círculo de color.",
+        "Ver cuántos productos usan cada atributo antes de tocarlo.",
+    ]) + sub("Valores de un atributo", "Editá, agregá o quitá valores. La tabla indica cuántas variantes usa cada valor.", "atributo-valores", "", "mid")
+    + callout("Si quitás un valor que está en uso, el panel te avisa cuántas variantes lo tienen para que no se rompa ningún producto."))
+
+add(G2, "etiquetas", "Etiquetas", "/admin/etiquetas",
+    "Marcas rápidas como “Nuevo”, “Oferta” o “Regalo”. Se crean al cargar un producto (campo Etiquetas) y acá las administrás.",
+    shot("etiquetas", "/admin/etiquetas", "mid") + points([
+        "Renombrar o borrar etiquetas, y ver en cuántos productos se usa cada una.",
+        "En la tienda, cada etiqueta tiene su propio listado y se muestra como cartelito sobre la foto.",
+    ]))
+
+# ------------------------------------------------------------------ VENTAS
+add(G3, "ventas", "Ventas", "/admin/ventas",
+    "Todos los pedidos. Los nuevos aparecen marcados hasta que los abrís.",
+    shot("ventas-lista", "/admin/ventas") + points([
+        "Ver estado de cada pedido (pago pendiente, confirmado, entregado, cancelado), medio de pago y total.",
+        "Filtrar y buscar por cliente o número de pedido.",
+        "Los pedidos nuevos tienen el distintivo <b>Nuevo</b> y suman en la campanita.",
+    ]) + sub("Detalle de un pedido", "Datos del cliente, envío, productos, totales, seguimiento y un historial con notas internas.", "venta-detalle", "", "mid") + points([
+        "<b>Cambiar el estado</b>: el cliente recibe un mail automático en cada cambio importante.",
+        "<b>Conciliar el pago</b> de Mercado Pago con un clic si el aviso automático no llegó.",
+        "Cargar el <b>número de seguimiento</b> y descargar el rótulo del envío (con OCA configurado).",
+        "Anotar <b>notas internas</b> que el cliente no ve.",
+    ]))
+
+add(G3, "estadisticas", "Estadísticas", "/admin/estadisticas",
+    "Cómo le va a la tienda: ingresos, ticket promedio, productos más vendidos, medios de pago y conversión.",
+    shot("estadisticas", "/admin/estadisticas") + points([
+        "Elegir el período (últimos 7, 30, 90 días o fechas a medida) y compararlo con el período anterior.",
+        "Ver los productos más vendidos, el reparto por medio de pago, por envío y por estado.",
+        "Seguir el <b>embudo</b>: visitas → carritos iniciados → pedidos pagados, con la tasa de conversión.",
+        "Conocer a tus clientes: nuevos, compradores, recurrentes y frecuencia de compra.",
+    ]))
+
+add(G3, "visitas", "Visitas", "/admin/visitas",
+    "El tráfico del sitio. No es lo mismo que Estadísticas: acá se mira cuánta gente entra, no cuánto se vende.",
+    shot("visitas", "/admin/visitas") + points([
+        "Visitas únicas y vistas de página por día.",
+        "Las páginas más vistas y los productos más agregados al carrito.",
+    ]))
+
+# ------------------------------------------------------------------ RECUPERAR
+add(G4, "carritos", "Carritos abandonados", "/admin/carritos-abandonados",
+    "Los clientes que pusieron productos en el carrito y no terminaron la compra. Podés contactarlos a mano o dejar que la tienda lo haga sola.",
+    shot("carritos", "/admin/carritos-abandonados") + points([
+        "Ver qué dejó cada persona, el total y hace cuánto fue su última actividad.",
+        "Escribirles por <b>WhatsApp</b> con un mensaje ya armado y el link para retomar el carrito.",
+        "Copiar los mails de la lista para una campaña.",
+        "Limpiar los carritos viejos.",
+    ]) + sub("Recuperación automática por mail", "Un interruptor: si alguien deja productos y no compra en las horas que elijas, recibe un mail con el link para retomar su carrito.", "carritos-auto", "", "mid") + callout(
+        "<b>Reglas de cuidado:</b> un mail por carrito, solo a carritos recientes, nunca a quien ya compró después ni a quien pidió no recibir más avisos (cada mail trae su enlace para darse de baja). Los productos sin stock no aparecen. Siempre podés mandarte una <b>prueba</b> antes de activarlo."))
+
+add(G4, "lista-espera", "Lista de espera", "/admin/lista-espera",
+    "Clientes que se anotaron con “Avisarme cuando haya stock” en un producto agotado.",
+    shot("lista-espera", "/admin/lista-espera") + points([
+        "Ver quién espera qué producto y desde cuándo.",
+        "Avisarles por WhatsApp o copiar sus mails.",
+        "El aviso automático por mail sale solo cuando reponés existencia (ver <a href=\"#mailing\">Mailing → Disponibilidad</a>).",
+    ]))
+
+add(G4, "mailing", "Mailing", "/admin/mailing",
+    "Mandá un mail a una o varias listas de clientes: armás el mensaje con vista previa y se envía en segundo plano.",
+    shot("mailing", "/admin/mailing") + points([
+        "Elegir la audiencia: carritos abandonados, lista de espera, usuarios registrados, suscriptores, clientes nuevos o frecuentes, inactivos y cualquier <a href=\"#segmentos\">segmento</a> que armes.",
+        "Escribir asunto y texto con formato; la <b>vista previa</b> muestra el mail con tu logo y tus datos.",
+        "Ver el historial en <b>Campañas enviadas</b>.",
+    ]) + sub("Disponibilidad y cupo del mes", "Muestra cuántos mails se mandaron este mes frente al cupo que definiste y la cantidad de avisos pendientes.", "mailing-disponibilidad", "", "mid"))
+
+add(G4, "notificaciones", "Notificaciones push", "/admin/notificaciones",
+    "Avisos que llegan al celular de quienes instalaron la web app, aunque no tengan el sitio abierto.",
+    shot("notificaciones", "/admin/notificaciones") + points([
+        "Ver cuántos dispositivos están suscriptos.",
+        "Escribir título, mensaje y, si querés, un link a un producto o categoría.",
+        "Mandar a todos los suscriptos y ver el historial de envíos.",
+    ]) + callout("Las notificaciones requieren que la persona haya instalado la <a href=\"#pwa\">web app</a> y aceptado los avisos."))
+
+add(G4, "conversaciones", "Conversaciones con la vendedora IA", "/admin/conversaciones",
+    "Cada charla del chat de la tienda queda guardada con el nombre y el teléfono que dejó el cliente al empezar.",
+    shot("conversaciones", "/admin/conversaciones") + points([
+        "Ver las consultas, cuántos mensajes tuvo cada una y su estado: <b>Para contactar</b> o <b>Atendida</b>.",
+        "Buscar por nombre, teléfono o texto.",
+        "Escribirle al cliente por WhatsApp con un clic y marcar la conversación como atendida.",
+    ]) + sub("Una conversación", "Se lee completa, con lo que preguntó el cliente y lo que respondió la vendedora.", "conversacion-detalle", "", "mid"))
+
+add(G4, "mensajes", "Mensajes de contacto", "/admin/mensajes",
+    "Lo que escriben los clientes desde el formulario de la página de contacto.",
+    shot("mensajes", "/admin/mensajes", "mid") + points([
+        "Responder por mail, marcar como leído o eliminar.",
+        "La sección solo aparece en el menú si tenés un formulario activo o hay mensajes.",
+    ]))
+
+# ------------------------------------------------------------------ REGLAS
+add(G5, "pagos", "Pagos", "/admin/pagos", "Elegí qué medios de pago aceptás y con qué descuento.",
+    shot("pagos", "/admin/pagos") + points([
+        "Prender o apagar cada medio con su interruptor: Mercado Pago, transferencia, contra entrega, tarjeta (Payway) y “sin pago online”.",
+        "Definir un <b>descuento</b> para cada medio (por ejemplo 10% por transferencia).",
+        "Cargar las credenciales de cada pasarela dentro de su tarjeta.",
+    ]) + callout("Con <b>Mercado Pago</b> el pago se confirma solo. Con transferencia el cliente adjunta el comprobante y vos confirmás desde el pedido."))
+
+add(G5, "envios", "Envíos", "/admin/envios", "Métodos de envío, zonas, descuentos por código postal y OCA.",
+    shot("envios-a", "/admin/envios") + points([
+        "Activar <b>OCA ePak</b> para cotizar y rotular envíos.",
+        "Crear <b>métodos propios</b>: retiro en el local, cadetería, entrega a coordinar… cada uno con su costo o gratis.",
+        "<b>Envío gratis</b> desde un monto.",
+        "<b>Zonas restringidas</b> (no se vende a ciertos códigos postales) y descuentos por código postal.",
+    ]) + shot("envios-b", "/admin/envios", "mid"))
+
+add(G5, "cupones", "Cupones", "/admin/cupones", "Códigos de descuento. Todas las condiciones son opcionales: lo que no cargás, no se exige.",
+    sub("Cupón rápido", "Para alguien que compró en el local y quiere probar la tienda online: un cupón de un solo uso, con vencimiento, que podés enviar por WhatsApp.", "cupones-rapido", "", "mid") +
+    sub("Lista de cupones", "Filtrá por tipo y estado (activos, usados, vencidos, deshabilitados) y apagá o prendé cada uno.", "cupones-lista", "", "mid") +
+    sub("Nuevo cupón", "Porcentaje, monto fijo o envío gratis; limitá por categoría o producto, medio de pago, compra mínima, vigencia y cantidad de usos.", "cupones-nuevo", "", "mid"))
+
+add(G5, "puntos", "Puntos", "/admin/puntos", "Los clientes acumulan puntos con cada compra y los canjean por cupones de un solo uso.",
+    shot("puntos", "/admin/puntos") + points([
+        "Prender el sistema y definir <b>cuántos puntos se dan por cada monto</b> gastado.",
+        "Crear <b>recompensas</b> (por ejemplo 500 puntos = cupón de 10%).",
+        "Ajustar a mano el saldo de un cliente (se registra el motivo) y ver los últimos canjes.",
+        "Los puntos se acreditan cuando el pedido pasa a entregado.",
+    ]))
+
+# ------------------------------------------------------------------ ASPECTO
+add(G6, "temas", "Temas y campañas", "/admin/temas", "Cambiá la identidad visual de la tienda para una campaña (Navidad, Black Friday, Hot Sale…) con programación automática.",
+    shot("temas", "/admin/temas") + points([
+        "Elegir una plantilla (Black Friday, Navidad, Día de la Madre…) o empezar de cero.",
+        "<b>Programar</b> con fecha de inicio y fin: la tienda cambia sola y vuelve a su aspecto base al terminar.",
+        "<b>Vista previa</b> antes de publicar, sin que los clientes lo vean.",
+        "Duplicar un tema, activarlo o apagarlo en cualquier momento.",
+    ]) + sub("Editar el aspecto", "Colores, tipografías, botones, barra de anuncio, slider de portada y tarjetas destacadas, con vista previa en vivo.", "tema-editar", "", "mid"))
+
+add(G6, "paginas", "Páginas", "/admin/paginas", "Quiénes somos, contacto y textos legales. Las que activás aparecen en el pie de página.",
+    shot("paginas", "/admin/paginas", "mid") + points([
+        "Crear páginas con editor de texto, URL propia y datos para buscadores.",
+        "Elegir si se muestra en el pie y si incluye el <b>formulario de contacto</b>.",
+        "Vienen precargados los textos legales (términos, privacidad, cambios, envíos) para completar y publicar.",
+    ]) + sub("Editar una página", "Título, URL, contenido y opciones de publicación.", "pagina-editar", "", "mid"))
+
+add(G6, "contacto", "Contacto", "/admin/contacto", "Las tarjetas con tus datos que se muestran en el pie del sitio.",
+    shot("contacto", "/admin/contacto", "mid") + points([
+        "Cargar una tarjeta por local o sucursal: título, dirección, teléfono, WhatsApp e Instagram.",
+        "Ordenarlas con las flechas. El pie muestra hasta 4 columnas.",
+    ]))
+
+# ------------------------------------------------------------------ CLIENTES
+add(G7, "clientes", "Clientes y usuarios", "/admin/usuarios", "Todas las cuentas de la tienda y quién administra el panel.",
+    shot("clientes", "/admin/usuarios") + points([
+        "Buscar clientes por nombre o mail, y exportarlos a CSV.",
+        "Ver compras, gasto total, última compra y puntos de cada uno.",
+        "Crear un <b>nuevo administrador</b>.",
+        "Restablecer la contraseña de una persona (solo superadministrador).",
+    ]) + sub("Ficha del cliente", "Resumen de compras, segmentos a los que pertenece, pedidos, puntos y beneficios utilizados.", "cliente-ficha", "", "mid")
+    + sub("Nuevo administrador", "Entra al panel con su mail y contraseña inicial. Si el mail ya tiene cuenta, esa cuenta pasa a ser administradora.", "nuevo-admin", "", "narrow")
+    + sub("Restablecer contraseña", "Definí una contraseña nueva o mandá un link por mail para que la persona la cree.", "reset-password", "", "narrow")
+    + callout("<b>Roles:</b> <b>Cliente</b> (solo compra), <b>Administrador</b> (gestiona la tienda) y <b>Superadministrador</b> (además maneja correo, imágenes, copias de seguridad y consumo)."))
+
+add(G7, "segmentos", "Segmentos", "/admin/segmentos", "Grupos de clientes que se arman solos según su comportamiento. Los usás para filtrar clientes y como audiencia en Mailing.",
+    shot("segmentos", "/admin/segmentos", "mid") + points([
+        "<b>Clientes nuevos</b> (registrados hace poco), <b>frecuentes</b> (varias compras en un período), <b>inactivos</b> (hace tiempo que no compran) y con puntos.",
+        "Ajustar los parámetros de cada segmento y prenderlos o apagarlos.",
+    ]))
+
+add(G7, "suscriptores", "Suscriptores", "/admin/suscriptores", "Quienes dejaron su mail en el formulario del newsletter del sitio.",
+    shot("suscriptores", "/admin/suscriptores", "mid") + points(["Ver la lista con la fecha de alta, copiar los mails o eliminar a alguien.", "Son una de las audiencias de <a href=\"#mailing\">Mailing</a>."]))
+
+add(G7, "registro", "Registro de actividad", "/admin/logs", "Todo lo que hace el equipo desde el panel queda anotado: quién, cuándo y qué.",
+    shot("registro", "/admin/logs", "mid") + points(["Útil para saber quién cambió un precio, confirmó un pago o editó un tema."]))
+
+# ------------------------------------------------------------------ CONFIGURACIÓN
+cfg = [
+    ("config-general", "General", "cfg-general", "Logo del encabezado, logo del pie y <b>favicon</b> (el ícono de la pestaña y de la web app). También el modo mantenimiento: muestra una pantalla de “volvemos pronto” a los clientes, mientras los administradores siguen entrando."),
+    ("config-beneficios", "Beneficios", "cfg-beneficios", "La franja de beneficios bajo el slider del inicio (envíos, cuotas, retiro…): de 1 a 6 ítems con ícono, título y subtítulo."),
+    ("config-franquicia", "Franquicia", "cfg-franquicia", "El <b>nombre de la tienda</b> y la sucursal o lugar. Se usa en los mails, en el encabezado, en los mensajes y como nombre de la web app."),
+    ("config-correo", "Correo", "cfg-correo", "Con qué proveedor sale el mail de la tienda (SMTP propio o Resend), remitente y envío de prueba. Solo superadministrador."),
+    ("config-imagenes", "Imágenes (R2)", "cfg-imagenes", "Dónde se guardan las fotos y videos. Sin configurar se guardan en el servidor; con Cloudflare R2 se guardan en la nube con dominio propio. Botón para probar la conexión. Solo superadministrador."),
+    ("config-copias", "Copias de seguridad", "cfg-copias", "Copias cifradas de toda la base (productos, pedidos, clientes y configuración). Hacés una copia al instante y se conservan las últimas; se descargan para guardarlas fuera del servidor. Solo superadministrador."),
+    ("config-mail-compra", "Mail de compra", "cfg-mail-compra", "Texto de bienvenida del mail que recibe el cliente al comprar y las notas según el medio de pago. Lo que dejás vacío usa el texto por defecto."),
+    ("config-checkout", "Checkout y mensajes", "cfg-checkout", "Un aviso opcional arriba del checkout (por ejemplo “los pedidos de después de las 18 h salen al día siguiente”) y los mensajes de la pantalla de pedido registrado."),
+    ("config-telegram", "Telegram", "cfg-telegram", "Cada pedido nuevo te llega al instante a un grupo de Telegram. Cargás el token del bot y el ID del chat, y probás con un botón."),
+    ("config-ia", "Vendedora IA", "cfg-ia", "El asistente del chat de la tienda: elegís el proveedor y el modelo, cargás la clave (queda guardada en el servidor y no se muestra), el nombre, el saludo y las instrucciones de venta. La vendedora solo recomienda productos reales del catálogo y con existencia."),
+    ("config-consumo", "Consumo", "cfg-consumo", "Cuántos mails y cuántos tokens de IA se usaron este mes frente al cupo. Podés poner un tope mensual; al llegar, se frenan las campañas o la IA. El contador arranca de cero el día 1. Solo superadministrador."),
+    ("config-popup", "Pop-up", "cfg-popup", "Un cartel promocional al entrar: dónde se muestra (solo inicio o todo el sitio), con qué frecuencia, título y texto con formato."),
+]
+body = '<div class="tabstrip">' + "".join(f'<a href="#{i}">{t}</a>' for i, t, _, _ in cfg) + "</div>"
+add(G8, "configuracion", "Configuración", "/admin/configuracion", "Todo lo que se ve en el sitio y las integraciones de la tienda, en pestañas. Algunas son solo para el superadministrador.", body)
+for i, t, s_, d in cfg:
+    add(G8, i, t, "Configuración → " + t, d, shot(s_, "/admin/configuracion", "mid"), True)
+
+# ------------------------------------------------------------------ INTRO + HTML
+INTRO = '''
+<div class="intro" id="intro">
+  <div class="intro-eyebrow">Manual de uso</div>
+  <h1>El panel de tu tienda,<br>pantalla por pantalla.</h1>
+  <p class="lead">Una guía para manejar la tienda día a día: cargar y ordenar productos, atender pedidos, recuperar clientes, definir las reglas de pago y envío y dejar todo a tu medida. Las imágenes son de una tienda de ejemplo.</p>
+  <div class="howto">
+    <div class="howto-step"><div class="n">1</div><p>Entrá a <code>/admin</code> con tu mail y contraseña. El ojito te deja ver lo que escribís.</p></div>
+    <div class="howto-step"><div class="n">2</div><p>Cargá tus <b>categorías</b>, <b>atributos</b> y <b>productos</b>. Si ya tenés una lista, usá el CSV.</p></div>
+    <div class="howto-step"><div class="n">3</div><p>Configurá <b>pagos</b>, <b>envíos</b> y tu <b>logo</b>. Con eso ya podés vender.</p></div>
+  </div>
+  <div class="callout"><p><b>Antes de salir en vivo:</b> cargá tu logo y favicon, el nombre de la tienda (Configuración → Franquicia), al menos un medio de pago y uno de envío, y hacé una compra de prueba.</p></div>
+</div>'''
+
+toc = []
+for g, items in TOC:
+    a = "".join('<a href="#%s"%s>%s%s</a>' % (i, ' class="sub"' if s else "", "↳ " if s else "", t) for i, t, s in items)
+    toc.append(f'<div class="toc-group"><span class="toc-label">{g}</span>{a}</div>')
+
+JS = """
+(function(){var q=document.getElementById('manual-q');if(!q)return;var links=[].slice.call(document.querySelectorAll('.toc a'));
+var none=document.querySelector('.toc .none');
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')}
+var text={};[].forEach.call(document.querySelectorAll('section.panel'),function(s){text['#'+s.id]=norm(s.textContent)});
+q.addEventListener('input',function(){var v=norm(q.value.trim()),n=0;links.forEach(function(a){var h=a.getAttribute('href');var ok=!v||norm(a.textContent).indexOf(v)>=0||(text[h]||'').indexOf(v)>=0;a.classList.toggle('hide',!ok);if(ok)n++});
+[].forEach.call(document.querySelectorAll('.toc-group'),function(g){g.classList.toggle('hide',!g.querySelector('a:not(.hide)'))});none.style.display=n?'none':'block'});})();
+"""
+
+page = f'''<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Manual del panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<style>{CSS}</style></head><body>
+<div class="shell"><nav class="toc"><div class="brand"><span class="dot"></span><b>Manual del panel</b></div>
+<input id="manual-q" type="search" placeholder="Buscar en el manual…" aria-label="Buscar en el manual"><div class="none">Sin resultados</div>
+{"".join(toc)}</nav>
+<main class="content">{INTRO}{"".join(SECTIONS)}</main></div>
+<script>{JS}</script></body></html>'''
+
+# nada de marcas ajenas en el documento de venta
+leak = re.search(r"cortopass|cortopac|moda ?shop|woo|odoo|facundo|santa fe", re.sub(r"data:image/[a-z]+;base64,[A-Za-z0-9+/=]+", "", page), re.I)
+if leak:
+    sys.exit("Aparece una marca/dato que no debería estar: " + leak.group(0))
+open(OUT, "w").write(page)
+allshots = {f[:-5] for f in os.listdir(os.path.join(HERE, "shots")) if f.endswith(".webp")}
+print("manual:", os.path.getsize(OUT) // 1024, "KB;", len(used), "capturas usadas; sin usar:", sorted(allshots - used))

@@ -12,11 +12,11 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: "Cortopassi - Tienda", body: event.data.text() };
+    payload = { title: "Tienda", body: event.data.text() };
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || "Cortopassi - Tienda", {
+    self.registration.showNotification(payload.title || "Tienda", {
       body: payload.body || "",
       icon: "/icons/app/192.png",
       badge: "/icons/app/192.png",

@@ -14,6 +14,7 @@ import { getAudienceEmails } from "@/lib/audiences";
 import type { MailAudience } from "@/generated/prisma/enums";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 
+import { storeNameOf } from "@/lib/storeName";
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "mail");
 const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif"]);
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -124,7 +125,7 @@ export async function createCampaign(formData: FormData): Promise<{ ok: boolean;
   if (emails.length > 0) {
     const html = buildMailHtml({
       logoUrl: absoluteUrl(resolveLogos(settings ?? {}).header),
-      franchiseName: settings?.franchiseName || "Cortopassi - Tienda",
+      franchiseName: storeNameOf(settings),
       franchiseLocation: settings?.franchiseLocation,
       subject,
       title,

@@ -12,6 +12,7 @@ import { getStoreSettingsRow } from "@/lib/settings";
 import { sendTelegram } from "@/lib/telegram";
 import { normalizeTime } from "@/lib/ai/availability";
 
+import { storeNameOf } from "@/lib/storeName";
 export async function updateMaintenanceMode(formData: FormData) {
   await requireAdmin();
 
@@ -302,7 +303,7 @@ export async function testTelegram(token: string, chatId: string): Promise<Teleg
   const result = await sendTelegram(
     useToken,
     useChatId,
-    "✅ <b>Prueba de Cortopassi - Tienda</b>\nSi ves este mensaje, los avisos de ventas están funcionando."
+    `✅ <b>Prueba de ${storeNameOf(saved)}</b>\nSi ves este mensaje, los avisos de ventas están funcionando.`
   );
   return result.ok ? { ok: true } : { ok: false, error: result.error };
 }

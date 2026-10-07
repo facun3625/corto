@@ -6,6 +6,7 @@ import { sendPushToUser } from "@/lib/webPush";
 import { formatOrderNumber } from "@/lib/orderNumber";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 
+import { storeNameOf } from "@/lib/storeName";
 // Mail "Recibimos tu pedido" que se le manda al cliente al confirmar la compra.
 // Fire and forget desde la ruta de pedidos: nunca tira ni frena la venta.
 //
@@ -105,7 +106,7 @@ export async function sendOrderConfirmation(order: OrderConfirmationEmail): Prom
 
   const html = buildMailHtml({
     logoUrl: absoluteUrl(resolveLogos(settings).header),
-    franchiseName: settings.franchiseName || "Cortopassi - Tienda",
+    franchiseName: storeNameOf(settings),
     franchiseLocation: settings.franchiseLocation,
     subject: `Recibimos tu pedido #${shortId}`,
     title: `¡Hola, ${firstName}!`,
