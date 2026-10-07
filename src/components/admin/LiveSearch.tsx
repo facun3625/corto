@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 // Buscador del panel que filtra la lista al ir escribiendo (sin botón).
@@ -9,15 +9,11 @@ export function LiveSearch({ defaultValue, placeholder, className }: { defaultVa
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(defaultValue);
-  const first = useRef(true);
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
     const handle = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
+      if (value.trim() === (params.get("q") ?? "")) return;
       if (value.trim()) params.set("q", value.trim());
       else params.delete("q");
       params.delete("page");

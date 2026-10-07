@@ -5,8 +5,8 @@ import { Pagination } from "@/components/Pagination";
 import { LiveSearchInput } from "./LiveSearchInput";
 import { CategoryFilterSelect } from "./CategoryFilterSelect";
 import { ProductsTable } from "./ProductsTable";
-
-const PAGE_SIZE = 25;
+import { PerPageSelect, SortSelect } from "./ListControls";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "./listOptions";
 
 type SortField = "name" | "category" | "price" | "stock";
 
@@ -25,9 +25,11 @@ export default async function AdminProductosPage({
     dir?: string;
     state?: string;
     type?: string;
+    per?: string;
   }>;
 }) {
   const params = await searchParams;
+  const perPage = (PAGE_SIZES as readonly number[]).includes(Number(params.per)) ? Number(params.per) : DEFAULT_PAGE_SIZE;
   const page = Math.max(1, Number(params.page) || 1);
   const query = params.q?.trim() ?? "";
   const categoryId = params.categoryId || undefined;
@@ -57,11 +59,11 @@ export default async function AdminProductosPage({
       maxStock,
       sort,
       dir,
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
+      limit: perPage,
+      offset: (page - 1) * perPage,
     }),
   ]);
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
   const sortedCategories = categories
     .filter((c) => (counts.get(c.id) ?? 0) > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -82,6 +84,7 @@ export default async function AdminProductosPage({
     maxStock: params.maxStock,
     sort: params.sort,
     dir: params.dir,
+    per: params.per,
   };
 
   function sortHref(field: SortField) {
@@ -95,6 +98,7 @@ export default async function AdminProductosPage({
     if (params.maxPrice) p.set("maxPrice", params.maxPrice);
     if (params.minStock) p.set("minStock", params.minStock);
     if (params.maxStock) p.set("maxStock", params.maxStock);
+    if (params.per) p.set("per", params.per);
     p.set("sort", field);
     p.set("dir", nextDir);
     return `/admin/productos?${p.toString()}`;
@@ -105,12 +109,15 @@ export default async function AdminProductosPage({
   const labelClasses = "mb-1 block text-xs font-medium text-brand-muted";
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0">
+    <div className="flex flex-col pb-6">
+      <div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-brand-ink">Productos</h1>
-            <p className="mt-1 text-sm text-brand-muted">{total} productos en el catálogo.</p>
+            <p className="mt-1 text-sm text-brand-muted">
+              {total} productos {hasFilters ? "encontrados" : "en el catálogo"}
+              {total > perPage && <> · mostrando {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)}</>}.
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Link href="/admin/categorias" className="rounded-lg border border-black/10 px-3 py-2 font-medium text-brand-ink hover:bg-brand-soft">Categorías</Link>
@@ -130,6 +137,16 @@ export default async function AdminProductosPage({
           <div className="w-48">
             <label className={labelClasses}>Categoría</label>
             <CategoryFilterSelect defaultValue={params.categoryId ?? ""} categories={sortedCategories} />
+          </div>
+
+          <div className="w-52">
+            <label className={labelClasses}>Ordenar por</label>
+            <SortSelect sort={sort} dir={dir} />
+          </div>
+
+          <div className="w-28">
+            <label className={labelClasses}>Por página</label>
+            <PerPageSelect value={perPage} />
           </div>
 
           {/* Precio/stock necesitan "Filtrar" (son rangos, no tiene sentido
@@ -201,7 +218,7 @@ export default async function AdminProductosPage({
         categories={sortedAllCategories}
       />
 
-      <div className="shrink-0">
+      <div>
         <Pagination
           basePath="/admin/productos"
           query={query || undefined}

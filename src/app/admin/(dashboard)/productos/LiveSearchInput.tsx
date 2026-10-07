@@ -15,6 +15,9 @@ export function LiveSearchInput({ defaultValue }: { defaultValue: string }) {
   useEffect(() => {
     const handle = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
+      // Si el texto ya es el de la dirección (por ejemplo al abrir la página 2, la 3…) no hay nada que buscar: navegar
+      // de nuevo volvía a la página 1 apenas cargaba
+      if (value.trim() === (params.get("q") ?? "")) return;
       if (value.trim()) params.set("q", value.trim());
       else params.delete("q");
       params.delete("page");

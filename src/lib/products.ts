@@ -6,6 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { ProductListItem } from "@/types/catalog";
 import { effectivePricing } from "@/lib/pricing";
 import { publishedNow } from "@/lib/catalogVisibility";
+import { compareByName } from "@/lib/sortNames";
 
 // Lo que trae cada fila de un listado: primera imagen, categorías y variantes
 // habilitadas (solo para calcular precio "desde" y stock de los variables).
@@ -109,7 +110,7 @@ export async function getProductsPage(opts: {
 
   // "En oferta" es un dato derivado (fechas de la promoción): ese listado se arma en memoria
   if (opts.onlyOffers) {
-    const rows = await prisma.product.findMany({ where, include: LIST_INCLUDE, orderBy: [{ name: "asc" }, { id: "asc" }] });
+    const rows = (await prisma.product.findMany({ where, include: LIST_INCLUDE })).sort(compareByName);
     const items = rows.map(toListItem).filter((p) => p.onSale && (!settings.hideOutOfStock || p.stock > 0));
     // Lo que tiene stock primero (el orden por nombre se mantiene dentro de cada grupo)
     const sorted = [...items.filter((p) => p.stock > 0), ...items.filter((p) => p.stock <= 0)];
@@ -138,39 +139,32 @@ export async function getProductsPage(opts: {
   return getSegmentedPage(segments, opts.limit, opts.offset);
 }
 
-// Arma el listado como una sola lista hecha de tramos (cada uno ordenado por nombre). Cuenta cada tramo y trae solo las
-// partes que caen dentro de la página pedida, así la paginación sigue siendo continua y sin repetidos.
+// Arma el listado como una sola lista hecha de tramos (cada uno ordenado por nombre, ver lib/sortNames.ts). De cada
+// tramo se traen solo los nombres (livianos) para ordenarlos y contarlos; después se leen completos únicamente los de la
+// página pedida, así la paginación sigue siendo continua y sin repetidos.
 async function getSegmentedPage(
   segments: Prisma.ProductWhereInput[],
   limit: number,
   offset: number
 ): Promise<{ products: ProductListItem[]; total: number }> {
-  const counts = await Promise.all(segments.map((w) => prisma.product.count({ where: w })));
-  const total = counts.reduce((a, b) => a + b, 0);
+  const sortedIds = await Promise.all(
+    segments.map(async (w) => (await prisma.product.findMany({ where: w, select: { id: true, name: true } })).sort(compareByName).map((r) => r.id))
+  );
+  const total = sortedIds.reduce((sum, ids) => sum + ids.length, 0);
 
-  const reads: Promise<ProductRow[]>[] = [];
+  const pageIds: string[] = [];
   let start = 0;
-  for (let i = 0; i < segments.length; i++) {
-    const end = start + counts[i];
+  for (const ids of sortedIds) {
+    const end = start + ids.length;
     const from = Math.max(offset, start);
     const to = Math.min(offset + limit, end);
-    if (from < to) {
-      reads.push(
-        prisma.product.findMany({
-          where: segments[i],
-          include: LIST_INCLUDE,
-          // id desempata productos con el mismo nombre: sin eso, al paginar se repiten o se saltean entre páginas
-          orderBy: [{ name: "asc" }, { id: "asc" }],
-          skip: from - start,
-          take: to - from,
-        })
-      );
-    }
+    if (from < to) pageIds.push(...ids.slice(from - start, to - start));
     start = end;
   }
 
-  const rows = (await Promise.all(reads)).flat();
-  return { products: rows.map(toListItem), total };
+  const rows = pageIds.length ? await prisma.product.findMany({ where: { id: { in: pageIds } }, include: LIST_INCLUDE }) : [];
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return { products: pageIds.map((id) => byId.get(id)).filter((r): r is ProductRow => Boolean(r)).map(toListItem), total };
 }
 
 // Búsqueda acotada para la vendedora virtual: solo productos publicados y con
@@ -288,7 +282,7 @@ export async function getAdminProductsPage(opts: {
   // stock/categoría son derivados (variantes / relación): se ordenan en memoria.
   const needsMemorySort = opts.sort === "stock" || opts.sort === "category" || opts.minStock !== undefined || opts.maxStock !== undefined;
   if (needsMemorySort) {
-    let all = decorate(await prisma.product.findMany({ where, include: LIST_INCLUDE, orderBy: { name: "asc" } }));
+    let all = decorate((await prisma.product.findMany({ where, include: LIST_INCLUDE })).sort(compareByName));
     if (opts.minStock !== undefined) all = all.filter((p) => p.stock >= opts.minStock!);
     if (opts.maxStock !== undefined) all = all.filter((p) => p.stock <= opts.maxStock!);
     if (opts.sort === "stock") all.sort((a, b) => (dir === "asc" ? a.stock - b.stock : b.stock - a.stock));
@@ -300,11 +294,22 @@ export async function getAdminProductsPage(opts: {
     return { products: all.slice(opts.offset, opts.offset + opts.limit), total: all.length };
   }
 
+  // Por nombre: alfabético de verdad (sin distinguir mayúsculas ni tildes). Se ordenan solo id+nombre y se leen completos
+  // los de la página.
+  if (opts.sort !== "price") {
+    const names = (await prisma.product.findMany({ where, select: { id: true, name: true } })).sort(compareByName);
+    if (dir === "desc") names.reverse();
+    const pageIds = names.slice(opts.offset, opts.offset + opts.limit).map((r) => r.id);
+    const rows = pageIds.length ? await prisma.product.findMany({ where: { id: { in: pageIds } }, include: LIST_INCLUDE }) : [];
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return { products: decorate(pageIds.map((id) => byId.get(id)).filter((r): r is ProductRow => Boolean(r))), total: names.length };
+  }
+
   const [rows, total] = await Promise.all([
     prisma.product.findMany({
       where,
       include: LIST_INCLUDE,
-      orderBy: opts.sort === "price" ? { price: dir } : { name: dir },
+      orderBy: [{ price: dir }, { name: "asc" }, { id: "asc" }],
       take: opts.limit,
       skip: opts.offset,
     }),

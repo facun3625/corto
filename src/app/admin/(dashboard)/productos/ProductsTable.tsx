@@ -130,9 +130,10 @@ export function ProductsTable({ products, sortHref, sort, dir, categories }: { p
       )}
       {message && <p className="mt-2 text-xs text-brand-ink">{message}</p>}
 
-      <div className="mt-4 min-h-0 flex-1 overflow-auto rounded-xl border border-black/10 bg-white">
+      <div className="mt-4 rounded-xl border border-black/10 bg-white">
         <table className="w-full min-w-[860px] text-left text-sm">
-          <thead className="sticky top-0 bg-white">
+          {/* Queda fijo pegado al borde de arriba del panel: -top compensa el relleno del contenedor (py-5 / sm:py-8) */}
+          <thead className="sticky -top-5 z-10 bg-white shadow-[0_1px_0_rgba(0,0,0,0.08)] sm:-top-8">
             <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-brand-muted">
               <th className="w-10 px-3 py-3"><input type="checkbox" checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(products.map((p) => p.id)))} aria-label="Seleccionar todos" /></th>
               <th className="px-3 py-3 font-semibold"><Link href={sortHref.name} className="hover:text-brand-pink-dark">Producto{arrow("name")}</Link></th>
@@ -153,7 +154,7 @@ export function ProductsTable({ products, sortHref, sort, dir, categories }: { p
                     <div className="flex items-center gap-3">
                       {p.thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.thumb} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />
+                        <img src={p.thumb} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-md object-cover" />
                       ) : (
                         <div className="h-10 w-10 shrink-0 rounded-md bg-brand-soft" />
                       )}

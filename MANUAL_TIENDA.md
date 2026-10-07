@@ -556,7 +556,10 @@ El tablero presenta:
 
 Desde **Productos** se administra todo el catálogo:
 
-- **Listado:** búsqueda por nombre o SKU, filtros por categoría, **estado** (publicados, borradores, programados), precio y stock, y orden por columna.
+- **Listado:** búsqueda por nombre o SKU, filtros por categoría, **estado** (publicados, borradores, programados), **tipo** (simples o variables), precio y stock.
+  - **Ordenar por:** un selector con **Nombre (A → Z)** y **(Z → A)**, precio, stock y categoría, de menor a mayor o al revés; también se puede tocar el título de cada columna. El orden alfabético **no distingue mayúsculas ni tildes** ("abeja" va antes que "Zeta" y "ÁRBOL" junto a "arbol") y ordena los números como números ("Pico 2" antes que "Pico 10"). Lo mismo vale para la tienda.
+  - **Por página:** 25, 50, 100 o 200 productos (por defecto 100).
+  - **Todo el centro se desplaza junto:** el título, los filtros, la tabla y la paginación van en un mismo scroll, y los títulos de la tabla quedan fijos arriba mientras bajás.
 - **Edición rápida:** el precio y el stock de los productos simples se cambian directamente en el listado.
 - **Acciones masivas:** seleccioná varios productos para publicarlos, pasarlos a borrador, destacarlos, agregarles o quitarles una categoría, **subir o bajar el precio un porcentaje** (también el de sus variantes) o eliminarlos.
 - **Duplicar:** crea una copia como borrador para partir de un producto parecido.
