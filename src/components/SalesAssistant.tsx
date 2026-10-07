@@ -359,7 +359,7 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
               </div>
             ))}
             {contactLoaded && contact === null && messages.length <= 1 && (
-              <form onSubmit={submitContact} className="mr-4 rounded-2xl rounded-bl-sm border border-black/10 bg-white p-3.5 shadow-sm sm:mr-6">
+              <form onSubmit={submitContact} className="mx-auto w-full rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
                 <p className="text-[13px] leading-snug text-brand-ink">Para retomar tu consulta si hace falta, ¿nos dejás tus datos?</p>
                 <div className="mt-3 space-y-2">
                   <input
