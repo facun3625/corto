@@ -47,6 +47,7 @@ export function toListItem(p: ProductRow): ProductListItem {
     onSale,
     image: image?.url ?? null,
     thumb: image?.thumbUrl ?? image?.url ?? null,
+    hasVideo: Boolean(image?.videoUrl),
     categoryId: category?.id ?? null,
     categoryName: category?.name ?? null,
   };

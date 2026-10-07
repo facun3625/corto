@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { getMailSender, type MailSender } from "@/lib/mailer";
+import { marketingMailsLeft } from "@/lib/usage";
 import { buildMailHtml } from "@/lib/mailTemplate";
 import { formatMoneyWith } from "@/lib/money";
 import { absoluteUrl, resolveLogos } from "@/lib/logo";
@@ -95,6 +96,10 @@ export async function runCartRecovery(now = new Date(), deps: { sender?: MailSen
   const sender = deps.sender === undefined ? await getMailSender() : deps.sender;
   if (!sender) return { ok: false, sent: 0, skipped: 0, message: "El correo no está configurado" };
 
+  // Cupo mensual de mails: al agotarse, la recuperación automática se frena hasta el mes siguiente
+  const left = await marketingMailsLeft(now);
+  if (left !== null && left <= 0) return { ok: false, sent: 0, skipped: 0, message: "Se agotó el cupo mensual de mails" };
+
   const cutoff = new Date(now.getTime() - clampDelayHours(settings.cartRecoveryDelayHours) * HOUR);
   const oldest = new Date(now.getTime() - MAX_AGE_DAYS * DAY);
   const gap = new Date(now.getTime() - MIN_GAP_DAYS * DAY);
@@ -115,6 +120,7 @@ export async function runCartRecovery(now = new Date(), deps: { sender?: MailSen
   for (const cart of carts) {
     // Ya se le avisó por este mismo movimiento del carrito: esperar a que lo vuelva a tocar
     if (cart.recoveryEmailSentAt && cart.recoveryEmailSentAt >= cart.lastActive) continue;
+    if (left !== null && sent >= left) return { ok: false, sent, skipped, message: "Se agotó el cupo mensual de mails" };
 
     const email = (cart.user?.email ?? cart.email ?? "").trim().toLowerCase();
     if (!EMAIL_RE.test(email)) { skipped++; continue; }

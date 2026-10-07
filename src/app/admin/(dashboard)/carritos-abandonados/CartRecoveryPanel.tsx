@@ -15,11 +15,13 @@ export function CartRecoveryPanel({
   mailReady,
   sentLast7Days,
   defaults,
+  mailQuotaExhausted = false,
 }: {
   initial: { enabled: boolean; delayHours: number; subject: string; message: string };
   mailReady: boolean;
   sentLast7Days: number;
   defaults: { subject: string; message: string };
+  mailQuotaExhausted?: boolean;
 }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(initial.enabled);
@@ -76,6 +78,12 @@ export function CartRecoveryPanel({
           </button>
         </div>
       </div>
+
+      {mailQuotaExhausted && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          Se agotó el cupo mensual de mails: la recuperación automática está frenada hasta el mes que viene (o hasta que se suba el cupo en Configuración → Consumo).
+        </p>
+      )}
 
       {!mailReady && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">El correo todavía no está configurado (Configuración → Correo). Sin eso no se puede activar.</p>

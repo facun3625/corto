@@ -24,6 +24,7 @@ export async function runOpenAiAssistant(input: AssistantProviderInput): Promise
     content: message.content,
   }));
   let products: AssistantProduct[] = [];
+  let tokens = 0;
 
   for (let round = 0; round < 4; round += 1) {
     const response = await client.responses.create({
@@ -34,6 +35,7 @@ export async function runOpenAiAssistant(input: AssistantProviderInput): Promise
       store: false,
       max_output_tokens: 600,
     });
+    tokens += response.usage?.total_tokens ?? 0;
     const calls = response.output.filter(
       (item): item is ResponseFunctionToolCall => item.type === "function_call",
     );
@@ -41,6 +43,7 @@ export async function runOpenAiAssistant(input: AssistantProviderInput): Promise
       return {
         text: response.output_text.trim() || "No pude armar una respuesta. Probá reformulando la consulta.",
         products,
+        tokens,
       };
     }
 
@@ -63,5 +66,5 @@ export async function runOpenAiAssistant(input: AssistantProviderInput): Promise
     responseInput = [...responseInput, ...toResponseInputItems(response.output), ...toolResults];
   }
 
-  return { text: "No pude completar la búsqueda. Probá con una consulta más específica.", products };
+  return { text: "No pude completar la búsqueda. Probá con una consulta más específica.", products, tokens };
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { loader } from './helpers/loader.mjs';
 
-const { smtpSecureFor, friendlySmtpError } = loader({ '@/lib/settings': { getStoreSettingsRow: async () => ({}) } })('@/lib/mailer');
+const { smtpSecureFor, friendlySmtpError } = loader({ '@/lib/settings': { getStoreSettingsRow: async () => ({}) }, '@/lib/usage': { addUsage: async () => {} } })('@/lib/mailer');
 
 test('SMTP: el TLS directo se decide por el puerto (587 = STARTTLS, 465 = TLS)', () => {
   assert.equal(smtpSecureFor(465, false), true);

@@ -10,6 +10,7 @@ import { UserTypeFilter } from "./UserTypeFilter";
 import { deleteAbandonedCart, cleanupOldAbandonedCarts } from "./actions";
 import { CartRecoveryPanel } from "./CartRecoveryPanel";
 import { getMailSender } from "@/lib/mailer";
+import { getUsageStatus } from "@/lib/usage";
 import { DEFAULT_MESSAGE, DEFAULT_SUBJECT } from "@/lib/cartRecoveryMail";
 
 type CartItemJson = { productId: string | null; name: string; price: number; quantity: number };
@@ -38,8 +39,9 @@ export default async function AdminCarritosAbandonadosPage({
   const params = await searchParams;
   const settings = await getStoreSettingsRow();
   const { currency } = settings;
-  const [mailSender, sentLast7Days] = await Promise.all([
+  const [mailSender, usage, sentLast7Days] = await Promise.all([
     getMailSender(),
+    getUsageStatus(),
     prisma.abandonedCart.count({ where: { recoveryEmailSentAt: { gte: daysAgo(7) } } }),
   ]);
   const fm = (n: number) => formatMoneyWith(n, currency);
@@ -76,6 +78,7 @@ export default async function AdminCarritosAbandonadosPage({
           initial={{ enabled: settings.cartRecoveryEnabled, delayHours: settings.cartRecoveryDelayHours, subject: settings.cartRecoverySubject ?? "", message: settings.cartRecoveryMessage ?? "" }}
           mailReady={mailSender !== null}
           sentLast7Days={sentLast7Days}
+          mailQuotaExhausted={usage.mail.exhausted}
           defaults={{ subject: DEFAULT_SUBJECT, message: DEFAULT_MESSAGE }}
         />
 

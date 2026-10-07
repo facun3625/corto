@@ -153,3 +153,12 @@ export async function registerOcaShipment(orderId: string): Promise<{ ok: boolea
     return { ok: false, message: "No se pudo registrar el envío en OCA. Probá de nuevo." };
   }
 }
+
+// Los pedidos que se muestran en pantalla pasan a "vistos": dejan de contar en la campanita y en el número de Ventas.
+// Solo marca los que todavía no se habían visto, y nunca toca el estado del pedido.
+export async function markOrdersSeen(ids: string[]): Promise<void> {
+  await requireAdmin();
+  const clean = [...new Set(ids.filter((id) => typeof id === "string" && id.length > 0 && id.length < 60))].slice(0, 200);
+  if (clean.length === 0) return;
+  await prisma.order.updateMany({ where: { id: { in: clean }, adminSeenAt: null }, data: { adminSeenAt: new Date() } });
+}

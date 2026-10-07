@@ -37,6 +37,12 @@ export function ProductCard({ product }: { product: ProductListItem }) {
     <div className="min-w-0 rounded-xl border border-brand-pink/15 bg-white p-3 transition-all hover:border-brand-pink/50 hover:shadow-md sm:p-4">
       <div className="relative">
         <ProductImage productId={product.id} thumbnail={product.thumb} alt={product.name} />
+        {product.hasVideo && (
+          <span className="pointer-events-none absolute bottom-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[11px] font-medium text-white" title="Tiene video">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3"><path d="M8 5v14l11-7z" /></svg>
+            Video
+          </span>
+        )}
         <button
           type="button"
           onClick={handleToggleFavorite}

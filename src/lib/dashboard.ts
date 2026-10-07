@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { getCustomerRows } from "@/lib/customers";
+import { getUsageStatus } from "@/lib/usage";
 import type { OrderStatus } from "@/generated/prisma/enums";
 
 // "Vendido" = pedidos con el pago confirmado o ya entregados
@@ -152,6 +153,7 @@ export async function getDashboardStats() {
     getCustomerRows(),
   ]);
   const activeCouponsTotal = await prisma.coupon.count({ where: couponActive });
+  const usage = await getUsageStatus();
   const bestCustomers = customerRows
     .filter((c) => c.stats.orders > 0)
     .sort((a, b) => b.stats.spent - a.stats.spent)
@@ -167,6 +169,11 @@ export async function getDashboardStats() {
   if (stalePending > 0) alerts.push({ level: "warning", text: `${stalePending} pedido(s) esperan confirmación hace más de 24 horas.`, href: "/admin/ventas?status=pending" });
   if (unreadMessages > 0) alerts.push({ level: "warning", text: `${unreadMessages} mensaje(s) de contacto sin leer.`, href: "/admin/mensajes" });
   if (!(settings.smtpHost && settings.smtpUser && settings.smtpPassword && settings.mailFromEmail) && !settings.resendApiKey) alerts.push({ level: "warning", text: "El correo no está configurado: no salen los mails de pedido ni de recuperación de contraseña.", href: "/integraciones" });
+  // Cupos mensuales (Configuración → Consumo): aviso al llegar al 80% y otro, más fuerte, al agotarse
+  if (usage.mail.exhausted) alerts.push({ level: "critical", text: "Se agotó el cupo mensual de mails: las campañas y la recuperación de carritos están frenadas hasta el mes que viene.", href: "/admin/configuracion" });
+  else if (usage.mail.warning) alerts.push({ level: "warning", text: `Usaste el ${usage.mail.pct}% del cupo mensual de mails (quedan ${usage.mail.remaining?.toLocaleString("es-AR")}).`, href: "/admin/configuracion" });
+  if (usage.ai.exhausted) alerts.push({ level: "critical", text: "Se agotó el cupo mensual de la vendedora de IA: la tienda ofrece WhatsApp hasta el mes que viene.", href: "/admin/configuracion" });
+  else if (usage.ai.warning) alerts.push({ level: "warning", text: `Usaste el ${usage.ai.pct}% del cupo mensual de la vendedora de IA (quedan ${usage.ai.remaining?.toLocaleString("es-AR")} tokens).`, href: "/admin/configuracion" });
   if (noImageProducts > 0) alerts.push({ level: "info", text: `${noImageProducts} producto(s) publicados no se ven en la tienda porque no tienen imagen.`, href: "/admin/productos" });
   if (outOfStockCount > 0) alerts.push({ level: "info", text: `${outOfStockCount} producto(s) sin stock.`, href: "/admin/productos?sort=stock" });
   if (expiringCoupons > 0) alerts.push({ level: "info", text: `${expiringCoupons} cupón(es) vencen en los próximos 3 días.`, href: "/admin/cupones" });

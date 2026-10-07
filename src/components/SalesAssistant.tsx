@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/lib/cart";
 import type { SiteSettings } from "@/lib/settings";
 import type { AssistantProduct } from "@/lib/ai/types";
@@ -17,6 +18,37 @@ type ChatMessage = {
 
 const SESSION_KEY = "cortopassi_ai_session";
 const MESSAGES_KEY = "cortopassi_ai_messages";
+// Datos que el cliente dejó al abrir el chat (o "skipped" si prefirió no dejarlos): se piden una sola vez por navegador
+const CONTACT_KEY = "cortopassi_ai_contact";
+
+type StoredContact = { name: string; phone: string } | "skipped";
+
+function readContact(): StoredContact | null {
+  try {
+    const raw = localStorage.getItem(CONTACT_KEY);
+    if (!raw) return null;
+    if (raw === "skipped") return "skipped";
+    const parsed = JSON.parse(raw) as { name?: unknown; phone?: unknown };
+    return typeof parsed.name === "string" && typeof parsed.phone === "string" ? { name: parsed.name, phone: parsed.phone } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function postContact(sessionIdValue: string, name: string, phone: string): Promise<string | null> {
+  try {
+    const response = await fetch("/api/assistant/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sessionIdValue, name, phone }),
+    });
+    if (response.ok) return null;
+    const data = (await response.json().catch(() => ({}))) as { error?: string };
+    return data.error ?? "No pudimos guardar tus datos.";
+  } catch {
+    return "No pudimos guardar tus datos. Revisá tu conexión.";
+  }
+}
 
 function sessionId(): string {
   const stored = localStorage.getItem(SESSION_KEY);
@@ -40,7 +72,15 @@ function textOnly(messages: ChatMessage[]) {
 
 export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
   const { addItem } = useCart();
+  const { data: authSession } = useSession();
   const [open, setOpen] = useState(false);
+  // null = todavía no decidió (se le pide al abrir el chat); "skipped" = prefirió no dejar sus datos
+  const [contact, setContact] = useState<StoredContact | null>(null);
+  const [contactLoaded, setContactLoaded] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [savingContact, setSavingContact] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +112,10 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
       } catch {
         localStorage.removeItem(MESSAGES_KEY);
       } finally {
+        // Quien ya venía conversando antes de que se pidieran los datos no vuelve a ver el pedido
+        const stored = readContact();
+        setContact(stored ?? (localStorage.getItem(MESSAGES_KEY) && (JSON.parse(localStorage.getItem(MESSAGES_KEY) ?? "[]") as unknown[]).length > 1 ? "skipped" : null));
+        setContactLoaded(true);
         setHistoryLoaded(true);
       }
     }, 0);
@@ -139,18 +183,37 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
     }
   }
 
+  // Nombre y teléfono para poder contactarlo si la IA no resuelve la consulta. Quedan guardados con la conversación.
+  async function submitContact(event: FormEvent) {
+    event.preventDefault();
+    if (savingContact) return;
+    setSavingContact(true);
+    setContactError(null);
+    const name = (contactName || (authSession?.user?.name ?? "")).trim();
+    const failure = await postContact(sessionId(), name, contactPhone);
+    setSavingContact(false);
+    if (failure) {
+      setContactError(failure);
+      return;
+    }
+    localStorage.setItem(CONTACT_KEY, JSON.stringify({ name, phone: contactPhone.trim() }));
+    setContact({ name, phone: contactPhone.trim() });
+  }
+
+  function skipContact() {
+    localStorage.setItem(CONTACT_KEY, "skipped");
+    setContact("skipped");
+  }
+
+  // "Limpiar" empieza una conversación nueva en este navegador; la anterior queda guardada en el panel de la tienda
   function clearChat() {
-    const previousSessionId = sessionId();
     localStorage.setItem(SESSION_KEY, crypto.randomUUID());
     localStorage.removeItem(MESSAGES_KEY);
     setMessages([{ id: "welcome", role: "assistant", content: liveSettings.welcomeMessage }]);
     setInput("");
     setError(null);
-    fetch("/api/assistant/chat", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: previousSessionId }),
-    }).catch(() => {});
+    // Los datos que ya dejó viajan con la conversación nueva
+    if (contact && contact !== "skipped") void postContact(sessionId(), contact.name, contact.phone);
   }
 
   if (!liveSettings.enabled) {
@@ -202,7 +265,7 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                 type="button"
                 onClick={clearChat}
                 disabled={sending}
-                title="Borrar la conversación y empezar de nuevo"
+                title="Empezar una conversación nueva"
                 aria-label="Limpiar chat"
                 className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-white/35 bg-white/10 px-2.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:border-white/60 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -294,6 +357,56 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
                 )}
               </div>
             ))}
+            {contactLoaded && contact === null && messages.length <= 1 && (
+              <form onSubmit={submitContact} className="mr-3 space-y-2.5 rounded-2xl rounded-bl-sm border border-brand-pink/30 bg-white p-3.5 shadow-sm sm:mr-5">
+                <p className="text-sm leading-relaxed text-brand-ink">
+                  Antes de empezar, dejanos tu <strong>nombre y teléfono</strong>: si no logro resolver tu consulta, te contactamos nosotros.
+                </p>
+                <input
+                  type="text"
+                  value={contactName || (authSession?.user?.name ?? "")}
+                  onChange={(event) => setContactName(event.target.value.slice(0, 80))}
+                  placeholder="Tu nombre"
+                  autoComplete="name"
+                  aria-label="Tu nombre"
+                  required
+                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
+                />
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(event) => setContactPhone(event.target.value.slice(0, 30))}
+                  placeholder="Tu teléfono (con código de área)"
+                  autoComplete="tel"
+                  aria-label="Tu teléfono"
+                  inputMode="tel"
+                  required
+                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
+                />
+                {contactError && <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{contactError}</p>}
+                <button
+                  type="submit"
+                  disabled={savingContact}
+                  className="w-full cursor-pointer rounded-full bg-brand-pink px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {savingContact ? "Guardando…" : "Empezar a chatear"}
+                </button>
+                <button type="button" onClick={skipContact} className="block w-full cursor-pointer text-center text-[11px] text-brand-muted underline">
+                  Prefiero no dejar mis datos
+                </button>
+                {liveSettings.humanSeller.whatsappUrl && (
+                  <a
+                    href={liveSettings.humanSeller.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-3 py-2 text-xs font-semibold text-white"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    O escribinos directo por WhatsApp
+                  </a>
+                )}
+              </form>
+            )}
             {sending && (
               <div className="mr-16 w-fit rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 text-sm text-brand-muted shadow-sm">
                 Buscando en la tienda…
@@ -335,13 +448,14 @@ export function SalesAssistant({ settings }: { settings: AssistantSettings }) {
               }}
               rows={1}
               maxLength={600}
-              placeholder="¿Qué estás buscando?"
+              placeholder={contactLoaded && contact === null ? "Completá tus datos para empezar" : "¿Qué estás buscando?"}
+              disabled={!contactLoaded || contact === null}
               aria-label="Mensaje"
               className="min-h-11 max-h-24 min-w-0 flex-1 resize-none rounded-xl border border-black/10 px-3 py-2.5 text-base text-brand-ink outline-none focus:border-brand-pink sm:text-sm"
             />
             <button
               type="submit"
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || sending || contact === null}
               className="h-11 shrink-0 cursor-pointer rounded-xl bg-brand-pink px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               Enviar

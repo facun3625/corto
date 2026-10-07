@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/prisma";
 import { getMailSender } from "@/lib/mailer";
+import { marketingMailsLeft, nextResetDate } from "@/lib/usage";
 import { buildMailHtml } from "@/lib/mailTemplate";
 import { getSegmentEmails } from "@/lib/customers";
 import { getAudienceEmails } from "@/lib/audiences";
@@ -56,8 +57,12 @@ async function runCampaign(campaignId: string, emails: string[], subject: string
     return;
   }
 
+  // Si mientras tanto se agotó el cupo mensual, se corta ahí (lo que falta no se manda)
+  const left = await marketingMailsLeft();
+
   let sent = 0;
   for (const email of emails) {
+    if (left !== null && sent >= left) break;
     const result = await mail.send(email, subject, html);
     if (!result.ok) console.error("mailing: no se pudo enviar a", email, "—", result.error);
     sent += 1;
@@ -74,7 +79,7 @@ async function runCampaign(campaignId: string, emails: string[], subject: string
   });
 }
 
-export async function createCampaign(formData: FormData) {
+export async function createCampaign(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
 
   const subject = String(formData.get("subject") ?? "").trim();
@@ -83,12 +88,25 @@ export async function createCampaign(formData: FormData) {
   const audiences = formData.getAll("audiences") as MailAudience[];
   const segmentIds = formData.getAll("segmentIds").map(String);
 
-  if (!subject || !title || !body || (audiences.length === 0 && segmentIds.length === 0)) return;
+  if (!subject || !title || !body || (audiences.length === 0 && segmentIds.length === 0)) return { ok: false, error: "Completá el asunto, el título, el mensaje y elegí a quién va." };
 
   const [settings, emails] = await Promise.all([
     prisma.storeSettings.findUnique({ where: { id: "global" } }),
     getAudienceEmails(audiences).then(async (list) => [...new Set([...list, ...(await getSegmentEmails(segmentIds))])]),
   ]);
+
+  // Cupo mensual (Configuración → Consumo): no se arranca una campaña que no entra en lo que queda del mes
+  const left = await marketingMailsLeft();
+  if (left !== null && emails.length > left) {
+    const resets = nextResetDate().toLocaleDateString("es-AR", { day: "numeric", month: "long" });
+    return {
+      ok: false,
+      error:
+        left === 0
+          ? `Se agotó el cupo mensual de mails: las campañas vuelven a estar disponibles el ${resets}. Podés subir el cupo en Configuración → Consumo.`
+          : `Te quedan ${left} mails este mes y esta campaña tiene ${emails.length} destinatarios. Elegí una lista más chica o subí el cupo en Configuración → Consumo.`,
+    };
+  }
 
   const campaign = await prisma.mailCampaign.create({
     data: {
@@ -130,27 +148,11 @@ export async function createCampaign(formData: FormData) {
   }
 
   revalidatePath("/admin/mailing");
+  return { ok: true };
 }
 
 export async function deleteCampaign(id: string) {
   await requireAdmin();
   await prisma.mailCampaign.delete({ where: { id } });
-  revalidatePath("/admin/mailing");
-}
-
-// Cupo mensual informativo (ver lib/mailQuota.ts) — no bloquea el envío,
-// solo avisa. Vaciar el campo vuelve a "sin límite cargado".
-export async function updateMailQuota(formData: FormData) {
-  await requireAdmin();
-
-  const raw = formData.get("mailMonthlyQuota");
-  const quota = typeof raw === "string" && raw.trim() ? Math.max(0, Math.floor(Number(raw))) : null;
-
-  await prisma.storeSettings.upsert({
-    where: { id: "global" },
-    create: { id: "global", mailMonthlyQuota: quota },
-    update: { mailMonthlyQuota: quota },
-  });
-
   revalidatePath("/admin/mailing");
 }

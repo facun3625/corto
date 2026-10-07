@@ -19,6 +19,8 @@ export type AssistantProduct = {
 export type AssistantReply = {
   text: string;
   products: AssistantProduct[];
+  // Tokens que consumió la respuesta (todas las vueltas con el proveedor); se restan del cupo mensual de IA
+  tokens: number;
 };
 
 export type AssistantProviderInput = {

@@ -1,16 +1,16 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { getAudienceCounts, getSegmentCounts, AUDIENCE_LABELS } from "@/lib/audiences";
 import { ensureSegmentsSeeded } from "@/lib/customers";
 import { getMailQuotaStatus } from "@/lib/mailQuota";
 import { Badge } from "@/components/admin/Badge";
-import { SaveButton } from "@/components/admin/SaveButton";
 import { SendIcon, MailIcon, TrendUpIcon } from "@/components/icons";
 import { MailComposer } from "./MailComposer";
 import { resolveLogos } from "@/lib/logo";
 import { MailHistoryPoller } from "./MailHistoryPoller";
 import { SectionSidebar } from "@/components/admin/SectionSidebar";
-import { deleteCampaign, updateMailQuota } from "./actions";
+import { deleteCampaign } from "./actions";
 
 const STATUS_LABELS: Record<string, string> = {
   sending: "Enviando...",
@@ -24,9 +24,6 @@ const STATUS_TONES: Record<string, "amber" | "green" | "red"> = {
   failed: "red",
 };
 
-const fieldClasses =
-  "w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
-const labelClasses = "mb-1 block text-xs font-medium text-brand-muted";
 
 export default async function AdminMailingPage() {
   await ensureSegmentsSeeded();
@@ -126,9 +123,8 @@ export default async function AdminMailingPage() {
       <div className="rounded-xl border border-black/10 bg-white p-5">
         <p className="text-sm font-semibold text-brand-ink">Cupo del mes</p>
         <p className="mt-0.5 text-xs text-brand-muted">
-          Cuenta las campañas mandadas desde el 1 de {currentMonthName} — se reinicia el{" "}
-          {quota.resetsOn.toLocaleDateString("es-AR", { day: "numeric", month: "long" })}. Es informativo: no bloquea
-          el envío.
+          Mails enviados desde el 1 de {currentMonthName}: se reinicia el{" "}
+          {quota.resetsOn.toLocaleDateString("es-AR", { day: "numeric", month: "long" })}.
         </p>
 
         <div className="mt-4 flex items-end justify-between gap-4">
@@ -152,20 +148,12 @@ export default async function AdminMailingPage() {
           </div>
         )}
 
-        <form action={updateMailQuota} className="mt-5 flex flex-wrap items-end gap-3 border-t border-black/5 pt-4">
-          <div className="w-44">
-            <label className={labelClasses}>Cupo mensual</label>
-            <input
-              type="number"
-              name="mailMonthlyQuota"
-              min={0}
-              placeholder="Sin límite"
-              defaultValue={quota.quota ?? ""}
-              className={fieldClasses}
-            />
-          </div>
-          <SaveButton trackDirty />
-        </form>
+        <p className="mt-5 border-t border-black/5 pt-4 text-xs text-brand-muted">
+          El cupo se define en{" "}
+          <Link href="/admin/configuracion" className="font-semibold text-brand-pink-dark hover:underline">Configuración → Consumo</Link>.
+          Cuenta todos los mails que salen (campañas, avisos de compra, recuperación de carritos y contraseñas). Al agotarse se frenan las
+          campañas y los mails automáticos; los de compra y de contraseña salen siempre.
+        </p>
       </div>
 
       <div className="rounded-xl border border-black/10 bg-white p-5">

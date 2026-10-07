@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getStoreSettingsRow } from "@/lib/settings";
+import { addUsage } from "@/lib/usage";
 
 export type MailSendResult = { ok: boolean; error?: string };
 
@@ -102,5 +103,17 @@ export function buildMailSender(settings: MailSenderConfig): MailSender | null {
 // elegido en /admin/configuracion). Quien llama decide qué hacer.
 export async function getMailSender(): Promise<MailSender | null> {
   const settings = await getStoreSettingsRow();
-  return buildMailSender(settings);
+  const sender = buildMailSender(settings);
+  if (!sender) return null;
+  // Cada mail enviado resta del cupo mensual (Configuración → Consumo, ver lib/usage.ts). Un fallo al contar nunca
+  // rompe el envío. Los mails de compra y de contraseña salen aunque el cupo esté agotado; quien manda marketing
+  // consulta marketingMailsLeft() antes.
+  return {
+    ...sender,
+    send: async (to, subject, html) => {
+      const result = await sender.send(to, subject, html);
+      if (result.ok) await addUsage("mail", 1).catch((err) => console.error("usage: no se pudo contar el mail", err));
+      return result;
+    },
+  };
 }

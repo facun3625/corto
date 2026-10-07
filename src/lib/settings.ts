@@ -7,6 +7,7 @@ import { DEFAULT_FOOTER_TEXT } from "@/lib/contact";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 import { getContactCards } from "@/lib/contactCards";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
+import { monthKey } from "@/lib/monthKey";
 
 export async function getStoreSettingsRow() {
   return prisma.storeSettings.upsert({
@@ -27,6 +28,12 @@ const DEFAULT_FEATURED_CATEGORY_IDS: string[] = [];
 export async function getSiteSettings() {
   const row = await getStoreSettingsRow();
   const assistantConfigured = Boolean(row.aiProvider && row.aiApiKey);
+  // Con cupo mensual de tokens cargado y agotado, la vendedora no se ofrece (queda el acceso a WhatsApp)
+  let aiQuotaExhausted = false;
+  if (assistantConfigured && row.aiAssistantEnabled && row.aiMonthlyTokenQuota && row.aiMonthlyTokenQuota > 0) {
+    const used = await prisma.monthlyUsage.findUnique({ where: { month_kind: { month: monthKey(), kind: "ai_tokens" } }, select: { amount: true } });
+    aiQuotaExhausted = (used?.amount ?? 0) >= row.aiMonthlyTokenQuota;
+  }
   // Ya no hay un toggle separado de "ofrecer atención humana": el horario
   // solo define CUÁNDO está disponible el WhatsApp (ya sea el botón dentro
   // del chat de la IA, o el botón flotante que lo reemplaza cuando la IA
@@ -86,7 +93,7 @@ export async function getSiteSettings() {
           }
         : null,
     assistant: {
-      enabled: row.aiAssistantEnabled && assistantConfigured,
+      enabled: row.aiAssistantEnabled && assistantConfigured && !aiQuotaExhausted,
       name: row.aiAssistantName?.trim() || "Vendedora virtual",
       welcomeMessage:
         row.aiWelcomeMessage?.trim() ||

@@ -37,6 +37,43 @@ function flattenTree(categories: FormCategory[]) {
 }
 
 // Imágenes que se insertan dentro de las descripciones (van al mismo almacenamiento que las del producto)
+// Toma un cuadro del video (cerca del segundo 1) para usarlo de portada. Corre en el navegador: así el servidor no
+// necesita ffmpeg. Falla si el navegador no puede leer el video (típico de los .mov de iPhone en HEVC).
+function captureVideoFrame(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    const finish = (fn: () => void) => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(objectUrl);
+      fn();
+    };
+    const fail = () => finish(() => reject(new Error("unreadable")));
+    const timer = setTimeout(fail, 20000);
+    video.onerror = fail;
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(1, (video.duration || 2) / 2);
+    };
+    video.onseeked = () => {
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      if (!w || !h) return fail();
+      const scale = Math.min(1, 1280 / Math.max(w, h));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => finish(() => (blob ? resolve(blob) : reject(new Error("unreadable")))), "image/jpeg", 0.85);
+    };
+    video.src = objectUrl;
+  });
+}
+
+const MAX_VIDEO_MB = 50;
+
 async function uploadRichImage(fd: FormData) {
   const res = await fetch("/api/admin/images", { method: "POST", body: fd });
   const data = await res.json().catch(() => ({}));
@@ -99,6 +136,48 @@ export function ProductForm({
         break;
       }
       setForm((prev) => ({ ...prev, images: [...prev.images, { url: data.url, thumbUrl: data.thumbUrl, alt: "" }] }));
+    }
+    setUploading(false);
+  }
+
+  // Un video ocupa un lugar de la galería: se sube el archivo y, como portada, un cuadro del propio video.
+  async function uploadVideos(files: FileList | null) {
+    if (!files?.length) return;
+    setUploading(true);
+    setError(null);
+    for (const file of Array.from(files)) {
+      if (!/\.(mp4|webm)$/i.test(file.name) && !/^video\/(mp4|webm)$/.test(file.type)) {
+        setError("El video tiene que ser mp4 o webm. Si es un .mov de iPhone, exportalo a mp4 (H.264) antes de subirlo.");
+        break;
+      }
+      if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+        setError(`El video supera los ${MAX_VIDEO_MB} MB: comprimilo antes de subirlo.`);
+        break;
+      }
+      let cover: Blob;
+      try {
+        cover = await captureVideoFrame(file);
+      } catch {
+        setError("Este navegador no puede leer ese video. Suele pasar con los .mov de iPhone: exportalo a mp4 (H.264) y volvé a subirlo.");
+        break;
+      }
+      const videoBody = new FormData();
+      videoBody.set("file", file);
+      const videoRes = await fetch("/api/admin/videos", { method: "POST", body: videoBody });
+      const videoData = await videoRes.json().catch(() => ({}));
+      if (!videoRes.ok) {
+        setError(videoData.error ?? "No se pudo subir el video");
+        break;
+      }
+      const coverBody = new FormData();
+      coverBody.set("file", new File([cover], "portada.jpg", { type: "image/jpeg" }));
+      const coverRes = await fetch("/api/admin/images", { method: "POST", body: coverBody });
+      const coverData = await coverRes.json().catch(() => ({}));
+      if (!coverRes.ok) {
+        setError(coverData.error ?? "No se pudo guardar la portada del video");
+        break;
+      }
+      setForm((prev) => ({ ...prev, images: [...prev.images, { url: coverData.url, thumbUrl: coverData.thumbUrl, alt: "", videoUrl: videoData.url }] }));
     }
     setUploading(false);
   }
@@ -363,12 +442,22 @@ export function ProductForm({
       )}
 
       <div className={card}>
-        <p className="mb-3 text-sm font-semibold text-brand-ink">Imágenes</p>
+        <p className="mb-1 text-sm font-semibold text-brand-ink">Imágenes y videos</p>
+        <p className="mb-3 text-xs text-brand-muted">Un producto puede tener solo videos: la portada se toma sola del video. Formatos mp4 o webm, hasta 50 MB cada uno.</p>
         <div className="flex flex-wrap gap-3">
           {form.images.map((img, i) => (
             <div key={img.url} className="w-28">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.thumbUrl ?? img.url} alt="" className="h-28 w-28 rounded-lg border border-black/10 object-cover" />
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.thumbUrl ?? img.url} alt="" className="h-28 w-28 rounded-lg border border-black/10 object-cover" />
+                {img.videoUrl && (
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center" title="Video">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-4 w-4"><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                  </span>
+                )}
+              </div>
               <div className="mt-1 flex items-center justify-between text-xs">
                 <button type="button" onClick={() => moveImage(i, -1)} className="cursor-pointer px-1 hover:text-brand-pink-dark" aria-label="Mover a la izquierda">←</button>
                 <span className="text-brand-muted">{i === 0 ? "Principal" : i + 1}</span>
@@ -380,6 +469,10 @@ export function ProductForm({
           <label className="flex h-28 w-28 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-black/20 text-center text-xs text-brand-muted hover:border-brand-pink">
             {uploading ? "Subiendo…" : "+ Subir imágenes"}
             <input type="file" accept="image/*" multiple className="hidden" disabled={uploading} onChange={(e) => { void uploadFiles(e.target.files); e.target.value = ""; }} />
+          </label>
+          <label className="flex h-28 w-28 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-black/20 text-center text-xs text-brand-muted hover:border-brand-pink">
+            {uploading ? "Subiendo…" : "+ Subir video"}
+            <input type="file" accept="video/mp4,video/webm,.mp4,.webm" multiple className="hidden" disabled={uploading} onChange={(e) => { void uploadVideos(e.target.files); e.target.value = ""; }} />
           </label>
         </div>
       </div>
@@ -441,10 +534,6 @@ export function ProductForm({
               <input type="number" min={0} step="0.01" className={field} value={form[key] ?? ""} onChange={(e) => set(key, num(e.target.value))} />
             </div>
           ))}
-          <div className="sm:col-span-2">
-            <label className={label}>Video (URL, opcional)</label>
-            <input className={field} value={form.videoUrl} onChange={(e) => set("videoUrl", e.target.value)} />
-          </div>
           <label className="flex items-end gap-2 pb-2 text-sm text-brand-ink sm:col-span-2">
             <input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} />
             Producto destacado

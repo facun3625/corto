@@ -46,6 +46,8 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const variantImage = variant?.image;
   const images = product.images;
   const mainImage = variantImage ?? images[imageIndex]?.url ?? null;
+  // Si el lugar elegido de la galería es un video (y no hay una foto de variante elegida), se muestra el reproductor
+  const mainVideo = !variantImage ? images[imageIndex]?.videoUrl ?? null : null;
   const variantLabel = variant
     ? product.options
         .map((o) => o.terms.find((t) => t.id === selected[o.attributeId])?.name)
@@ -87,9 +89,23 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       <div className="grid gap-8 md:grid-cols-2">
         <div>
           <div className="aspect-square overflow-hidden rounded-2xl bg-brand-soft">
-            {mainImage && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+            {mainVideo ? (
+              // key: al cambiar de video se vuelve a armar el reproductor. preload="metadata": no baja el video hasta que se toca play
+              <video
+                key={mainVideo}
+                src={mainVideo}
+                poster={mainImage ?? undefined}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={`Video de ${product.name}`}
+                className="h-full w-full bg-black/5 object-contain"
+              />
+            ) : (
+              mainImage && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+              )
             )}
           </div>
           {images.length > 1 && (
@@ -103,8 +119,17 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                     i === imageIndex && !variantImage ? "border-brand-pink" : "border-transparent"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.thumbUrl} alt={img.alt ?? ""} className="h-full w-full object-cover" />
+                  <span className="relative block h-full w-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.thumbUrl} alt={img.alt ?? ""} className="h-full w-full object-cover" />
+                    {img.videoUrl && (
+                      <span className="absolute inset-0 flex items-center justify-center" aria-label="Video">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white">
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-3 w-3"><path d="M8 5v14l11-7z" /></svg>
+                        </span>
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>

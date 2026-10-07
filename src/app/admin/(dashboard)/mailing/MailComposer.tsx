@@ -46,6 +46,7 @@ export function MailComposer({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Fuerza un remount del editor (que es "no controlado" a propósito, ver
   // RichTextEditor) para vaciarlo después de un envío exitoso.
   const [editorKey, setEditorKey] = useState(0);
@@ -80,7 +81,12 @@ export function MailComposer({
   }
 
   async function handleSubmit(formData: FormData) {
-    await createCampaign(formData);
+    setError(null);
+    const result = await createCampaign(formData);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo enviar el mailing.");
+      return;
+    }
     setSent(true);
     setSubject("");
     setTitle("");
@@ -201,6 +207,7 @@ export function MailComposer({
             Enviar mailing
           </button>
           {sent && <span className="text-sm font-semibold text-green-700">¡Enviando! Mirá el historial abajo.</span>}
+          {error && <span className="text-sm font-semibold text-red-700">{error}</span>}
         </div>
       </div>
 

@@ -47,7 +47,7 @@ export async function getProductForEdit(id: string): Promise<ProductInput | null
     tags: p.tags.map((t) => t.tag.name), relatedIds: p.related.map((r) => r.relatedId),
     seoTitle: p.seoTitle ?? "", seoDescription: p.seoDescription ?? "",
     categoryIds: p.categories.map((c) => c.categoryId),
-    images: p.images.map((i) => ({ url: i.url, thumbUrl: i.thumbUrl, alt: i.alt ?? "" })),
+    images: p.images.map((i) => ({ url: i.url, thumbUrl: i.thumbUrl, alt: i.alt ?? "", videoUrl: i.videoUrl })),
     attributeIds: p.attributes.map((a) => a.attributeId),
     variants: p.variants.map((v) => ({
       id: v.id, sku: v.sku ?? "", price: v.price, compareAtPrice: v.compareAtPrice, costPrice: v.costPrice, promoPrice: v.promoPrice, stock: v.stock,

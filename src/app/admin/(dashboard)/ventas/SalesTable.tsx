@@ -96,7 +96,10 @@ export function SalesTable({ orders }: { orders: SalesOrder[] }) {
                   onClick={() => setSelected(o)}
                   className="scroll-mt-4 cursor-pointer border-b border-black/5 target:bg-brand-soft last:border-0 hover:bg-brand-soft/50"
                 >
-                  <td className="px-4 py-3 font-semibold text-brand-ink">{formatOrderNumber(o.number)}</td>
+                  <td className="px-4 py-3 font-semibold text-brand-ink">
+                    {formatOrderNumber(o.number)}
+                    {!o.adminSeenAt && <span className="ml-2 rounded-full bg-brand-pink px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-white">Nuevo</span>}
+                  </td>
                   <td className="px-4 py-3 font-medium text-brand-ink">
                     {o.customerName}
                     <span className="block text-xs font-normal text-brand-muted">{o.customerEmail}</span>

@@ -6,6 +6,7 @@ import { buildAssistantInstructions } from "@/lib/ai/prompt";
 import { runAssistantProvider } from "@/lib/ai/provider";
 import { DEFAULT_AI_MODELS } from "@/lib/ai/types";
 import { parseAssistantRequest, parseAssistantSessionId } from "@/lib/ai/validation";
+import { addUsage, isAiQuotaExhausted } from "@/lib/usage";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "La vendedora virtual no está disponible." }, { status: 503 });
   }
 
+  // Cupo mensual de tokens agotado: la vendedora se apaga hasta el mes siguiente (la tienda ofrece WhatsApp en su lugar)
+  if (await isAiQuotaExhausted()) {
+    return NextResponse.json({ error: "La vendedora virtual no está disponible por ahora.", unavailable: true }, { status: 503 });
+  }
+
   const existing = await prisma.aiConversation.findUnique({
     where: { sessionId: parsed.sessionId },
     select: {
@@ -92,12 +98,15 @@ export async function POST(request: NextRequest) {
       instructions: buildAssistantInstructions(settings.aiInstructions),
       history,
     });
+    // Lo consumido se resta del cupo mensual (Configuración → Consumo)
+    await Promise.all([addUsage("ai_tokens", reply.tokens), addUsage("ai_requests", 1)]).catch((err) => console.error("usage: no se pudo contar el consumo de IA", err));
     const cleanReply = reply.text.trim().slice(0, 5_000);
     const session = await auth();
     const conversation = await prisma.aiConversation.upsert({
       where: { sessionId: parsed.sessionId },
       create: { sessionId: parsed.sessionId, userId: session?.user?.id },
-      update: session?.user?.id ? { userId: session.user.id } : {},
+      // lastMessageAt ordena la lista de Conversaciones IA del panel; handledAt vuelve a null: hay algo nuevo para revisar
+      update: { lastMessageAt: new Date(), handledAt: null, ...(session?.user?.id ? { userId: session.user.id } : {}) },
       select: { id: true },
     });
     await prisma.aiMessage.createMany({
@@ -122,16 +131,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
-  let sessionId: string;
-  try {
-    const body = await request.json() as { sessionId?: unknown };
-    sessionId = parseAssistantSessionId(body.sessionId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Solicitud inválida";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-
-  await prisma.aiConversation.deleteMany({ where: { sessionId } });
+// "Limpiar chat" solo empieza una conversación nueva en el navegador: las conversaciones quedan guardadas y se ven en el
+// panel (Conversaciones IA). Se mantiene el endpoint para navegadores que todavía tengan la versión anterior abierta.
+export async function DELETE() {
   return new NextResponse(null, { status: 204 });
 }

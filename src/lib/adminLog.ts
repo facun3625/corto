@@ -33,6 +33,8 @@ const ACTION_LABELS: Record<string, string> = {
   "cart_recovery.enable": "Activó la recuperación automática de carritos",
   "cart_recovery.disable": "Suspendió la recuperación automática de carritos",
   "cart_recovery.save": "Cambió los ajustes de recuperación de carritos",
+  "usage.quotas": "Cambió los cupos mensuales de mails y de IA",
+  "ai.conversation_delete": "Eliminó una conversación de la vendedora IA",
   "backup.create": "Hizo una copia de seguridad",
   "backup.delete": "Eliminó una copia de seguridad",
   "migration.start": "Inició la migración desde WooCommerce",

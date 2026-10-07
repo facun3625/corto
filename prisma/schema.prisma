@@ -206,6 +206,10 @@ model StoreSettings {
   // día 1 del mes en curso — ver lib/mailQuota.ts.
   mailMonthlyQuota Int?
 
+  // Tope mensual de tokens de la vendedora de IA (null = sin límite). Cuando se agota, el chat se reemplaza por el acceso
+  // directo a WhatsApp hasta el mes siguiente. Ver lib/usage.ts.
+  aiMonthlyTokenQuota Int?
+
   // Par de claves VAPID para notificaciones push (Web Push nativo, sin
   // proveedor externo) — se generan una sola vez, solas, la primera vez que
   // hace falta mandar o suscribir un push (ver lib/webPush.ts). La privada
@@ -367,6 +371,13 @@ model AiConversation {
   sessionId String      @unique
   userId    String?
   user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Datos que el cliente deja al abrir el chat, para poder contactarlo si la IA no resuelve la consulta
+  name      String?
+  phone     String?
+  // Cuándo se marcó como atendida (null = pendiente de revisar)
+  handledAt DateTime?
+  // Último mensaje de la conversación (para ordenar la lista del panel)
+  lastMessageAt DateTime @default(now())
   messages  AiMessage[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -739,6 +750,8 @@ model CartRecoveryOptOut {
 // equipo, o automático si viene de Mercado Pago); cancelled = nunca pagó.
 model Order {
   id            String        @id @default(cuid())
+  // Cuándo lo vio un administrador por primera vez (null = pedido nuevo, sin ver). Alimenta la campanita y el número de Ventas.
+  adminSeenAt   DateTime?
   // Número correlativo visible (#0001, #0002...) — el id interno es un código largo
   number        Int           @unique @default(autoincrement())
   userId        String?
@@ -947,6 +960,9 @@ model ProductImage {
   thumbUrl  String?
   alt       String?
   sortOrder Int     @default(0)
+  // Si este lugar de la galería es un video: url/thumbUrl son su portada (un cuadro del video) y videoUrl el archivo.
+  // Todo lo que usa la imagen (listados, carrito, mails, vista previa) sigue usando la portada sin enterarse.
+  videoUrl  String?
   // Referencia a la imagen original (Woo) para no re-subirla si se reintenta la migración
   sourceUrl String?
 
@@ -1304,4 +1320,14 @@ model ContactCard {
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Consumo del mes de lo que tiene cupo: mails enviados ("mail") y tokens de la IA ("ai_tokens"). month = "AAAA-MM" en
+// hora de Argentina. Se suma de a poco con cada envío o respuesta (ver lib/usage.ts).
+model MonthlyUsage {
+  month  String
+  kind   String
+  amount Int    @default(0)
+
+  @@id([month, kind])
 }

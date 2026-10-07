@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon } from "@/components/icons";
+import { ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon } from "@/components/icons";
 import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
 
 const LINKS = [
@@ -24,6 +24,7 @@ const LINKS = [
   { href: "/admin/cupones", keywords: "descuentos codigos promociones", label: "Cupones", icon: TagIcon },
   { href: "/admin/temas", keywords: "campanas slider banner portada colores navidad tipografia anuncio aspecto tarjetas", label: "Temas y campañas", icon: StarIcon },
   { href: "/admin/paginas", keywords: "legales terminos politicas quienes somos", label: "Páginas", icon: ClipboardIcon },
+  { href: "/admin/conversaciones", keywords: "vendedora ia chat consultas telefono contacto conversaciones inteligencia artificial", label: "Conversaciones IA", icon: ChatIcon },
   { href: "/admin/mensajes", keywords: "consultas contacto formulario", label: "Mensajes", icon: MailIcon },
   { href: "/admin/contacto", keywords: "sucursales datos telefono whatsapp instagram direccion tarjetas mapa", label: "Contacto", icon: MailIcon },
   { href: "/admin/puntos", keywords: "recompensas fidelizacion", label: "Puntos", icon: StarIcon },
@@ -37,7 +38,7 @@ const LINKS = [
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { pendingOrders: number; unreadMessages: number; showMessages?: boolean } }) {
+export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { userLabel: string; logoUrl?: string; counts?: { newOrders: number; unreadMessages: number; pendingConversations?: number; showMessages?: boolean } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -163,8 +164,8 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts }: { us
               <Icon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
               <span className="min-w-0 flex-1 truncate">{link.label}</span>
               {(() => {
-                // Números a la derecha: pedidos pendientes en Ventas y mensajes sin leer en Mensajes
-                const n = link.href === "/admin/ventas" ? counts?.pendingOrders : link.href === "/admin/mensajes" ? counts?.unreadMessages : 0;
+                // Números a la derecha: pedidos nuevos (sin ver) en Ventas, mensajes sin leer y conversaciones de IA con contacto por revisar
+                const n = link.href === "/admin/ventas" ? counts?.newOrders : link.href === "/admin/mensajes" ? counts?.unreadMessages : link.href === "/admin/conversaciones" ? counts?.pendingConversations : 0;
                 return n ? (
                   <span className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white text-brand-pink-dark" : "bg-brand-pink text-white"}`}>{n > 99 ? "99+" : n}</span>
                 ) : null;

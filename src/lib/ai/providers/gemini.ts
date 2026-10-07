@@ -26,6 +26,7 @@ export async function runGeminiAssistant(input: AssistantProviderInput): Promise
   };
   let interaction = await client.interactions.create({ ...requestConfig, input: transcript(input) });
   let products: AssistantProduct[] = [];
+  let tokens = interaction.usage?.total_tokens ?? 0;
 
   for (let round = 0; round < 4; round += 1) {
     const calls = (interaction.steps ?? []).filter((step) => step.type === "function_call");
@@ -33,6 +34,7 @@ export async function runGeminiAssistant(input: AssistantProviderInput): Promise
       return {
         text: interaction.output_text?.trim() || "No pude armar una respuesta. Probá reformulando la consulta.",
         products,
+        tokens,
       };
     }
 
@@ -63,7 +65,8 @@ export async function runGeminiAssistant(input: AssistantProviderInput): Promise
       ...requestConfig,
       input: [...(interaction.steps ?? []), ...functionResults],
     });
+    tokens += interaction.usage?.total_tokens ?? 0;
   }
 
-  return { text: "No pude completar la búsqueda. Probá con una consulta más específica.", products };
+  return { text: "No pude completar la búsqueda. Probá con una consulta más específica.", products, tokens };
 }

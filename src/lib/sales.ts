@@ -67,6 +67,7 @@ export async function getSalesPage(opts: SalesFilterOpts & { limit: number; offs
         couponDiscount: true,
         zipDiscount: true,
         createdAt: true,
+        adminSeenAt: true,
         shippingMethod: { select: { name: true } },
         shippingCode: true,
         shippingName: true,

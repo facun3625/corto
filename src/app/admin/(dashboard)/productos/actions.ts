@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import { parseCsv } from "@/lib/csv";
+import { normalizeVideoUrl } from "@/lib/video";
 
 export type ProductInput = {
   id?: string;
@@ -39,7 +40,8 @@ export type ProductInput = {
   seoTitle: string;
   seoDescription: string;
   categoryIds: string[];
-  images: { url: string; thumbUrl: string | null; alt: string }[];
+  // Si la imagen es la portada de un video, videoUrl es el archivo del video
+  images: { url: string; thumbUrl: string | null; alt: string; videoUrl?: string | null }[];
   // Atributos que definen las variantes (solo productos variables)
   attributeIds: string[];
   variants: {
@@ -186,7 +188,7 @@ export async function saveProduct(input: ProductInput): Promise<SaveResult> {
           await tx.productImage.update({ where: { id: existingId }, data: { sortOrder: index, alt: nullIfEmpty(image.alt) } });
         } else {
           const created = await tx.productImage.create({
-            data: { productId: product.id, url: image.url, thumbUrl: image.thumbUrl, alt: nullIfEmpty(image.alt), sortOrder: index },
+            data: { productId: product.id, url: image.url, thumbUrl: image.thumbUrl, alt: nullIfEmpty(image.alt), sortOrder: index, videoUrl: normalizeVideoUrl(image.videoUrl ?? "") || null },
           });
           imageIdByUrl.set(image.url, created.id);
         }
@@ -503,7 +505,7 @@ export async function duplicateProduct(id: string): Promise<{ ok: boolean; id?: 
     });
     const imageIdMap = new Map<string, string>();
     for (const img of p.images) {
-      const created = await tx.productImage.create({ data: { productId: copy.id, url: img.url, thumbUrl: img.thumbUrl, alt: img.alt, sortOrder: img.sortOrder } });
+      const created = await tx.productImage.create({ data: { productId: copy.id, url: img.url, thumbUrl: img.thumbUrl, alt: img.alt, sortOrder: img.sortOrder, videoUrl: img.videoUrl } });
       imageIdMap.set(img.id, created.id);
     }
     if (p.categories.length) await tx.productCategory.createMany({ data: p.categories.map((c) => ({ productId: copy.id, categoryId: c.categoryId })) });

@@ -14,6 +14,8 @@ export type ProductListItem = {
   onSale: boolean;
   image: string | null;
   thumb: string | null;
+  // true si la primera foto de la galería es un video (la portada muestra un ícono de play)
+  hasVideo: boolean;
   categoryId: string | null;
   categoryName: string | null;
 };

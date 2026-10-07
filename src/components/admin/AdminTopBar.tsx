@@ -27,11 +27,15 @@ export function AdminTopBar({ name, email, role, counts }: { name: string; email
   const bellRef = useClickAway(() => setBell(false));
   const profileRef = useClickAway(() => setProfile(false));
 
+  // Solo lo que todavía no se vio: un pedido deja de contar en cuanto se abre Ventas, aunque siga pendiente de confirmar
+  // (los pedidos con pago pendiente hace más de 24 horas se avisan en el inicio del panel).
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   const alerts = [
-    counts.pendingOrders > 0 && { href: "/admin/ventas?status=pending", text: `${counts.pendingOrders} pedido${counts.pendingOrders === 1 ? "" : "s"} pendiente${counts.pendingOrders === 1 ? "" : "s"}`, hint: counts.staleOrders > 0 ? `${counts.staleOrders} hace más de 24 horas` : "", urgent: counts.staleOrders > 0 },
+    counts.newOrders > 0 && { href: "/admin/ventas", text: plural(counts.newOrders, "pedido nuevo", "pedidos nuevos"), hint: "", urgent: true },
     counts.unreadMessages > 0 && { href: "/admin/mensajes", text: `${counts.unreadMessages} mensaje${counts.unreadMessages === 1 ? "" : "s"} sin leer`, hint: "", urgent: false },
+    counts.pendingConversations > 0 && { href: "/admin/conversaciones", text: plural(counts.pendingConversations, "consulta de la vendedora con teléfono", "consultas de la vendedora con teléfono"), hint: "Para contactar si la IA no resolvió", urgent: false },
   ].filter(Boolean) as { href: string; text: string; hint: string; urgent: boolean }[];
-  const total = counts.pendingOrders + counts.unreadMessages;
+  const total = counts.newOrders + counts.unreadMessages + counts.pendingConversations;
   const initials = (name || email).split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "A";
 
   return (

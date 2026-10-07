@@ -362,7 +362,18 @@ Si la vendedora se desactiva, la tienda muestra el acceso directo a WhatsApp.
 
 ### 6.5 Limpiar conversación
 
-El botón **Limpiar chat** borra el historial de esa conversación y comienza una sesión nueva.
+El botón **Limpiar** del chat empieza una conversación nueva en el navegador del cliente. **La anterior no se borra: queda guardada** y se ve en el panel (ver 6.6). Los datos de contacto que ya dejó viajan con la conversación nueva.
+
+### 6.6 Datos de contacto y conversaciones guardadas
+
+**Al abrir el chat**, el cliente ve una tarjeta que le pide su **nombre y su teléfono** (con código de área): "si no logro resolver tu consulta, te contactamos nosotros". Debajo tiene un botón para escribir directo por **WhatsApp** y la opción "Prefiero no dejar mis datos". Hasta que elige una de las dos cosas, el cuadro para escribir está desactivado. Se pide una sola vez por navegador, y si el cliente tiene cuenta se completa su nombre.
+
+**Conversaciones IA** (menú del panel) guarda **todas** las conversaciones:
+
+- La lista muestra el cliente (o "Anónimo"), su teléfono con enlace a WhatsApp, la primera consulta, la cantidad de mensajes, la última actividad y el estado. Se puede buscar por nombre, teléfono o texto de la conversación, y filtrar por **Para contactar** (dejó teléfono y no se marcó como atendida), **Con teléfono** y **Atendidas**.
+- Al abrir una conversación se ve el diálogo completo con fecha y hora, los productos que la vendedora recomendó (con enlace) y los datos del cliente. Desde ahí: **Escribirle por WhatsApp**, **Marcar como atendida** (o volver a dejarla pendiente) y **Eliminar** (con confirmación).
+- Si un cliente que ya estaba "atendido" vuelve a escribir, la conversación vuelve a quedar pendiente.
+- El menú y la campanita muestran un número con las conversaciones **con teléfono pendientes de atender**.
 
 ---
 
@@ -425,6 +436,7 @@ El panel conserva la última actividad de los carritos y permite:
 **Recuperación automática por mail (con interruptor).** Arriba de la lista hay una tarjeta con un interruptor que la **activa o la suspende** al instante (viene suspendida). Mientras esté suspendida no se manda ningún mail. Con **Ajustes** se elige cuántas horas esperar desde la última actividad del carrito (1 a 72; por defecto 4), el asunto y el mensaje (si se dejan vacíos se usan los de ejemplo), y **Enviarme una prueba** manda el mail a tu casilla para verlo antes de activar.
 
 - Para activarla tiene que estar configurado el correo (Configuración → Correo).
+- Cuenta para el **cupo mensual de mails**: si se agota, la recuperación automática se frena hasta el mes siguiente y la tarjeta lo avisa.
 - Reglas: un mail por carrito (como mucho uno cada 3 días), solo a carritos de los últimos 3 días (al activarla no se avisa a carritos viejos), solo a quien dejó su email o tiene cuenta, y nunca a quien ya compró después de dejar el carrito ni a quien pidió no recibir más.
 - Cada mail incluye un link para **no recibir más recordatorios**; quien lo toca queda excluido para siempre.
 - En la lista, la columna **Mail automático** muestra a quién ya se le envió, y la tarjeta cuenta los enviados en los últimos 7 días.
@@ -450,14 +462,7 @@ El editor permite utilizar:
 
 El panel muestra destinatarios, cantidad enviada, estado e historial de campañas.
 
-La pestaña **Disponibilidad** permite:
-
-- Definir un cupo mensual de emails.
-- Consultar cuántos envíos se utilizaron durante el mes.
-- Ver cuántos quedan disponibles.
-- Revisar las campañas enviadas desde el primer día del mes.
-
-El cupo es informativo: ayuda a controlar el consumo, pero no bloquea automáticamente una campaña.
+La pestaña **Disponibilidad** muestra cuántos mails se enviaron en el mes, cuántos quedan y las campañas mandadas desde el día 1. El cupo se define en **Configuración → Consumo** (ver 10.5): cuenta **todos** los mails que salen y, al agotarse, **frena las campañas**. Una campaña que no entra en lo que queda del mes no se arranca y avisa cuántos mails quedan.
 
 ### 8.3 Notificaciones push
 
@@ -614,7 +619,7 @@ En **Migración Woo**, el superadministrador tiene una **zona de peligro**: *Ver
 
 ### 10.4 bis bis Barra superior del panel
 
-Arriba del panel hay una barra con la **campanita** de novedades (pedidos pendientes y mensajes sin leer, con el detalle y enlaces; avisa cuántos pendientes llevan más de 24 horas) y el **menú del perfil** (nombre, email y rol, "Ver la tienda" y "Cerrar sesión"). En el menú lateral, **Ventas** muestra un número con los pedidos pendientes y **Mensajes** con los mensajes sin leer.
+Arriba del panel hay una barra con la **campanita** de novedades y el **menú del perfil** (nombre, email y rol, "Ver la tienda" y "Cerrar sesión"). La campanita y los números del menú cuentan solo lo que **todavía no viste**: los **pedidos nuevos** (en **Ventas**), los mensajes sin leer (en **Mensajes**) y las conversaciones de la vendedora con teléfono por atender (en **Conversaciones IA**). Un pedido deja de contar en cuanto abrís Ventas y lo ves en la lista (ahí aparece con la marca **Nuevo** durante esa visita), aunque siga pendiente de confirmar: los pedidos con pago pendiente hace más de 24 horas se avisan aparte, en "Requiere tu atención" del inicio.
 
 ### 10.4 ter Roles y administradores
 
@@ -641,6 +646,9 @@ Las pestañas disponibles son:
 - **Checkout y mensajes:** aviso del checkout y textos de “pedido registrado”.
 - **Telegram:** avisos de ventas.
 - **Vendedora IA:** identidad, instrucciones y horarios.
+- **Consumo:** el consumo del mes de lo que tiene cupo: **mails** y **tokens de la vendedora de IA**. Cada mail que sale y cada respuesta de la IA se va restando, con una barra de lo usado y lo que queda, y el contador arranca de cero solo el día 1 de cada mes (hora de Argentina). Todos los administradores lo ven; **solo el superadministrador carga los cupos** (vacío = sin límite). Se avisa en el inicio del panel al llegar al **80 %** y de nuevo al agotarse.
+  - **Mails:** cuenta campañas, avisos de compra y de cambio de estado, recuperación de carritos y contraseñas. **Al agotarse se frenan las campañas y la recuperación automática de carritos**; los avisos de compra, de estado y de contraseña **siguen saliendo siempre**, porque un cliente no puede quedarse sin su confirmación (pueden pasarse del cupo).
+  - **IA:** se mide en tokens (lo que cobra el proveedor: lo que se le manda y lo que responde). Al agotarse, **la vendedora se reemplaza por el acceso directo a WhatsApp** hasta el mes siguiente. Muestra además cuántas respuestas hubo y cuántos tokens consume cada una, para estimar el cupo.
 - **Pop-up:** ventana promocional del sitio.
 
 ### 10.6 Registro de actividad

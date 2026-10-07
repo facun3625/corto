@@ -3,6 +3,7 @@ import { dayToInstant } from "@/lib/storeTime";
 import type { OrderStatus, PaymentMethod } from "@/generated/prisma/enums";
 import { Pagination } from "@/components/Pagination";
 import { SalesTable } from "./SalesTable";
+import { MarkSeen } from "./MarkSeen";
 import { SalesFilters } from "./SalesFilters";
 
 const PAGE_SIZE = 25;
@@ -68,6 +69,7 @@ export default async function AdminVentasPage({
         </a>
       </div>
 
+      <MarkSeen ids={orders.filter((o) => !o.adminSeenAt).map((o) => o.id)} />
       <SalesTable orders={orders} />
 
       <div className="shrink-0">

@@ -48,7 +48,7 @@ export async function getProductDetail(where: { id: string } | { slug: string })
     onPromo: base.onPromo,
     tags: p.tags.map((t) => t.tag),
     stock: p.manageStock ? Math.max(0, p.stock) : 9999,
-    images: p.images.map((i) => ({ url: i.url, thumbUrl: i.thumbUrl ?? i.url, alt: i.alt, id: i.id })),
+    images: p.images.map((i) => ({ url: i.url, thumbUrl: i.thumbUrl ?? i.url, alt: i.alt, id: i.id, videoUrl: i.videoUrl })),
     categories: p.categories.map((c) => c.category),
     options: p.attributes.map((pa) => ({
       attributeId: pa.attributeId,

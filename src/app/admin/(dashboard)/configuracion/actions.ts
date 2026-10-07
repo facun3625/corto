@@ -5,6 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireSuperAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { getStoreSettingsRow } from "@/lib/settings";
@@ -411,4 +412,22 @@ export async function saveHomeBenefits(items: { icon: string; title: string; sub
   revalidatePath("/admin/configuracion");
   revalidatePath("/");
   return { ok: true, message: clean.length > 0 ? "Franja guardada." : "Se restableció la franja original." };
+}
+
+// Cupos mensuales de mails y de tokens de la IA (Configuración → Consumo). Solo el superadministrador los define: son
+// los límites del servicio contratado. Vacío = sin límite.
+export async function updateUsageQuotas(formData: FormData) {
+  await requireSuperAdmin();
+  const parse = (raw: FormDataEntryValue | null) => {
+    if (typeof raw !== "string" || !raw.trim()) return null;
+    const n = Math.floor(Number(raw.replace(/[.\s]/g, "")));
+    return Number.isFinite(n) && n > 0 ? Math.min(n, 2_000_000_000) : null;
+  };
+  const data = { mailMonthlyQuota: parse(formData.get("mailMonthlyQuota")), aiMonthlyTokenQuota: parse(formData.get("aiMonthlyTokenQuota")) };
+  await prisma.storeSettings.upsert({ where: { id: "global" }, create: { id: "global", ...data }, update: data });
+  await logAdminAction("usage.quotas", { detail: `mails: ${data.mailMonthlyQuota ?? "sin límite"} · tokens IA: ${data.aiMonthlyTokenQuota ?? "sin límite"}` });
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/admin/mailing");
+  revalidatePath("/admin/inicio");
+  revalidatePath("/", "layout");
 }

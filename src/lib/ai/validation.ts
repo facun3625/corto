@@ -31,3 +31,25 @@ export function optionalText(value: unknown, maxLength = 100): string | undefine
   const text = value.trim().slice(0, maxLength);
   return text || undefined;
 }
+
+// Datos que el cliente deja al abrir el chat para que la tienda pueda contactarlo si la IA no resuelve su consulta.
+export function cleanContactName(raw: unknown): string {
+  const name = typeof raw === "string" ? raw.replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim() : "";
+  if (name.length < 2) throw new Error("Escribí tu nombre");
+  if (name.length > 80) throw new Error("El nombre es demasiado largo");
+  return name;
+}
+
+export function cleanContactPhone(raw: unknown): string {
+  const text = typeof raw === "string" ? raw.replace(/\s+/g, " ").trim() : "";
+  if (!/^[0-9+\-() ]+$/.test(text)) throw new Error("El teléfono solo puede tener números, espacios, + - y paréntesis");
+  const digits = text.replace(/\D/g, "");
+  if (digits.length < 8 || digits.length > 15) throw new Error("Revisá el teléfono: tiene que incluir el código de área");
+  return text.slice(0, 30);
+}
+
+export function parseContactRequest(value: unknown): { sessionId: string; name: string; phone: string } {
+  if (!value || typeof value !== "object") throw new Error("Solicitud inválida");
+  const { sessionId, name, phone } = value as Record<string, unknown>;
+  return { sessionId: parseAssistantSessionId(sessionId), name: cleanContactName(name), phone: cleanContactPhone(phone) };
+}

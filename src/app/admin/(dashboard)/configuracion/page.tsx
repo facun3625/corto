@@ -14,6 +14,8 @@ import { BenefitsEditor } from "./BenefitsEditor";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
 import { R2Form } from "./R2Form";
 import { BackupsPanel } from "./BackupsPanel";
+import { UsagePanel } from "./UsagePanel";
+import { getUsageStatus } from "@/lib/usage";
 import { KEEP_BACKUPS, backupSecret, listBackups } from "@/lib/backup";
 import { getR2Config } from "@/lib/storage";
 import { getContactCards } from "@/lib/contactCards";
@@ -455,6 +457,8 @@ export default async function AdminConfiguracionPage({
       keep={KEEP_BACKUPS}
     />
   );
+
+  const usagePanel = <UsagePanel status={await getUsageStatus()} isSuper={isSuper} />;
 
   const mailProviderPanel = (
     <form action={updateMailProviderSettings} className="rounded-xl border border-black/10 bg-white p-5">
@@ -944,6 +948,7 @@ export default async function AdminConfiguracionPage({
           { id: "checkout", label: "Checkout y mensajes", content: checkoutPanel },
           { id: "telegram", label: "Telegram", content: telegramPanel },
           { id: "vendedora", label: "Vendedora IA", content: aiPanel },
+          { id: "consumo", label: "Consumo", content: usagePanel },
           { id: "popup", label: "Pop-up", content: popupPanel },
         ]}
       />
