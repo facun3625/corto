@@ -50,6 +50,7 @@ export function PageForm({ initial }: { initial: PageInput }) {
         </div>
         <div className="flex flex-wrap items-center gap-6 text-sm text-brand-ink">
           <label className="flex items-center gap-2"><input type="checkbox" checked={form.enabled} onChange={(e) => set("enabled", e.target.checked)} /> Publicada</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={form.showInMenu} onChange={(e) => set("showInMenu", e.target.checked)} /> Mostrar en el menú</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={form.showInFooter} onChange={(e) => set("showInFooter", e.target.checked)} /> Mostrar en el pie</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={form.showContactForm} onChange={(e) => set("showContactForm", e.target.checked)} /> Incluir formulario de contacto</label>
           <label className="flex items-center gap-2">Orden <input type="number" className="w-20 rounded-lg border border-black/10 px-2 py-1" value={form.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label>

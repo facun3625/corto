@@ -720,7 +720,7 @@ El **aspecto base** (el de siempre, que se ve cuando no hay ninguna campaña act
 
 ### 11.2 Páginas y textos legales
 
-En **Páginas** se editan las páginas institucionales (**Quiénes somos**, **Contacto**) y los textos legales (**Términos y condiciones**, **Política de privacidad**, **Cambios y devoluciones**, **Envíos y entregas**). Las legales vienen **ocultas** con un texto de ejemplo: completalas (conviene que las revise un profesional) y publicalas. Cada página puede mostrarse en el pie de la tienda y puede incluir un **formulario de contacto**.
+En **Páginas** se editan las páginas institucionales (**Quiénes somos**, **Contacto**) y los textos legales (**Términos y condiciones**, **Política de privacidad**, **Cambios y devoluciones**, **Envíos y entregas**). Las legales vienen **ocultas** con un texto de ejemplo: completalas (conviene que las revise un profesional) y publicalas. Cada página publicada aparece en el **menú de arriba** de la tienda (se destilda con *Mostrar en el menú*; las legales vienen sin tildar), puede mostrarse en el **pie** y puede incluir un **formulario de contacto**.
 
 Lo que los clientes escriben en el formulario llega por mail a la tienda y queda en **Mensajes**, donde se marcan como leídos, se responden por mail o se eliminan.
 
@@ -791,3 +791,11 @@ La asistente consulta fuentes reales antes de responder sobre productos, stock, 
 ---
 
 **Fin del Manual Cortopassi - Tienda**
+
+### SEO y etiquetas (Configuración → SEO y etiquetas)
+
+- **Buscadores y redes:** título del sitio (hasta 70 caracteres; vacío = nombre de la tienda), descripción e **imagen para compartir** (la que aparece al pegar el link en WhatsApp, Facebook, Instagram o X). Se aplican al inicio y a todo lo que no tenga SEO propio: productos, categorías y páginas pueden tener el suyo en su edición.
+- **Permitir que Google indexe el sitio:** apagado, el sitio pide a los buscadores que no lo muestren (etiqueta *noindex* y `robots.txt` cerrado). Sirve mientras se arma la tienda; hay que prenderlo al salir en vivo.
+- **Medición y publicidad:** Google Analytics 4 (`G-…`), Google Tag Manager (`GTM-…`) y Píxel de Meta (solo el número). Se pega solo el código: la tienda arma el script. Si el formato no es válido, no se guarda. No se cargan en el panel, así que las visitas del equipo no se cuentan. No usar Analytics y Tag Manager a la vez con la misma medición (se duplicaría).
+- **Verificación:** código de Google Search Console y de verificación de dominio de Meta (se puede pegar la etiqueta completa).
+- **Otras etiquetas propias** (solo superadministrador): campo libre para etiquetas `<meta>`, `<link>` y `<script>` de cualquier otro servicio; los enlaces deben ser https, se descartan los atributos `on…` y cualquier otra etiqueta. Se cargan en todo el sitio público (no en el panel).

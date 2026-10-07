@@ -6,6 +6,8 @@ import { Poppins } from "next/font/google";
 import { headers } from "next/headers";
 import { Providers } from "@/components/Providers";
 import { SiteChrome } from "@/components/SiteChrome";
+import { SiteTags } from "@/components/SiteTags";
+import { cleanGaId, cleanGtmId, cleanPixelId, parseCustomTags } from "@/lib/seoTags";
 import { getSiteSettings } from "@/lib/settings";
 import { getThemeForRequest } from "@/lib/themeRuntime";
 import { themeCss, themeFontHref } from "@/lib/themes";
@@ -24,9 +26,19 @@ export async function generateMetadata(): Promise<Metadata> {
   const { favicon } = resolveLogos(row);
   const v = iconVersion(favicon);
   const name = storeNameOf(row);
+  const title = row.seoTitle?.trim() || name;
+  const description = row.seoDescription?.trim() || `${name} — descubrí el catálogo completo y comprá online.`;
+  const image = row.seoImageUrl?.trim() || null;
+  const other: Record<string, string> = {};
+  if (row.facebookDomainVerification) other["facebook-domain-verification"] = row.facebookDomainVerification;
   return {
-    title: name,
-    description: `${name} — descubrí el catálogo completo y comprá online.`,
+    title,
+    description,
+    // Al compartir el sitio en redes (WhatsApp, Facebook, Instagram, X…)
+    openGraph: { title, description, siteName: name, type: "website", locale: "es_AR", images: image ? [image] : undefined },
+    twitter: { card: image ? "summary_large_image" : "summary", title, description, images: image ? [image] : undefined },
+    robots: row.seoIndexable ? undefined : { index: false, follow: false },
+    verification: { google: row.googleSiteVerification || undefined, other: Object.keys(other).length ? other : undefined },
     manifest: "/manifest.webmanifest",
     // capable: true es lo que hace que, instalada, abra sin la barra de
     // Safari. Sin icons.apple, Safari muestra una captura de pantalla en vez
@@ -48,7 +60,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [settings, requestHeaders, theme] = await Promise.all([getSiteSettings(), headers(), getThemeForRequest()]);
+  const [settings, requestHeaders, theme, row] = await Promise.all([getSiteSettings(), headers(), getThemeForRequest(), getStoreSettingsRow()]);
+  const customTags = parseCustomTags(row.customHeadCode).tags;
   const fontHref = theme ? themeFontHref(theme.config) : null;
   const isMaintenancePage = requestHeaders.get("x-maintenance-page") === "1";
 
@@ -60,6 +73,7 @@ export default async function RootLayout({
         {fontHref && <link rel="stylesheet" href={fontHref} />}
       </head>
       <body className="flex min-h-full flex-col font-sans">
+        <SiteTags gaId={cleanGaId(row.gaMeasurementId ?? "")} gtmId={cleanGtmId(row.gtmId ?? "")} pixelId={cleanPixelId(row.metaPixelId ?? "")} tags={customTags} />
         <Providers currency={settings.currency} cartAutoCloseSeconds={settings.cartAutoCloseSeconds}>
           <SiteChrome settings={settings} isMaintenancePage={isMaintenancePage} announcement={theme?.config.announcement.enabled ? theme.config.announcement : null} previewThemeName={theme?.previewing ? theme.name : null}>
             {children}

@@ -176,6 +176,18 @@ model StoreSettings {
   popupScope     PopupScope     @default(all)
   popupFrequency PopupFrequency @default(once)
 
+  // SEO y etiquetas de seguimiento (Configuración → SEO y etiquetas)
+  seoTitle                  String? // título del sitio en Google y al compartir; vacío = el nombre de la tienda
+  seoDescription            String?
+  seoImageUrl               String? // imagen que se ve al compartir el sitio en redes
+  seoIndexable              Boolean @default(true) // false = se le pide a Google que no indexe el sitio
+  gaMeasurementId           String? // Google Analytics 4: G-XXXXXXXXXX
+  gtmId                     String? // Google Tag Manager: GTM-XXXXXXX
+  metaPixelId               String? // Píxel de Meta (Facebook / Instagram)
+  googleSiteVerification    String? // código de verificación de Google Search Console
+  facebookDomainVerification String? // código de verificación de dominio de Meta
+  customHeadCode            String? // etiquetas propias (meta, link, script); solo las carga el superadmin
+
   // Nombre y sucursal de la franquicia — para el encabezado del mailing
   // (ej. "ModaShop" / "Santa Fe"). Pensado para cuando haya más de una
   // franquicia, cada una con su propia identidad en los mails que manda.
@@ -1136,6 +1148,8 @@ model Page {
   content         String   @default("")
   enabled         Boolean  @default(true)
   showInFooter    Boolean  @default(true)
+  // Aparece en el menú de arriba de la tienda (si está publicada)
+  showInMenu      Boolean  @default(true)
   sortOrder       Int      @default(0)
   seoDescription  String?
   // Páginas con formulario de contacto

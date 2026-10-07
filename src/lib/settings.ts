@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { DEFAULT_FRANCHISE_LOCATION } from "@/lib/contact";
 import { resolveContact } from "@/lib/contactInfo";
 import { getHumanSellerAvailability } from "@/lib/ai/availability";
-import { getFooterPages } from "@/lib/pages";
+import { getFooterPages, getMenuPages } from "@/lib/pages";
 import { DEFAULT_FOOTER_TEXT } from "@/lib/contact";
 import { resolveLogos, absoluteUrl } from "@/lib/logo";
 import { getContactCards } from "@/lib/contactCards";
@@ -57,6 +57,7 @@ export async function getSiteSettings() {
     footerText: row.footerText?.trim() || DEFAULT_FOOTER_TEXT,
     logos: resolveLogos(row),
     footerPages: await getFooterPages(),
+    menuPages: await getMenuPages(),
     contactCards,
     home: {
       featuredEnabled: row.homeFeaturedEnabled,

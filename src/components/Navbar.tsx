@@ -15,12 +15,20 @@ import { TopContactBar } from "@/components/TopContactBar";
 import { InstallPwaButton } from "@/components/InstallPwaButton";
 import type { SiteSettings } from "@/lib/settings";
 
-const LINKS = [
+const BASE_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/#donde-estamos", label: "Dónde estamos" },
   { href: "/#contacto", label: "Contacto" },
   { href: "/tienda", label: "Tienda" },
 ];
+
+// Menú: los links fijos + las páginas publicadas que se tildaron "Mostrar en el menú" (antes de "Tienda", que va como botón).
+// Si una página se llama igual que un link fijo (por ejemplo "Contacto") no se repite.
+function buildLinks(pages: { slug: string; title: string }[]) {
+  const taken = new Set(BASE_LINKS.map((l) => l.label.toLowerCase()));
+  const extra = pages.filter((p) => !taken.has(p.title.trim().toLowerCase())).map((p) => ({ href: `/pagina/${p.slug}`, label: p.title }));
+  return [...BASE_LINKS.slice(0, -1), ...extra, BASE_LINKS[BASE_LINKS.length - 1]];
+}
 
 function NavbarSearch({ className }: { className: string }) {
   const router = useRouter();
@@ -62,6 +70,7 @@ function NavbarSearch({ className }: { className: string }) {
 }
 
 export function Navbar({ settings }: { settings: SiteSettings }) {
+  const LINKS = buildLinks(settings.menuPages);
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"inicio" | "donde-estamos" | "contacto">("inicio");
@@ -152,10 +161,10 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
 
           <Link href="/" className="min-w-0 shrink">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={settings.logos.header} alt={settings.franchiseName} className="h-10 w-auto max-w-[100px] object-contain sm:h-16 sm:max-w-none" />
+            <img src={settings.logos.header} alt={settings.franchiseName} className="h-10 w-auto max-w-[100px] object-contain sm:h-16 sm:max-w-none lg:h-12 xl:h-16" />
           </Link>
 
-          <nav className="hidden flex-1 items-center justify-center gap-8 lg:flex">
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-4 lg:flex xl:gap-6 2xl:gap-8">
             {LINKS.map((link) => {
               const active = isActive(link.href);
               const isTienda = link.href === "/tienda";
@@ -166,8 +175,8 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={
                     isTienda
-                      ? "flex cursor-pointer items-center gap-1.5 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-brand-pink-dark"
-                      : `relative flex cursor-pointer items-center gap-1.5 py-2 text-xs font-medium uppercase tracking-widest transition-colors ${
+                      ? "flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-brand-pink-dark"
+                      : `relative flex cursor-pointer items-center gap-1.5 whitespace-nowrap py-2 text-[11px] font-medium uppercase tracking-wider transition-colors xl:text-xs xl:tracking-widest ${
                           active ? "text-brand-pink-dark" : "text-brand-ink/70 hover:text-brand-pink-dark"
                         }`
                   }
@@ -185,7 +194,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
           <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3 lg:flex-none">
             {/* En /tienda ya está el buscador de ShopControls, sincronizado
                 con el filtro actual — repetirlo acá era espacio duplicado. */}
-            {pathname !== "/tienda" && <NavbarSearch className="hidden max-w-[220px] flex-1 sm:block" />}
+            {pathname !== "/tienda" && <NavbarSearch className="hidden max-w-[220px] flex-1 sm:block lg:max-w-[130px] xl:max-w-[220px]" />}
 
             {/* Solo en mobile/tablet — en desktop ya está la versión pill en
                 el footer, no hace falta duplicarla acá al lado del buscador. */}

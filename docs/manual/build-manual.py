@@ -301,7 +301,7 @@ add(G6, "temas", "Temas y campañas", "/admin/temas", "Cambiá la identidad visu
 add(G6, "paginas", "Páginas", "/admin/paginas", "Quiénes somos, contacto y textos legales. Las que activás aparecen en el pie de página.",
     shot("paginas", "/admin/paginas", "mid") + points([
         "Crear páginas con editor de texto, URL propia y datos para buscadores.",
-        "Elegir si se muestra en el pie y si incluye el <b>formulario de contacto</b>.",
+        "Elegir si se muestra en el <b>menú de arriba</b> y en el <b>pie</b>, y si incluye el <b>formulario de contacto</b>. Una página publicada aparece en el menú salvo que destildes “Mostrar en el menú”.",
         "Vienen precargados los textos legales (términos, privacidad, cambios, envíos) para completar y publicar.",
     ]) + sub("Editar una página", "Título, URL, contenido y opciones de publicación.", "pagina-editar", "", "mid"))
 
@@ -346,6 +346,7 @@ cfg = [
     ("config-telegram", "Telegram", "cfg-telegram", "Cada pedido nuevo te llega al instante a un grupo de Telegram. Cargás el token del bot y el ID del chat, y probás con un botón."),
     ("config-ia", "Vendedora IA", "cfg-ia", "El asistente del chat de la tienda: lo prendés o apagás, y definís el nombre, el saludo, las instrucciones de venta y el horario de WhatsApp para hablar con una persona. La vendedora solo recomienda productos reales del catálogo y con existencia."),
     ("config-consumo", "Consumo", "cfg-consumo", "Cuántos mails y cuántos tokens de IA se usaron este mes frente al cupo. Podés poner un tope mensual; al llegar, se frenan las campañas o la IA. El contador arranca de cero el día 1. Solo superadministrador."),
+    ("config-seo", "SEO y etiquetas", "cfg-seo", "Cómo se ve la tienda en Google y al compartirla en redes, y dónde sumar Google Analytics, Tag Manager, el píxel de Meta y cualquier otra etiqueta. <b>Título y descripción</b> del sitio, <b>imagen para compartir</b> (WhatsApp, Facebook, Instagram, X) y el interruptor <b>Permitir que Google indexe el sitio</b>: apagalo mientras armás la tienda y prendelo al salir en vivo. En <b>Medición y publicidad</b> pegás solo el código (G-…, GTM-… o el ID del píxel) y la tienda carga el script, sin contar tus visitas al panel. En <b>Verificación</b> cargás los códigos de Google Search Console y de Meta. <b>Otras etiquetas propias</b> (solo superadministrador) acepta <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> y <code>&lt;script&gt;</code> de cualquier servicio. Cada producto, categoría y página puede tener además su propio título y descripción SEO."),
     ("config-popup", "Pop-up", "cfg-popup", "Un cartel promocional al entrar: dónde se muestra (solo inicio o todo el sitio), con qué frecuencia, título y texto con formato."),
 ]
 body = '<div class="tabstrip">' + "".join(f'<a href="#{i}">{t}</a>' for i, t, _, _ in cfg) + "</div>"

@@ -14,6 +14,7 @@ export type PageInput = {
   content: string;
   enabled: boolean;
   showInFooter: boolean;
+  showInMenu: boolean;
   showContactForm: boolean;
   sortOrder: number;
   seoDescription: string;
@@ -35,6 +36,7 @@ export async function savePage(input: PageInput): Promise<PageResult> {
       content: sanitizeRichHtml(input.content),
       enabled: input.enabled,
       showInFooter: input.showInFooter,
+      showInMenu: input.showInMenu,
       showContactForm: input.showContactForm,
       sortOrder: Number.isFinite(input.sortOrder) ? Math.trunc(input.sortOrder) : 0,
       seoDescription: input.seoDescription.trim().slice(0, 300) || null,

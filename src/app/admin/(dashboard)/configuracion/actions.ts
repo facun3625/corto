@@ -11,6 +11,8 @@ import { Prisma } from "@/generated/prisma/client";
 import { getStoreSettingsRow } from "@/lib/settings";
 import { sendTelegram } from "@/lib/telegram";
 import { normalizeTime } from "@/lib/ai/availability";
+import { auth } from "@/lib/auth";
+import { cleanGaId, cleanGtmId, cleanPixelId, cleanVerificationCode } from "@/lib/seoTags";
 
 import { storeNameOf } from "@/lib/storeName";
 export async function updateMaintenanceMode(formData: FormData) {
@@ -337,6 +339,32 @@ export async function updateBrandSettings(formData: FormData) {
   };
   const data = { logoHeaderUrl: clean("logoHeaderUrl"), logoFooterUrl: clean("logoFooterUrl"), faviconUrl: clean("faviconUrl") };
   await prisma.storeSettings.upsert({ where: { id: "global" }, create: { id: "global", ...data }, update: data });
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/", "layout");
+}
+
+// SEO del sitio y etiquetas de seguimiento. Cada ID se valida por formato; lo que no cumple se guarda vacío.
+// El código propio (etiquetas meta/link/script) solo lo puede cargar el superadmin: si lo edita otro, se conserva el que había.
+export async function updateSeoSettings(formData: FormData) {
+  await requireAdmin();
+  const text = (name: string, max: number) => String(formData.get(name) ?? "").trim().slice(0, max) || null;
+  const image = String(formData.get("seoImageUrl") ?? "").trim().slice(0, 500);
+  const data: Prisma.StoreSettingsUncheckedUpdateInput = {
+    seoTitle: text("seoTitle", 70),
+    seoDescription: text("seoDescription", 200),
+    seoImageUrl: /^(https:\/\/|\/api\/uploads\/)/.test(image) ? image : null,
+    seoIndexable: formData.get("seoIndexable") === "on",
+    gaMeasurementId: cleanGaId(String(formData.get("gaMeasurementId") ?? "")),
+    gtmId: cleanGtmId(String(formData.get("gtmId") ?? "")),
+    metaPixelId: cleanPixelId(String(formData.get("metaPixelId") ?? "")),
+    googleSiteVerification: cleanVerificationCode(String(formData.get("googleSiteVerification") ?? "")),
+    facebookDomainVerification: cleanVerificationCode(String(formData.get("facebookDomainVerification") ?? "")),
+  };
+  if ((await auth())?.user?.role === "superadmin" && formData.has("customHeadCode")) {
+    data.customHeadCode = text("customHeadCode", 10_000);
+  }
+  await prisma.storeSettings.upsert({ where: { id: "global" }, create: { id: "global", ...(data as Prisma.StoreSettingsUncheckedCreateInput) }, update: data });
+  await logAdminAction("settings.seo");
   revalidatePath("/admin/configuracion");
   revalidatePath("/", "layout");
 }

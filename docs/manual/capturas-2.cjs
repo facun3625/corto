@@ -12,12 +12,13 @@ const wanted = (g) => only.length === 0 || only.includes(g);
   try {
     if (wanted("config")) {
       await b.as("super");
-      const tabs = [["General", "cfg-general"], ["Beneficios", "cfg-beneficios"], ["Franquicia", "cfg-franquicia"], ["Copias de seguridad", "cfg-copias"], ["Mail de compra", "cfg-mail-compra"], ["Checkout y mensajes", "cfg-checkout"], ["Telegram", "cfg-telegram"], ["Vendedora IA", "cfg-ia"], ["Consumo", "cfg-consumo"], ["Pop-up", "cfg-popup"]];
+      const tabs = [["General", "cfg-general"], ["Beneficios", "cfg-beneficios"], ["Franquicia", "cfg-franquicia"], ["Copias de seguridad", "cfg-copias"], ["Mail de compra", "cfg-mail-compra"], ["Checkout y mensajes", "cfg-checkout"], ["Telegram", "cfg-telegram"], ["Vendedora IA", "cfg-ia"], ["Consumo", "cfg-consumo"], ["SEO y etiquetas", "cfg-seo"], ["Pop-up", "cfg-popup"]];
       for (const [label, id] of tabs) await step(id, async () => {
         await b.size(1200, 900); await b.go("/admin/configuracion", 1800); await b.click(label); await b.sleep(600);
         // el manual no cubre Correo ni Imágenes (R2) ni el proveedor de IA: se ocultan de la captura
         await b.js(`[...document.querySelectorAll('[role=tab]')].filter(t=>/^(Correo|Imágenes \\(R2\\))$/.test(t.textContent.trim())).forEach(t=>t.style.display='none');
           [...document.querySelectorAll('main p')].filter(p=>p.textContent.trim()==='Proveedor de IA').forEach(p=>{let e=p;while(e&&!/rounded-xl/.test(e.className||''))e=e.parentElement;if(e)e.remove()})`);
+        if (id === "cfg-seo") { await b.size(1200, 1900); await b.shot(id, { clip: { x: 0, y: 0, width: 1200, height: 1560 } }); return; }
         await b.shot(id);
       });
     }

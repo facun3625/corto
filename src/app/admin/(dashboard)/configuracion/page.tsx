@@ -21,6 +21,7 @@ import { getR2Config } from "@/lib/storage";
 import { getContactCards } from "@/lib/contactCards";
 import { resolveContact } from "@/lib/contactInfo";
 import { auth } from "@/lib/auth";
+import { storeNameOf } from "@/lib/storeName";
 import { MailProviderFields } from "@/app/integraciones/MailProviderFields";
 import { MailTestButton } from "@/app/integraciones/MailTestButton";
 import { updateAiSecretSettings, updateMailProviderSettings } from "@/app/integraciones/actions";
@@ -32,6 +33,7 @@ import { getCashDiscountPct } from "@/lib/paymentSettings";
 import { syncNow } from "../puntos/actions";
 import {
   updateSiteSettings,
+  updateSeoSettings,
   updateMailSettings,
   updateBrandSettings,
   updateTelegramSettings,
@@ -859,6 +861,117 @@ export default async function AdminConfiguracionPage({
     </div>
   );
 
+  // --- Panel: SEO y etiquetas ---
+  const seoPanel = (
+    <form action={updateSeoSettings} className="flex flex-col gap-8">
+      <section className="rounded-xl border border-black/10 bg-white p-5">
+        <p className="font-semibold text-brand-ink">Buscadores y redes sociales</p>
+        <p className="mt-1 max-w-3xl text-xs text-brand-muted">
+          Cómo se ve el sitio en Google y al compartir el link en WhatsApp, Facebook, Instagram o X. Cada producto, categoría y página
+          puede tener su propio título y descripción en su edición; esto es lo que se usa para el inicio y lo que no tiene uno propio.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClasses}>Título del sitio</label>
+            <input name="seoTitle" maxLength={70} defaultValue={settings.seoTitle ?? ""} placeholder={storeNameOf(settings)} className={fieldClasses} />
+            <p className="mt-1 text-xs text-brand-muted">Hasta 70 caracteres. Vacío = el nombre de la tienda.</p>
+          </div>
+          <div>
+            <label className={labelClasses}>Descripción</label>
+            <textarea name="seoDescription" maxLength={200} rows={3} defaultValue={settings.seoDescription ?? ""} placeholder="Qué vendés y por qué elegirte, en una o dos frases." className={fieldClasses} />
+            <p className="mt-1 text-xs text-brand-muted">Entre 120 y 160 caracteres rinde mejor (máximo 200).</p>
+          </div>
+        </div>
+        <div className="mt-4 max-w-xl">
+          <LogoField
+            name="seoImageUrl"
+            label="Imagen para compartir"
+            hint="La que aparece al pegar el link en redes. Mejor horizontal, de 1200×630."
+            initialUrl={settings.seoImageUrl ?? ""}
+            fallbackUrl={null}
+            previewClass="h-20"
+          />
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-black/5 pt-4">
+          <ToggleSwitch name="seoIndexable" defaultChecked={settings.seoIndexable} />
+          <div>
+            <p className="text-sm text-brand-ink">Permitir que Google indexe el sitio</p>
+            <p className="text-xs text-brand-muted">Apagalo mientras armás la tienda: le pide a los buscadores que no la muestren. Acordate de prenderlo al salir en vivo.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-black/10 bg-white p-5">
+        <p className="font-semibold text-brand-ink">Medición y publicidad</p>
+        <p className="mt-1 max-w-3xl text-xs text-brand-muted">
+          Pegá solo el código; la tienda arma y carga el script. No se carga dentro del panel, así que tus visitas al admin no se cuentan. Dejalo vacío para no usarlo.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className={labelClasses}>Google Analytics 4</label>
+            <input name="gaMeasurementId" maxLength={20} defaultValue={settings.gaMeasurementId ?? ""} placeholder="G-XXXXXXXXXX" className={fieldClasses} />
+            <p className="mt-1 text-xs text-brand-muted">Analytics → Administrar → Flujos de datos.</p>
+          </div>
+          <div>
+            <label className={labelClasses}>Google Tag Manager</label>
+            <input name="gtmId" maxLength={20} defaultValue={settings.gtmId ?? ""} placeholder="GTM-XXXXXXX" className={fieldClasses} />
+            <p className="mt-1 text-xs text-brand-muted">Si usás Tag Manager, no cargues además Analytics acá: se contaría doble.</p>
+          </div>
+          <div>
+            <label className={labelClasses}>Píxel de Meta (Facebook / Instagram)</label>
+            <input name="metaPixelId" maxLength={24} defaultValue={settings.metaPixelId ?? ""} placeholder="1234567890123456" className={fieldClasses} />
+            <p className="mt-1 text-xs text-brand-muted">Solo el número de ID del píxel.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-black/10 bg-white p-5">
+        <p className="font-semibold text-brand-ink">Verificación del sitio</p>
+        <p className="mt-1 max-w-3xl text-xs text-brand-muted">
+          Para demostrar que el sitio es tuyo. Podés pegar el código o la etiqueta completa que te da cada servicio.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClasses}>Google Search Console</label>
+            <input name="googleSiteVerification" maxLength={300} defaultValue={settings.googleSiteVerification ?? ""} placeholder="código de google-site-verification" className={fieldClasses} />
+          </div>
+          <div>
+            <label className={labelClasses}>Verificación de dominio de Meta</label>
+            <input name="facebookDomainVerification" maxLength={300} defaultValue={settings.facebookDomainVerification ?? ""} placeholder="código de facebook-domain-verification" className={fieldClasses} />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-black/10 bg-white p-5">
+        <p className="font-semibold text-brand-ink">Otras etiquetas propias</p>
+        {isSuper ? (
+          <>
+            <p className="mt-1 max-w-3xl text-xs text-brand-muted">
+              Para cualquier otro servicio: pegá acá sus etiquetas, una debajo de otra, y se cargan en todas las páginas de la tienda (menos en el panel).
+              Se aceptan <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> y <code>&lt;script&gt;</code>; los enlaces tienen que ser https. Cualquier otra etiqueta se descarta.
+            </p>
+            <textarea
+              name="customHeadCode"
+              rows={8}
+              maxLength={10000}
+              defaultValue={settings.customHeadCode ?? ""}
+              spellCheck={false}
+              placeholder={'<meta property="fb:app_id" content="123456789" />\n<meta name="p:domain_verify" content="abc123" />'}
+              className={`${fieldClasses} mt-3 font-mono text-xs`}
+            />
+            <p className="mt-1 text-xs text-brand-muted">Un script mal puesto puede romper el sitio: probá la tienda después de guardar.</p>
+          </>
+        ) : (
+          <p className="mt-1 text-xs text-brand-muted">Para sumar etiquetas propias (otros servicios o scripts) pedíselo al superadministrador.</p>
+        )}
+      </section>
+
+      <div>
+        <SaveButton trackDirty />
+      </div>
+    </form>
+  );
+
   // --- Panel: Pop-up del sitio ---
   const popupPanel = (
     <form action={updatePopupSettings} className="rounded-xl border border-black/10 bg-white p-5">
@@ -949,6 +1062,7 @@ export default async function AdminConfiguracionPage({
           { id: "telegram", label: "Telegram", content: telegramPanel },
           { id: "vendedora", label: "Vendedora IA", content: aiPanel },
           { id: "consumo", label: "Consumo", content: usagePanel },
+          { id: "seo", label: "SEO y etiquetas", content: seoPanel },
           { id: "popup", label: "Pop-up", content: popupPanel },
         ]}
       />
