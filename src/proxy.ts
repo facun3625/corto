@@ -82,5 +82,6 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|logo2.png|uploads/).*)"],
+  // Los íconos, el manifiesto y el service worker no pasan por acá: tienen que verse siempre (también con el modo mantenimiento prendido)
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|logo2.png|uploads/|icons/|manifest.webmanifest|sw.js).*)"],
 };

@@ -7,7 +7,7 @@ import path from "node:path";
 // como material de venta/onboarding, no solo referencia interna. El link no
 // está listado en ningún menú del sitio y lleva noindex — no es secreto por
 // contraseña, es "no lo vas a encontrar salvo que te pasen el link".
-const MANUAL_PATH = path.join(process.cwd(), "src", "content", "moda-manual.html");
+const MANUAL_PATH = path.join(process.cwd(), "src", "content", "manual-panel.html");
 
 export async function GET() {
   const html = await readFile(MANUAL_PATH, "utf-8");

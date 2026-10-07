@@ -115,7 +115,7 @@ export default async function AdminConfiguracionPage({
             label="Favicon (ícono de la pestaña)"
             hint="Imagen cuadrada, de 512×512 si podés. También es el ícono al instalar la tienda como app en el celular."
             initialUrl={settings.faviconUrl ?? ""}
-            fallbackUrl="/icons/icon-192.png"
+            fallbackUrl="/icons/default-icon.png"
             previewClass="h-10"
           />
         </div>
@@ -805,7 +805,7 @@ export default async function AdminConfiguracionPage({
             maxLength={6000}
             defaultValue={settings.aiInstructions ?? ""}
             placeholder={
-              "Ejemplo:\n- Priorizá la nueva colección.\n- Preguntá para qué ocasión busca la prenda.\n- Mantené un tono cercano y alegre."
+              "Ejemplo:\n- Priorizá la nueva colección.\n- Preguntá para qué ocasión busca el producto.\n- Mantené un tono cercano y alegre."
             }
             className={`${fieldClasses} resize-y`}
           />

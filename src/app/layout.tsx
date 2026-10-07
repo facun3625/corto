@@ -1,5 +1,6 @@
 import { resolveLogos } from "@/lib/logo";
 import { getStoreSettingsRow } from "@/lib/settings";
+import { iconVersion } from "@/lib/appIcon";
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { headers } from "next/headers";
@@ -19,18 +20,20 @@ const poppins = Poppins({
 // Título y descripción fijos; el ícono (favicon) es el que subió el admin, o el original de la instalación
 export async function generateMetadata(): Promise<Metadata> {
   const { favicon } = resolveLogos(await getStoreSettingsRow());
+  const v = iconVersion(favicon);
   return {
     title: "Cortopassi - Tienda",
     description: "Cortopassi - Tienda — descubrí el catálogo completo y comprá online.",
-    manifest: "/manifest.json",
+    manifest: "/manifest.webmanifest",
     // capable: true es lo que hace que, instalada, abra sin la barra de
     // Safari. Sin icons.apple, Safari muestra una captura de pantalla en vez
     // del logo como ícono — los tres campos van juntos, no alcanza con el
     // manifest solo (Safari no lo lee para esto).
     appleWebApp: { capable: true, statusBarStyle: "black-translucent" },
     icons: {
-      icon: favicon ?? "/icons/icon-512.png",
-      apple: favicon ?? "/icons/icon-192.png",
+      icon: favicon ?? `/icons/app/512.png?v=${v}`,
+      // En el iPhone el ícono tiene que ser un PNG con fondo: se usa el armado a medida, no la imagen cargada tal cual
+      apple: `/icons/app/192.png?v=${v}`,
     },
   };
 }
