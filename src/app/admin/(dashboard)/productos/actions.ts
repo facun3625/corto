@@ -8,6 +8,7 @@ import { slugify, uniqueSlug } from "@/lib/slug";
 import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import { parseCsv } from "@/lib/csv";
 import { normalizeVideoUrl } from "@/lib/video";
+import { stockFieldsFor, type StockMode } from "@/lib/stockMode";
 
 export type ProductInput = {
   id?: string;
@@ -394,14 +395,21 @@ export async function importPriceStockCsv(formData: FormData): Promise<CsvImport
 
 // ---- Edición rápida, acciones masivas y duplicado ----
 
-export async function quickUpdateProduct(id: string, patch: { price?: number; stock?: number }): Promise<{ ok: boolean; error?: string }> {
+export async function quickUpdateProduct(
+  id: string,
+  patch: { price?: number; stock?: number; stockMode?: StockMode }
+): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
-  const data: { price?: number; stock?: number } = {};
+  const data: { price?: number; stock?: number; manageStock?: boolean } = {};
   if (patch.price !== undefined) {
     if (!money(patch.price)) return { ok: false, error: "Precio inválido" };
     data.price = patch.price;
   }
-  if (patch.stock !== undefined) {
+  if (patch.stockMode !== undefined) {
+    if (!["available", "unavailable", "tracked"].includes(patch.stockMode)) return { ok: false, error: "Existencia inválida" };
+    if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return { ok: false, error: "El stock debe ser un entero de 0 en adelante" };
+    Object.assign(data, stockFieldsFor(patch.stockMode, patch.stock ?? 0));
+  } else if (patch.stock !== undefined) {
     if (!Number.isInteger(patch.stock)) return { ok: false, error: "El stock debe ser entero" };
     data.stock = patch.stock;
   }
@@ -423,6 +431,8 @@ export type BulkAction =
   | { type: "addCategory"; categoryId: string }
   | { type: "removeCategory"; categoryId: string }
   | { type: "adjustPrice"; percent: number }
+  // Hay existencia / No hay existencia (también para todas las variantes de los productos con variantes)
+  | { type: "stockMode"; mode: "available" | "unavailable" }
   | { type: "delete" };
 
 export async function bulkProductAction(ids: string[], action: BulkAction): Promise<{ ok: boolean; affected: number; error?: string }> {
@@ -469,6 +479,15 @@ export async function bulkProductAction(ids: string[], action: BulkAction): Prom
         }
       });
       affected = products.length;
+      break;
+    }
+    case "stockMode": {
+      if (action.mode !== "available" && action.mode !== "unavailable") return { ok: false, affected: 0, error: "Existencia inválida" };
+      const fields = stockFieldsFor(action.mode);
+      await prisma.$transaction(async (tx) => {
+        affected = (await tx.product.updateMany({ where, data: fields })).count;
+        await tx.variant.updateMany({ where: { productId: { in: unique } }, data: fields });
+      });
       break;
     }
     case "delete":

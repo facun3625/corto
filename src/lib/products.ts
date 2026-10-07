@@ -225,6 +225,8 @@ export async function getAdminProductsPage(opts: {
   state?: "visible" | "draft" | "scheduled";
   // simple | variable (con variantes: talle, color…)
   type?: "simple" | "variable";
+  // in = hay existencia (se puede comprar); out = no hay existencia
+  availability?: "in" | "out";
   minPrice?: number;
   maxPrice?: number;
   minStock?: number;
@@ -244,7 +246,7 @@ export async function getAdminProductsPage(opts: {
         : opts.state === "scheduled"
           ? { status: "published", OR: [{ publishAt: { gt: now } }, { unpublishAt: { lte: now } }] }
           : {};
-  const where: Prisma.ProductWhereInput = {
+  const baseWhere: Prisma.ProductWhereInput = {
     ...stateWhere,
     ...(opts.type ? { type: opts.type } : {}),
     ...(categoryIds ? { categories: { some: { categoryId: { in: categoryIds } } } } : {}),
@@ -260,6 +262,9 @@ export async function getAdminProductsPage(opts: {
       ? { price: { ...(opts.minPrice !== undefined ? { gte: opts.minPrice } : {}), ...(opts.maxPrice !== undefined ? { lte: opts.maxPrice } : {}) } }
       : {}),
   };
+  // La disponibilidad se suma con AND: así no pisa el OR de la búsqueda ni el del estado "programados"
+  const where: Prisma.ProductWhereInput =
+    opts.availability === "in" ? { AND: [baseWhere, WITH_STOCK] } : opts.availability === "out" ? { AND: [baseWhere, { NOT: WITH_STOCK }] } : baseWhere;
   const dir = opts.dir === "desc" ? "desc" : "asc";
   const decorate = (rows: ProductRow[]): AdminProductListItem[] =>
     rows.map((p) => ({

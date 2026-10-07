@@ -26,6 +26,7 @@ export default async function AdminProductosPage({
     state?: string;
     type?: string;
     per?: string;
+    avail?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -43,6 +44,7 @@ export default async function AdminProductosPage({
   const state = params.state === "visible" || params.state === "draft" || params.state === "scheduled" ? params.state : undefined;
 
   const type = params.type === "simple" || params.type === "variable" ? params.type : undefined;
+  const availability = params.avail === "in" || params.avail === "out" ? params.avail : undefined;
 
   const categories = await getAllCategories();
 
@@ -53,6 +55,7 @@ export default async function AdminProductosPage({
       categoryId,
       state,
       type,
+      availability,
       minPrice,
       maxPrice,
       minStock,
@@ -71,13 +74,14 @@ export default async function AdminProductosPage({
   const sortedAllCategories = [...categories].map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
 
   const hasFilters = Boolean(
-    query || categoryId || state || type || minPrice !== undefined || maxPrice !== undefined || minStock !== undefined || maxStock !== undefined
+    query || categoryId || state || type || availability || minPrice !== undefined || maxPrice !== undefined || minStock !== undefined || maxStock !== undefined
   );
 
   const extraParams = {
     categoryId: params.categoryId,
     state,
     type,
+    avail: availability,
     minPrice: params.minPrice,
     maxPrice: params.maxPrice,
     minStock: params.minStock,
@@ -94,6 +98,7 @@ export default async function AdminProductosPage({
     if (params.categoryId) p.set("categoryId", params.categoryId);
     if (state) p.set("state", state);
     if (type) p.set("type", type);
+    if (availability) p.set("avail", availability);
     if (params.minPrice) p.set("minPrice", params.minPrice);
     if (params.maxPrice) p.set("maxPrice", params.maxPrice);
     if (params.minStock) p.set("minStock", params.minStock);
@@ -168,6 +173,14 @@ export default async function AdminProductosPage({
                 <option value="">Todos</option>
                 <option value="simple">Simples</option>
                 <option value="variable">Variables</option>
+              </select>
+            </div>
+            <div className="w-44">
+              <label className={labelClasses}>Existencia</label>
+              <select name="avail" defaultValue={availability ?? ""} className={fieldClasses}>
+                <option value="">Todas</option>
+                <option value="in">Hay existencia</option>
+                <option value="out">No hay existencia</option>
               </select>
             </div>
             <div className="w-24">

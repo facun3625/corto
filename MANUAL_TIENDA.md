@@ -284,7 +284,7 @@ El comercio puede recibir un aviso del nuevo pedido mediante Telegram.
 
 ### 5.2 Stock
 
-El stock se descuenta automáticamente cuando se registra un pedido, incluso si todavía está pendiente de pago. Si el pedido se cancela o se elimina, las unidades vuelven al stock. Reabrir un pedido cancelado vuelve a descontarlas y avisa si ya no alcanzan. Los productos con el control de stock desactivado no descuentan ni validan unidades.
+El stock se descuenta automáticamente cuando se registra un pedido, incluso si todavía está pendiente de pago. Si el pedido se cancela o se elimina, las unidades vuelven al stock. Reabrir un pedido cancelado vuelve a descontarlas y avisa si ya no alcanzan. Los productos en **"Hay existencia"** (sin control de cantidad) no descuentan ni validan unidades.
 
 ### 5.3 Gestión desde Ventas
 
@@ -556,17 +556,22 @@ El tablero presenta:
 
 Desde **Productos** se administra todo el catálogo:
 
-- **Listado:** búsqueda por nombre o SKU, filtros por categoría, **estado** (publicados, borradores, programados), **tipo** (simples o variables), precio y stock.
+- **Listado:** búsqueda por nombre o SKU, filtros por categoría, **estado** (publicados, borradores, programados), **tipo** (simples o variables), **existencia** (hay / no hay), precio y cantidad.
   - **Ordenar por:** un selector con **Nombre (A → Z)** y **(Z → A)**, precio, stock y categoría, de menor a mayor o al revés; también se puede tocar el título de cada columna. El orden alfabético **no distingue mayúsculas ni tildes** ("abeja" va antes que "Zeta" y "ÁRBOL" junto a "arbol") y ordena los números como números ("Pico 2" antes que "Pico 10"). Lo mismo vale para la tienda.
   - **Por página:** 25, 50, 100 o 200 productos (por defecto 100).
   - **Todo el centro se desplaza junto:** el título, los filtros, la tabla y la paginación van en un mismo scroll, y los títulos de la tabla quedan fijos arriba mientras bajás.
-- **Edición rápida:** el precio y el stock de los productos simples se cambian directamente en el listado.
-- **Acciones masivas:** seleccioná varios productos para publicarlos, pasarlos a borrador, destacarlos, agregarles o quitarles una categoría, **subir o bajar el precio un porcentaje** (también el de sus variantes) o eliminarlos.
+- **Edición rápida:** el precio y la **existencia** de los productos simples se cambian directamente en el listado (ver "Existencia" más abajo).
+- **Acciones masivas:** seleccioná varios productos para publicarlos, pasarlos a borrador, destacarlos, agregarles o quitarles una categoría, **subir o bajar el precio un porcentaje** (también el de sus variantes), marcarlos **con existencia** o **sin existencia** (también todas sus variantes) o eliminarlos. Las acciones masivas piden confirmación.
 - **Duplicar:** crea una copia como borrador para partir de un producto parecido.
 - **Nuevo producto / Editar:** nombre, tipo (simple o variable), estado (publicado o borrador), SKU, descripción, precio, precio anterior, **precio de costo**, stock, medidas de envío, imágenes, categorías, **etiquetas**, **productos recomendados**, producto destacado y datos SEO.
   - La **descripción corta** y la **descripción** tienen editor de texto completo: títulos, negrita, cursiva, subrayado, tachado, listas con viñetas y numeradas, citas, línea separadora, colores de texto, enlaces, imágenes, deshacer/rehacer y quitar formato.
   - En los productos variables, los **atributos** se agregan de a uno con un buscador, y sus valores se eligen escribiendo (con "Agregar todos" y "Quitar todos"), en vez de una lista larga de casillas.
   - En el listado, cada producto tiene un botón **Editar** al lado del nombre.
+- **Existencia (hay / no hay):** cada producto simple, y cada variante, tiene tres estados que se eligen con un selector, en el formulario y en el listado:
+  - **Hay existencia:** sin llevar la cuenta de unidades; siempre se puede comprar.
+  - **No hay existencia:** no se puede comprar; en la tienda figura "Sin stock" con el aviso de reposición, y va al final de los listados.
+  - **Controlar cantidad:** se carga el número de unidades; cada venta descuenta y con 0 queda sin existencia.
+  Lo que ya estaba cargado cae solo en uno de los tres (lo migrado como "en stock" sin cantidad = hay existencia; lo "agotado" = no hay existencia), así que no hay nada que rehacer. Pasar un producto con cantidad a "hay" o "no hay existencia" borra ese número; por eso las acciones masivas piden confirmación. Con el filtro **Existencia** del listado se encuentra todo lo que tiene o no tiene.
 - **Programar publicación:** “mostrar desde” y “ocultar desde”: el producto aparece y desaparece solo en esas fechas.
 - **Precio promocional programado:** un precio promocional con fecha de inicio y de fin. Mientras está vigente se cobra y se muestra el precio normal tachado; cuando termina, vuelve solo al normal. En los productos variables se carga en cada variante.
 - **Productos variables:** se eligen los atributos y sus valores y el botón **Generar variantes** crea todas las combinaciones. Cada variante tiene su propio SKU, precio, costo, promoción, stock e imagen.

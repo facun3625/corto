@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMoney } from "@/lib/currency";
 import { bulkProductAction, duplicateProduct, quickUpdateProduct, type BulkAction } from "./actions";
 import { useConfirm } from "@/lib/useConfirm";
+import { STOCK_MODE_LABEL, stockModeOf, type StockMode } from "@/lib/stockMode";
 
 export type TableProduct = {
   id: string;
@@ -32,16 +33,22 @@ const VISIBILITY: Record<TableProduct["visibility"], { text: string; cls: string
 };
 
 // Edita precio o stock en el lugar: se guarda al salir del campo (o con Enter)
-function InlineNumber({ productId, field, value, step, disabled }: { productId: string; field: "price" | "stock"; value: number; step: string; disabled?: boolean }) {
+// asTracked: al guardar la cantidad, el producto pasa a "Controlar cantidad" (y se guarda aunque el número no haya cambiado)
+function InlineNumber({ productId, field, value, step, disabled, asTracked }: { productId: string; field: "price" | "stock"; value: number; step: string; disabled?: boolean; asTracked?: boolean }) {
   const [text, setText] = useState(String(value));
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
     const n = Number(text);
-    if (text.trim() === "" || n === value || Number.isNaN(n)) return setText(String(value));
+    if (text.trim() === "" || Number.isNaN(n) || (n === value && !asTracked)) return setText(String(value));
+    if (asTracked && (!Number.isInteger(n) || n < 0)) {
+      setState("error");
+      setError("Una cantidad entera de 0 en adelante");
+      return;
+    }
     setState("saving");
-    const result = await quickUpdateProduct(productId, { [field]: n });
+    const result = await quickUpdateProduct(productId, asTracked ? { stockMode: "tracked", stock: n } : { [field]: n });
     if (result.ok) {
       setState("saved");
       setTimeout(() => setState("idle"), 1200);
@@ -69,6 +76,51 @@ function InlineNumber({ productId, field, value, step, disabled }: { productId: 
   );
 }
 
+// Existencia de un producto simple, en el lugar: Hay existencia / No hay existencia / Controlar cantidad (con el número)
+function StockCell({ product }: { product: TableProduct }) {
+  const router = useRouter();
+  const [mode, setMode] = useState<StockMode>(stockModeOf(product));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function change(next: StockMode) {
+    if (next === "tracked") {
+      setMode("tracked"); // se guarda al escribir la cantidad
+      return;
+    }
+    const previous = mode;
+    setMode(next);
+    setSaving(true);
+    setError(null);
+    const result = await quickUpdateProduct(product.id, { stockMode: next });
+    setSaving(false);
+    if (result.ok) router.refresh();
+    else {
+      setMode(previous);
+      setError(result.error ?? "No se pudo guardar");
+    }
+  }
+
+  const tone = mode === "available" ? "border-green-200 bg-green-50 text-green-700" : mode === "unavailable" ? "border-red-200 bg-red-50 text-red-700" : "border-black/10 bg-white text-brand-ink";
+  return (
+    <span className="inline-flex flex-col gap-1">
+      <select
+        aria-label={`Existencia de ${product.name}`}
+        value={mode}
+        disabled={saving}
+        onChange={(e) => change(e.target.value as StockMode)}
+        className={`w-44 cursor-pointer rounded-md border px-2 py-1 text-xs font-semibold focus:border-brand-pink focus:outline-none ${tone}`}
+      >
+        {(["available", "unavailable", "tracked"] as StockMode[]).map((m) => (
+          <option key={m} value={m}>{STOCK_MODE_LABEL[m]}</option>
+        ))}
+      </select>
+      {mode === "tracked" && <InlineNumber productId={product.id} field="stock" value={product.manageStock ? product.stock : 0} step="1" asTracked />}
+      {error && <span className="text-[10px] text-red-600">{error}</span>}
+    </span>
+  );
+}
+
 export function ProductsTable({ products, sortHref, sort, dir, categories }: { products: TableProduct[]; sortHref: SortHref; sort: string; dir: string; categories: { id: string; name: string }[] }) {
   const router = useRouter();
   const { formatMoney } = useMoney();
@@ -88,7 +140,9 @@ export function ProductsTable({ products, sortHref, sort, dir, categories }: { p
   });
 
   async function run(action: BulkAction, confirmText?: string) {
-    if (confirmText && !(await confirm({ title: confirmText, danger: true }))) return;
+    // Rojo y "Eliminar" solo cuando de verdad se borra; para el resto (precios, existencia) el botón dice "Aplicar"
+    const destructive = action.type === "delete";
+    if (confirmText && !(await confirm({ title: confirmText, danger: destructive, confirmLabel: destructive ? "Eliminar" : "Aplicar" }))) return;
     start(async () => {
       const result = await bulkProductAction([...selected], action);
       setMessage(result.ok ? `Listo: ${result.affected} producto(s) afectado(s).` : result.error ?? "No se pudo aplicar");
@@ -112,6 +166,8 @@ export function ProductsTable({ products, sortHref, sort, dir, categories }: { p
           <button disabled={pending} className={btn} onClick={() => run({ type: "draft" })}>Pasar a borrador</button>
           <button disabled={pending} className={btn} onClick={() => run({ type: "feature", value: true })}>Destacar</button>
           <button disabled={pending} className={btn} onClick={() => run({ type: "feature", value: false })}>Quitar destacado</button>
+          <button disabled={pending} className={btn} onClick={() => run({ type: "stockMode", mode: "available" }, `¿Marcar ${selected.size} producto(s) con existencia? Dejan de llevar la cuenta de unidades: si tenían una cantidad cargada, se pierde ese número.`)}>Con existencia</button>
+          <button disabled={pending} className={btn} onClick={() => run({ type: "stockMode", mode: "unavailable" }, `¿Marcar ${selected.size} producto(s) sin existencia? No se van a poder comprar (en los que llevaban cantidad, queda en 0).`)}>Sin existencia</button>
           <span className="flex items-center gap-1">
             <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-xs">
               <option value="">Categoría…</option>
@@ -172,10 +228,11 @@ export function ProductsTable({ products, sortHref, sort, dir, categories }: { p
                     {p.type === "simple" ? <InlineNumber productId={p.id} field="price" value={p.basePrice} step="0.01" /> : <span className="text-brand-pink-dark">desde {formatMoney(p.price)}</span>}
                   </td>
                   <td className="px-3 py-2">
-                    {p.type === "simple" && p.manageStock ? (
-                      <InlineNumber productId={p.id} field="stock" value={p.stock} step="1" />
+                    {p.type === "simple" ? (
+                      <StockCell product={p} />
                     ) : (
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${p.stock > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>{p.manageStock || p.type === "variable" ? p.stock : "sin control"}</span>
+                      // Con variantes la existencia se edita en cada variante (dentro del producto)
+                      <span title="Se edita en cada variante" className={`rounded-full px-2.5 py-1 text-xs font-semibold ${p.stock > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>{p.stock > 0 ? STOCK_MODE_LABEL.available : STOCK_MODE_LABEL.unavailable}</span>
                     )}
                   </td>
                   <td className="px-3 py-2"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${vis.cls}`}>{vis.text}</span></td>

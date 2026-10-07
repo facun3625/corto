@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { StockModeControl } from "./StockModeControl";
 import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { saveProduct, deleteProduct, type ProductInput } from "./actions";
@@ -332,14 +333,10 @@ export function ProductForm({
               <label className={label}>Precio anterior (tachado)</label>
               <input type="number" min={0} step="0.01" className={field} value={form.compareAtPrice ?? ""} onChange={(e) => set("compareAtPrice", num(e.target.value))} />
             </div>
-            <div>
-              <label className={label}>Stock</label>
-              <input type="number" step="1" className={field} value={form.stock} disabled={!form.manageStock} onChange={(e) => set("stock", Math.trunc(Number(e.target.value)))} />
+            <div className="sm:col-span-2">
+              <label className={label}>Existencia</label>
+              <StockModeControl manageStock={form.manageStock} stock={form.stock} onChange={(f) => setForm((prev) => ({ ...prev, ...f }))} />
             </div>
-            <label className="flex items-end gap-2 pb-2 text-sm text-brand-ink">
-              <input type="checkbox" checked={form.manageStock} onChange={(e) => set("manageStock", e.target.checked)} />
-              Controlar stock
-            </label>
           </div>
         </div>
       )}
@@ -419,7 +416,7 @@ export function ProductForm({
                       <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.price} onChange={(e) => updateVariant(i, { price: Number(e.target.value) })} /></td>
                       <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.compareAtPrice ?? ""} onChange={(e) => updateVariant(i, { compareAtPrice: num(e.target.value) })} /></td>
                       <td className="w-28 px-2"><input type="number" min={0} step="0.01" className={field} value={v.promoPrice ?? ""} onChange={(e) => updateVariant(i, { promoPrice: num(e.target.value) })} /></td>
-                      <td className="w-24 px-2"><input type="number" step="1" className={field} value={v.stock} onChange={(e) => updateVariant(i, { stock: Math.trunc(Number(e.target.value)) })} /></td>
+                      <td className="w-64 px-2"><StockModeControl compact manageStock={v.manageStock} stock={v.stock} onChange={(f) => updateVariant(i, f)} /></td>
                       <td className="w-32 px-2">
                         <select className={field} value={v.imageUrl ?? ""} onChange={(e) => updateVariant(i, { imageUrl: e.target.value || null })}>
                           <option value="">—</option>
