@@ -74,7 +74,7 @@ add(G1, "inicio", "Inicio", "/admin/inicio",
         "Crear un <b>cupón rápido</b> sin salir de la pantalla (porcentaje, vigencia y, si querés, mandarlo por WhatsApp).",
         "Entrar a cualquier sección desde el menú de la izquierda.",
         "Buscar una sección del panel escribiendo su nombre (atajo <code>Ctrl</code>/<code>⌘</code> + <code>K</code>).",
-    ]) + callout("<b>El menú está ordenado en grupos que se despliegan:</b> <b>Catálogo</b> (productos, categorías, atributos, etiquetas), <b>Ventas</b>, <b>Estadísticas</b> (de ventas y visitas), <b>Clientes</b> (clientes y usuarios —incluye a los administradores—, segmentos, suscriptores, puntos), <b>Tienda</b> (pagos, envíos, cupones, temas, páginas y contacto) y <b>Recuperar clientes</b> (carritos y lista de espera). Mailing, Notificaciones, Conversaciones IA y Mensajes están sueltos, y Configuración al final. Tocá el nombre de un grupo para abrirlo o cerrarlo: se mantiene abierto uno solo a la vez (al abrir otro, el anterior se cierra) y el panel abre solo el de la pantalla en la que estás. Los números rojos (pedidos nuevos, mensajes, consultas de la IA) se ven siempre.") + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
+    ]) + callout("<b>El menú está ordenado en grupos que se despliegan:</b> <b>Catálogo</b> (productos, categorías, atributos, etiquetas), <b>Ventas</b>, <b>Estadísticas</b> (de ventas y visitas), <b>Clientes y usuarios</b> (clientes, administradores, segmentos, suscriptores, puntos), <b>Tienda</b> (pagos, envíos, cupones, temas, páginas y contacto) y <b>Recuperar clientes</b> (carritos y lista de espera). Mailing, Notificaciones, Conversaciones IA y Mensajes están sueltos, y Configuración al final. Tocá el nombre de un grupo para abrirlo o cerrarlo: se mantiene abierto uno solo a la vez (al abrir otro, el anterior se cierra) y el panel abre solo el de la pantalla en la que estás. Los números rojos (pedidos nuevos, mensajes, consultas de la IA) se ven siempre.") + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
     + sub("La campanita", "Avisa cuando entra un pedido nuevo, un mensaje o una consulta de la vendedora IA. Al abrirla se marcan como vistos.", "campanita", "", "mid"))
 
 add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
@@ -312,7 +312,7 @@ add(G6, "contacto", "Contacto", "/admin/contacto", "Las tarjetas con tus datos q
     ]))
 
 # ------------------------------------------------------------------ CLIENTES
-add(G7, "clientes", "Clientes y usuarios", "/admin/usuarios", "Todas las cuentas de la tienda y quién administra el panel.",
+add(G7, "clientes", "Clientes y administradores", "/admin/usuarios", "Todas las cuentas de la tienda y quién administra el panel. Son dos entradas del menú sobre la misma lista: <b>Clientes</b> muestra solo a quienes compran y <b>Administradores</b> solo al equipo con acceso al panel.",
     shot("clientes", "/admin/usuarios") + points([
         "Buscar clientes por nombre o mail, y exportarlos a CSV.",
         "Ver compras, gasto total, última compra y puntos de cada uno.",

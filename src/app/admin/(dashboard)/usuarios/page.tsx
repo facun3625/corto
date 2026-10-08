@@ -16,9 +16,11 @@ type Sort = "recent" | "spent" | "orders" | "last";
 export default async function AdminUsuariosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; segment?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; segment?: string; sort?: string; role?: string }>;
 }) {
-  const { q, segment: segmentId, sort: sortParam } = await searchParams;
+  const { q, segment: segmentId, sort: sortParam, role: roleParam } = await searchParams;
+  // Dos vistas de la misma lista (las dos entradas del menú): solo clientes o solo administradores; sin filtro, todas las cuentas
+  const view = roleParam === "clientes" || roleParam === "administradores" ? roleParam : null;
   const query = q?.trim().toLowerCase() ?? "";
   const sort: Sort = (["recent", "spent", "orders", "last"] as const).includes(sortParam as Sort) ? (sortParam as Sort) : "recent";
   await ensureSegmentsSeeded();
@@ -31,7 +33,9 @@ export default async function AdminUsuariosPage({
   ]);
   const segment = segments.find((s) => s.id === segmentId);
 
-  let users = segment ? await getSegmentMembers(segment, rows) : rows;
+  let users = segment && view !== "administradores" ? await getSegmentMembers(segment, rows) : rows;
+  if (view === "clientes") users = users.filter((u) => u.role === "customer");
+  if (view === "administradores") users = users.filter((u) => u.role !== "customer");
   if (query) users = users.filter((u) => u.email.toLowerCase().includes(query) || (u.name ?? "").toLowerCase().includes(query));
   users = [...users].sort((a, b) => {
     if (sort === "spent") return b.stats.spent - a.stats.spent;
@@ -44,6 +48,7 @@ export default async function AdminUsuariosPage({
     const sp = new URLSearchParams();
     if (q) sp.set("q", q);
     if (segmentId) sp.set("segment", segmentId);
+    if (view) sp.set("role", view);
     sp.set("sort", s);
     return `/admin/usuarios?${sp.toString()}`;
   };
@@ -57,14 +62,14 @@ export default async function AdminUsuariosPage({
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-brand-ink">Clientes y usuarios</h1>
+          <h1 className="text-2xl font-bold text-brand-ink">{view === "clientes" ? "Clientes" : view === "administradores" ? "Administradores" : "Clientes y usuarios"}</h1>
           <p className="mt-1 text-sm text-brand-muted">
-            {users.length} {segment ? `en el segmento “${segment.name}”` : "cuentas registradas"}.{" "}
+            {users.length} {view === "administradores" ? "cuentas con acceso al panel" : segment ? `en el segmento “${segment.name}”` : view === "clientes" ? "clientes registrados" : "cuentas registradas"}.{" "}
             <Link href="/admin/segmentos" className="font-medium text-brand-pink-dark hover:underline">Administrar segmentos</Link>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <SegmentFilter segments={segments.map((s) => ({ id: s.id, name: s.name }))} current={segmentId ?? ""} />
+          {view !== "administradores" && <SegmentFilter segments={segments.map((s) => ({ id: s.id, name: s.name }))} current={segmentId ?? ""} />}
           <UserSearchInput defaultValue={q?.trim() ?? ""} />
           <NewAdminForm />
           <a href={exportHref} className="rounded-lg border border-black/10 px-3 py-2 text-xs font-semibold text-brand-ink hover:bg-brand-soft">Exportar CSV</a>

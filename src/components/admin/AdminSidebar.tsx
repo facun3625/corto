@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDownIcon, ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon, BookIcon } from "@/components/icons";
 import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
@@ -29,7 +29,8 @@ const LINKS = [
   { href: "/admin/mensajes", keywords: "consultas contacto formulario", label: "Mensajes", icon: MailIcon },
   { href: "/admin/contacto", keywords: "sucursales datos telefono whatsapp instagram direccion tarjetas mapa", label: "Contacto", icon: MailIcon },
   { href: "/admin/puntos", keywords: "recompensas fidelizacion", label: "Puntos", icon: StarIcon },
-  { href: "/admin/usuarios", keywords: "clientes cuentas usuarios", label: "Clientes", icon: UsersIcon },
+  { href: "/admin/usuarios?role=clientes", keywords: "cuentas compradores usuarios", label: "Clientes", icon: UsersIcon },
+  { href: "/admin/usuarios?role=administradores", keywords: "admins equipo staff usuarios acceso panel contraseña", label: "Administradores", icon: UsersIcon },
   { href: "/admin/segmentos", keywords: "grupos clientes", label: "Segmentos", icon: TagIcon },
   { href: "/admin/suscriptores", keywords: "newsletter email", label: "Suscriptores", icon: MailIcon },
   { href: "/admin/logs", keywords: "historial auditoria actividad", label: "Registro", icon: ClipboardIcon },
@@ -45,7 +46,7 @@ const TREE: NavEntry[] = [
   { kind: "group", id: "catalogo", label: "Catálogo", icon: PackageIcon, items: [{ href: "/admin/productos" }, { href: "/admin/categorias" }, { href: "/admin/atributos" }, { href: "/admin/etiquetas" }, { href: "/admin/migracion" }] },
   { kind: "link", href: "/admin/ventas" },
   { kind: "group", id: "estadisticas", label: "Estadísticas", icon: TrendUpIcon, items: [{ href: "/admin/estadisticas", label: "De ventas" }, { href: "/admin/visitas" }] },
-  { kind: "group", id: "clientes", label: "Clientes", icon: UsersIcon, items: [{ href: "/admin/usuarios", label: "Clientes y usuarios" }, { href: "/admin/segmentos" }, { href: "/admin/suscriptores" }, { href: "/admin/puntos" }] },
+  { kind: "group", id: "clientes", label: "Clientes y usuarios", icon: UsersIcon, items: [{ href: "/admin/usuarios?role=clientes" }, { href: "/admin/usuarios?role=administradores" }, { href: "/admin/segmentos" }, { href: "/admin/suscriptores" }, { href: "/admin/puntos" }] },
   { kind: "group", id: "tienda", label: "Tienda", icon: StoreIcon, items: [{ href: "/admin/pagos" }, { href: "/admin/envios" }, { href: "/admin/cupones" }, { href: "/admin/temas" }, { href: "/admin/paginas" }, { href: "/admin/contacto" }] },
   { kind: "group", id: "recuperar", label: "Recuperar clientes", icon: CartIcon, items: [{ href: "/admin/carritos-abandonados" }, { href: "/admin/lista-espera" }] },
   { kind: "link", href: "/admin/mailing" },
@@ -62,6 +63,17 @@ const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").t
 
 export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSuper = false }: { userLabel: string; logoUrl?: string; isSuper?: boolean; counts?: { newOrders: number; unreadMessages: number; pendingConversations?: number; showMessages?: boolean } }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Un ítem puede traer filtro en la dirección (?role=…): está activo si coincide la ruta y ese filtro. En /admin/usuarios sin filtro
+  // (o dentro de la ficha de un cliente) se considera "Clientes".
+  const isActiveHref = (href: string) => {
+    const [path, query] = href.split("?");
+    if (!pathname.startsWith(path)) return false;
+    if (!query) return true;
+    const want = new URLSearchParams(query).get("role");
+    const have = searchParams.get("role");
+    return want === "clientes" ? have !== "administradores" : have === want;
+  };
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -101,9 +113,10 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
 
   // Grupo abierto: el de la pantalla actual, o el que quedó recordado en este navegador
   const activeGroupId = useMemo(() => {
-    for (const e of TREE) if (e.kind === "group" && e.items.some((i) => pathname.startsWith(i.href))) return e.id;
+    for (const e of TREE) if (e.kind === "group" && e.items.some((i) => isActiveHref(i.href))) return e.id;
     return null;
-  }, [pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, searchParams]);
   useEffect(() => {
     let saved: string | null = null;
     try { saved = localStorage.getItem(OPEN_KEY); } catch {}
@@ -133,7 +146,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
 
   // Un ítem del menú (suelto, dentro de un grupo o resultado de la búsqueda)
   function linkNode(link: NavLink, opts: { index?: number; nested?: boolean; label?: string } = {}) {
-    const active = pathname.startsWith(link.href);
+    const active = isActiveHref(link.href);
     const picked = searching && opts.index === highlight;
     const Icon = link.icon;
     // Números a la derecha: pedidos nuevos (sin ver) en Ventas, mensajes sin leer y conversaciones de IA con contacto por revisar
