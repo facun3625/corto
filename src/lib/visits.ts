@@ -10,6 +10,11 @@ export type VisitStats = {
   topPages: { path: string; count: number }[];
   topCartProducts: { name: string; quantity: number }[];
   series: { label: string; count: number }[];
+  // Origen de las visitas: la primera llegada de cada visitante en el período
+  sources: { channel: string; paid: boolean; count: number }[];
+  noSource: number; // visitas sin dato de origen (anteriores a esta función)
+  campaigns: { campaign: string; channel: string; paid: boolean; count: number }[];
+  referrerHosts: { host: string; count: number }[];
 };
 
 function bucketKey(d: Date, g: Granularity): string {
@@ -106,7 +111,34 @@ export async function getVisitStats(opts: { from?: Date; to?: Date; granularity:
   }
   const topCartProducts = [...productMap.values()].sort((a, b) => b.quantity - a.quantity).slice(0, 10);
 
+  // Origen: de cada visitante (sesión) se toma su primera llegada dentro del período
+  const landings = await prisma.pageView.findMany({
+    where: { ...where, isLanding: true },
+    orderBy: { createdAt: "asc" },
+    select: { sessionId: true, channel: true, paid: true, campaign: true, referrerHost: true },
+  });
+  const firstBySession = new Map<string, (typeof landings)[number]>();
+  for (const l of landings) if (!firstBySession.has(l.sessionId)) firstBySession.set(l.sessionId, l);
+  const srcMap = new Map<string, { channel: string; paid: boolean; count: number }>();
+  const campMap = new Map<string, { campaign: string; channel: string; paid: boolean; count: number }>();
+  const hostMap = new Map<string, number>();
+  for (const l of firstBySession.values()) {
+    const channel = l.channel ?? "directo";
+    const key = `${channel}|${l.paid}`;
+    srcMap.set(key, { channel, paid: l.paid, count: (srcMap.get(key)?.count ?? 0) + 1 });
+    if (l.campaign) {
+      const ck = `${l.campaign}|${channel}|${l.paid}`;
+      campMap.set(ck, { campaign: l.campaign, channel, paid: l.paid, count: (campMap.get(ck)?.count ?? 0) + 1 });
+    }
+    if (l.referrerHost && channel === "sitio") hostMap.set(l.referrerHost, (hostMap.get(l.referrerHost) ?? 0) + 1);
+  }
+  const noSource = Math.max(0, distinctSessions.length - firstBySession.size);
+
   return {
+    sources: [...srcMap.values()].sort((a, b) => b.count - a.count),
+    noSource,
+    campaigns: [...campMap.values()].sort((a, b) => b.count - a.count).slice(0, 10),
+    referrerHosts: [...hostMap.entries()].map(([host, count]) => ({ host, count })).sort((a, b) => b.count - a.count).slice(0, 8),
     visits: distinctSessions.length,
     pageViews,
     topPages: pathGroups.map((g) => ({ path: g.path, count: g._count.path })).sort((a, b) => b.count - a.count),

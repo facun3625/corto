@@ -56,7 +56,7 @@ const wanted = (g) => only.length === 0 || only.some((o) => g.includes(o));
       await step("ventas-lista", async () => { await b.size(1200, 900); await b.go("/admin/ventas", 700); await b.shot("ventas-lista"); });
       await step("venta-detalle", async () => { await b.size(1200, 1000); await b.go("/admin/ventas", 1500); await b.click("css:tbody tr:nth-child(4)"); await b.sleep(700); await b.shot("venta-detalle"); });
       await step("estadisticas", async () => { await b.size(1200, 1700); await b.go("/admin/estadisticas", 2500); await b.shot("estadisticas"); });
-      await step("visitas", async () => { await b.size(1200, 1100); await b.go("/admin/visitas", 2200); await b.shot("visitas"); });
+      await step("visitas", async () => { await b.size(1200, 1900); await b.go("/admin/visitas", 2600); await b.js(`const i=document.querySelector('input[aria-label="Link con origen"]');if(i)i.value=i.value.replace(/^https?:\\/\\/[^/]+/,"https://tutienda.com")`); await b.shot("visitas"); });
     });
 
     // ================= RECUPERAR CLIENTES =================

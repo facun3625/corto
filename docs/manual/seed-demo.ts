@@ -458,9 +458,17 @@ async function main() {
   // ---------- estadísticas ----------
   for (let d = 0; d < 30; d++) {
     const visits = 12 + Math.round(Math.abs(Math.sin(d / 3)) * 30) + (d < 7 ? 15 : 0);
+    // De dónde llega cada visitante (la primera vista de su sesión): mezcla creíble de redes, buscadores, anuncios y directo
+    const origins: { channel: string; paid?: boolean; campaign?: string; host?: string }[] = [
+      { channel: "instagram" }, { channel: "instagram", campaign: "bio-perfil" }, { channel: "directo" }, { channel: "google" }, { channel: "instagram", paid: true, campaign: "ofertas-de-primavera" },
+      { channel: "facebook" }, { channel: "whatsapp", campaign: "recuperar-carrito" }, { channel: "directo" }, { channel: "google" }, { channel: "email", campaign: "newsletter-octubre" },
+      { channel: "facebook", paid: true, campaign: "ofertas-de-primavera" }, { channel: "sitio", host: "blogdecasa.com" }, { channel: "tiktok" }, { channel: "instagram" },
+    ];
     for (let k = 0; k < visits; k++) {
       const sid = `v-${d}-${k % 14}`;
-      await prisma.pageView.create({ data: { path: ["/", "/tienda", "/tienda", "/producto/remera-basica-de-algodon", "/carrito"][k % 5], sessionId: sid, createdAt: ago(d, k % 20) } });
+      const first = k < 14;
+      const o = origins[(k + d) % origins.length];
+      await prisma.pageView.create({ data: { ...(first ? { isLanding: true, channel: o.channel, paid: o.paid ?? false, campaign: o.campaign ?? null, referrerHost: o.host ?? null } : {}), path: ["/", "/tienda", "/tienda", "/producto/remera-basica-de-algodon", "/carrito"][k % 5], sessionId: sid, createdAt: ago(d, k % 20) } });
     }
     for (let k = 0; k < Math.round(visits / 3); k++) await prisma.funnelEvent.createMany({ data: [{ sessionId: `f-${d}-${k}`, type: "visit", createdAt: ago(d) }, ...(k % 3 === 0 ? [{ sessionId: `f-${d}-${k}`, type: "cart", createdAt: ago(d) }] : [])], skipDuplicates: true });
   }

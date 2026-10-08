@@ -723,9 +723,17 @@ model PageView {
   path      String
   sessionId String
   createdAt DateTime @default(now())
+  // Origen de la visita: solo se completa en la primera página de cada sesión del navegador ("llegada").
+  // channel: instagram, facebook, whatsapp, tiktok, youtube, x, pinterest, linkedin, google, buscadores, email, push, otro, sitio, directo
+  isLanding    Boolean @default(false)
+  channel      String?
+  paid         Boolean @default(false) // llegó desde un anuncio (por los UTM del link o el identificador de Google Ads)
+  campaign     String? // utm_campaign
+  referrerHost String? // sitio desde el que llegó, cuando no es una red conocida
 
   @@index([createdAt])
   @@index([path])
+  @@index([isLanding, createdAt])
 }
 
 // Foto del último estado de cada carrito, sincronizada sola en cada cambio

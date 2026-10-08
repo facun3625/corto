@@ -163,7 +163,7 @@ export default async function AdminCarritosAbandonadosPage({
                           onSent={markCartWhatsApp.bind(null, cart.id)}
                           href={buildWhatsAppLink(
                             phone,
-                            `Hola ${cart.user?.name ?? cart.name ?? ""}! Vimos que dejaste ${items.length === 1 ? items[0]?.name ?? "un producto" : `${items.length} productos`} en tu carrito de ${storeNameOf(settings)}. ¿Te ayudamos a completar la compra? ${base}/carrito?recuperar=${cart.id}`
+                            `Hola ${cart.user?.name ?? cart.name ?? ""}! Vimos que dejaste ${items.length === 1 ? items[0]?.name ?? "un producto" : `${items.length} productos`} en tu carrito de ${storeNameOf(settings)}. ¿Te ayudamos a completar la compra? ${base}/carrito?recuperar=${cart.id}&utm_source=whatsapp&utm_medium=mensaje&utm_campaign=recuperar-carrito`
                           )}
                         />
                       )}

@@ -142,7 +142,7 @@ export async function runCartRecovery(now = new Date(), deps: { sender?: MailSen
     });
     if (claim.count === 0) continue;
 
-    const { subject, html } = buildRecoveryMail({ settings, name: cart.user?.name ?? cart.name, email, items, link: `${siteUrl()}/carrito?recuperar=${cart.id}` });
+    const { subject, html } = buildRecoveryMail({ settings, name: cart.user?.name ?? cart.name, email, items, link: `${siteUrl()}/carrito?recuperar=${cart.id}&utm_source=email&utm_medium=email&utm_campaign=recuperar-carrito` });
     const result = await sender.send(email, subject, html);
     if (!result.ok) {
       // Se libera para reintentar en el próximo pase y se corta: casi seguro es un problema del correo

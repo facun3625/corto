@@ -43,11 +43,12 @@ async function prepareDatabase() {
       setup(b) {
         const stubs = {
           'next/cache': 'export const revalidatePath = () => {};',
+          'next/server': 'export const NextResponse = { json: (body, init) => new Response(JSON.stringify(body), { status: init?.status ?? 200, headers: { "content-type": "application/json" } }) };',
           'server-only': '',
           '@/lib/adminAuth': 'export const requireAdmin = async () => ({ user: { id: "admin", name: "Admin" } }); export const requireSuperAdmin = async () => ({ user: { id: "admin", name: "Admin" } });',
           '@/lib/adminLog': 'export const logAdminAction = async () => {};',
         };
-        b.onResolve({ filter: /^(server-only|next\/cache|@\/lib\/(adminAuth|adminLog))$/ }, (a) => ({ path: a.path, namespace: 'stub' }));
+        b.onResolve({ filter: /^(server-only|next\/cache|next\/server|@\/lib\/(adminAuth|adminLog))$/ }, (a) => ({ path: a.path, namespace: 'stub' }));
         b.onLoad({ filter: /.*/, namespace: 'stub' }, (a) => ({ contents: stubs[a.path], loader: 'js' }));
       },
     }],

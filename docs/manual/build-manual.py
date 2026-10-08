@@ -316,7 +316,12 @@ add(G3, "visitas", "Visitas", "/admin/visitas",
     shot("visitas", "/admin/visitas") + points([
         "Visitas únicas y vistas de página por día.",
         "Las páginas más vistas y los productos más agregados al carrito.",
-    ]))
+        "<b>De dónde vienen las visitas:</b> Instagram, Facebook, WhatsApp, TikTok, Google, mails, otros sitios o directo, con cantidad y porcentaje. En Instagram, Facebook y Google separa lo <b>orgánico</b> de lo que viene de <b>publicidad</b> (barra naranja).",
+        "<b>Campañas:</b> las visitas de cada campaña que armes con un link con origen, y los sitios que te enlazan.",
+        "<b>Armá un link con origen:</b> elegís la página, dónde lo vas a poner (bio de Instagram, anuncio, mail, WhatsApp…) y un nombre de campaña, y copiás el link. Cuando alguien entra por ese link, Visitas lo cuenta en ese origen.",
+    ]) + callout(
+        "<b>Cómo se detecta el origen:</b> por la página desde la que llega la persona, por el navegador interno de Instagram, Facebook y TikTok, y por los datos que lleva el link (los llamados UTM). Para distinguir lo orgánico de la publicidad, los anuncios tienen que usar un link con origen de tipo “Anuncio pago” (los clics de Google Ads se detectan solos). Un link pegado en un chat de WhatsApp no informa su origen: figura como <b>Directo</b> salvo que uses un link con origen.",
+        "Los mails y mensajes de recuperación de carritos ya llevan su origen puesto, así que aparecen solos como Email y WhatsApp (campaña “recuperar-carrito”). El origen se cuenta desde que se activa esta función; las visitas anteriores no lo tienen."))
 
 # ------------------------------------------------------------------ RECUPERAR
 add(G4, "carritos", "Carritos abandonados", "/admin/carritos-abandonados",

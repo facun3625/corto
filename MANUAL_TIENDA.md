@@ -614,6 +614,13 @@ Permite elegir un período rápido (7 días, 30 días, 12 meses, todo el histori
 
 Permite consultar páginas vistas, sesiones únicas, evolución y páginas más visitadas.
 
+**De dónde vienen las visitas.** Una tarjeta muestra el origen de cada visitante (se cuenta su primera llegada en el período): Instagram, Facebook, WhatsApp, TikTok, YouTube, X, Google, otros buscadores, Email, notificaciones, otros sitios o Directo, con cantidad y porcentaje. En las redes y en Google separa **orgánico** de **publicidad** (barra naranja). Aparte hay una lista de **campañas** y de otros sitios que enlazan a la tienda.
+
+- **Cómo se detecta:** por el sitio desde el que llegó la persona, por el navegador interno de Instagram, Facebook y TikTok, por los identificadores de clic (por ejemplo los de Google Ads) y por los parámetros UTM del link (`utm_source`, `utm_medium`, `utm_campaign`).
+- **Armá un link con origen:** debajo hay un armador: se elige la página, dónde se va a poner (bio de Instagram, publicación, anuncio pago, mail, mensaje) y una campaña opcional, y se copia el link. Para que un anuncio figure como *publicidad*, usar el tipo **Anuncio pago** (`utm_medium=cpc`). El link de la bio, con tipo *Link de la bio*, cuenta como orgánico.
+- **Limitaciones:** un link pegado en un chat de WhatsApp (o una app que no informa de dónde viene) figura como *Directo*; con un link con origen (`utm_source=whatsapp`) se cuenta bien. Facebook agrega un identificador a todos los links, por eso solo no alcanza para decir que es un anuncio.
+- Los mails y los mensajes de recuperación de carritos ya llevan origen puesto (Email / WhatsApp, campaña `recuperar-carrito`). Las visitas anteriores a esta función no tienen origen y se avisan aparte.
+
 ### 10.4 sexies Categorías
 
 En **Categorías** hay un listado en árbol (cada subcategoría debajo de su padre, con su imagen, slug y cantidad de productos), con buscador y paginado de a 50. A la izquierda se **agrega** una categoría (nombre y padre); al crearla o al entrar a una (**Editar**) se abre su pantalla: nombre, slug, categoría padre, orden, descripción, imagen y SEO. No permite que una categoría sea hija de sí misma ni de sus subcategorías. Al borrar una categoría, sus subcategorías suben al nivel superior y los productos no se borran (solo pierden ese vínculo); el diálogo avisa cuántos se ven afectados.

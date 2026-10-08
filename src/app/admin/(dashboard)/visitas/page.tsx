@@ -2,6 +2,9 @@ import { getVisitStats, type Granularity } from "@/lib/visits";
 import { StatCard } from "@/components/admin/StatCard";
 import { EyeIcon, DashboardIcon, TrendUpIcon } from "@/components/icons";
 import { VisitFilters, PERIODS, type PeriodKey } from "./VisitFilters";
+import { UtmLinkBuilder } from "./UtmLinkBuilder";
+import { sourceLabel } from "@/lib/trafficSource";
+import { siteUrl } from "@/lib/siteUrl";
 
 const PAGE_LABELS: Record<string, string> = {
   "/": "Home",
@@ -79,6 +82,8 @@ export default async function AdminVisitasPage({
   const stats = await getVisitStats({ from, to, granularity });
 
   const maxSeries = Math.max(1, ...stats.series.map((m) => m.count));
+  const maxSource = Math.max(1, ...stats.sources.map((x) => x.count));
+  const sourceTotal = stats.sources.reduce((n, x) => n + x.count, 0);
   const maxPage = Math.max(1, ...stats.topPages.map((p) => p.count));
   const maxProduct = Math.max(1, ...stats.topCartProducts.map((p) => p.quantity));
   const labelStep = Math.max(1, Math.ceil(stats.series.length / 10));
@@ -140,6 +145,69 @@ export default async function AdminVisitasPage({
             ))}
           </div>
         )}
+      </div>
+
+      {/* De dónde vienen las visitas */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-black/10 bg-white p-5 lg:col-span-2">
+          <p className="text-sm font-semibold text-brand-ink">De dónde vienen las visitas</p>
+          <p className="mt-0.5 text-xs text-brand-muted">Se cuenta la primera llegada de cada visitante en el período. Los links de la bio, los anuncios y los mails con origen (abajo) se distinguen mejor.</p>
+          {stats.sources.length === 0 ? (
+            <p className="mt-4 text-sm text-brand-muted">Todavía no hay visitas con origen en este período.</p>
+          ) : (
+            <div className="mt-4 flex flex-col gap-3">
+              {stats.sources.map((x) => (
+                <div key={`${x.channel}-${x.paid}`}>
+                  <div className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="truncate text-brand-ink">{sourceLabel(x.channel, x.paid)}</span>
+                    <span className="shrink-0 text-brand-ink"><b>{x.count}</b> <span className="text-xs text-brand-muted">({sourceTotal > 0 ? Math.round((x.count / sourceTotal) * 100) : 0}%)</span></span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full rounded-full bg-brand-soft">
+                    <div className={`h-1.5 rounded-full ${x.paid ? "bg-amber-500" : "bg-brand-pink"}`} style={{ width: `${(x.count / maxSource) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+              {stats.noSource > 0 && <p className="text-xs text-brand-muted">{stats.noSource} visitas más son anteriores a esta función y no tienen origen registrado.</p>}
+            </div>
+          )}
+          <p className="mt-4 border-t border-black/5 pt-3 text-xs text-brand-muted">
+            <b>Directo</b> incluye a quien escribió el sitio, lo tenía en favoritos o llegó desde una app que no informa su origen (por ejemplo un link pegado en WhatsApp).
+          </p>
+        </div>
+        <div className="flex flex-col gap-4">
+          <div className="rounded-xl border border-black/10 bg-white p-5">
+            <p className="text-sm font-semibold text-brand-ink">Campañas</p>
+            {stats.campaigns.length === 0 ? (
+              <p className="mt-3 text-xs text-brand-muted">Aparecen cuando usás links con campaña (ver “Armá un link con origen”).</p>
+            ) : (
+              <ul className="mt-3 flex flex-col gap-2">
+                {stats.campaigns.map((c) => (
+                  <li key={`${c.campaign}-${c.channel}-${c.paid}`} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate text-brand-ink">{c.campaign} <span className="text-xs text-brand-muted">· {sourceLabel(c.channel, c.paid)}</span></span>
+                    <b className="shrink-0 text-brand-ink">{c.count}</b>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {stats.referrerHosts.length > 0 && (
+            <div className="rounded-xl border border-black/10 bg-white p-5">
+              <p className="text-sm font-semibold text-brand-ink">Otros sitios que te enlazan</p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {stats.referrerHosts.map((h) => (
+                  <li key={h.host} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate text-brand-ink">{h.host}</span>
+                    <b className="shrink-0 text-brand-ink">{h.count}</b>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <UtmLinkBuilder siteUrl={siteUrl()} />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
