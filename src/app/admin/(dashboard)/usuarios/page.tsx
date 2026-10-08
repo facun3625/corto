@@ -71,7 +71,7 @@ export default async function AdminUsuariosPage({
         <div className="flex flex-wrap items-center gap-2">
           {view !== "administradores" && <SegmentFilter segments={segments.map((s) => ({ id: s.id, name: s.name }))} current={segmentId ?? ""} />}
           <UserSearchInput defaultValue={q?.trim() ?? ""} />
-          <NewAdminForm />
+          {view !== "clientes" && <NewAdminForm />}
           <a href={exportHref} className="rounded-lg border border-black/10 px-3 py-2 text-xs font-semibold text-brand-ink hover:bg-brand-soft">Exportar CSV</a>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default async function AdminUsuariosPage({
           <thead className="sticky top-0 bg-white">
             <tr className="border-b border-black/10 text-xs uppercase tracking-wide text-brand-muted">
               <th className={th}>Cliente</th>
-              <th className={th}>Rol</th>
+              {view !== "clientes" && <th className={th}>Rol</th>}
               <th className={th}>{sortLink("recent", "Alta")}</th>
               <th className={th}>{sortLink("orders", "Compras")}</th>
               <th className={th}>{sortLink("spent", "Gasto total")}</th>
@@ -100,11 +100,13 @@ export default async function AdminUsuariosPage({
                     <Link href={`/admin/usuarios/${u.id}`} className="font-medium text-brand-ink hover:text-brand-pink-dark hover:underline">{u.name ?? "—"}</Link>
                     <span className="block text-xs text-brand-muted">{u.email}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.role !== "customer" ? "bg-brand-pink/10 text-brand-pink-dark" : "bg-gray-100 text-gray-700"}`}>
-                      {u.role === "superadmin" ? "Superadministrador" : u.role === "admin" ? "Administrador" : "Cliente"}
-                    </span>
-                  </td>
+                  {view !== "clientes" && (
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${u.role !== "customer" ? "bg-brand-pink/10 text-brand-pink-dark" : "bg-gray-100 text-gray-700"}`}>
+                        {u.role === "superadmin" ? "Superadministrador" : u.role === "admin" ? "Administrador" : "Cliente"}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-brand-muted">{u.createdAt.toLocaleDateString("es-AR")}</td>
                   <td className="px-4 py-3 text-brand-ink">{u.stats.orders}</td>
                   <td className="px-4 py-3 text-brand-ink">{u.stats.orders > 0 ? fm(u.stats.spent) : "—"}</td>
@@ -133,7 +135,7 @@ export default async function AdminUsuariosPage({
               );
             })}
             {users.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-brand-muted">{query || segment ? "Ningún usuario coincide." : "Todavía no hay usuarios registrados."}</td></tr>
+              <tr><td colSpan={view === "clientes" ? 8 : 9} className="px-4 py-8 text-center text-brand-muted">{query || segment ? "Ningún usuario coincide." : "Todavía no hay usuarios registrados."}</td></tr>
             )}
           </tbody>
         </table>
