@@ -31,7 +31,7 @@ export function PushPrompt() {
       snoozed = Date.now() - Number(localStorage.getItem(DISMISS_KEY) ?? 0) < SNOOZE_MS;
     } catch {}
     if (snoozed) return;
-    const timer = setTimeout(() => setShow(true), 4000);
+    const timer = setTimeout(() => setShow(true), 2500);
     return () => clearTimeout(timer);
   }, []);
 

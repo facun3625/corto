@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useInstallPrompt } from "@/lib/useInstallPrompt";
-import { enablePush } from "@/lib/pushClient";
+import { enablePush, pushSupported, resyncPush } from "@/lib/pushClient";
 import { DownloadIcon, ShareIcon } from "@/components/icons";
 
 // Chrome/Firefox/Edge en iOS corren sobre WebKit pero no pueden instalar —
@@ -12,6 +12,42 @@ function detectIOS() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isIOSNonSafari = /CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
   return { isIOS, isIOSNonSafari };
+}
+
+// Dentro de la app instalada (pie de página): muestra si las notificaciones están activas y deja activarlas con un toque
+function NotificationsStatus() {
+  const [state, setState] = useState<"unsupported" | "default" | "granted" | "denied" | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const next = !pushSupported() ? "unsupported" : (Notification.permission as "default" | "granted" | "denied");
+      setState(next);
+      if (next === "granted") void resyncPush();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  if (!state) return null;
+  const note = "max-w-[16rem] text-center text-xs text-brand-muted";
+  if (state === "granted") return <p className={note}>🔔 Notificaciones activadas</p>;
+  if (state === "denied") return <p className={note}>Las notificaciones están bloqueadas. Activalas desde los Ajustes del teléfono, en Notificaciones.</p>;
+  if (state === "unsupported") return <p className={note}>Este dispositivo no permite notificaciones (en iPhone hace falta iOS 16.4 o más nuevo).</p>;
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        const ok = await enablePush().catch(() => false);
+        setBusy(false);
+        setState(ok ? "granted" : (Notification.permission as "default" | "granted" | "denied"));
+      }}
+      className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-brand-ink transition-colors hover:border-brand-pink hover:text-brand-pink-dark disabled:opacity-60"
+    >
+      🔔 Activar notificaciones
+    </button>
+  );
 }
 
 export function InstallPwaButton({ variant = "pill" }: { variant?: "pill" | "icon" }) {
@@ -53,7 +89,8 @@ export function InstallPwaButton({ variant = "pill" }: { variant?: "pill" | "ico
   // beforeinstallprompt (ej. Safari/Firefox de escritorio) — quedaba
   // invisible sin ninguna pista de por qué. Ahora se muestra siempre salvo
   // que ya esté instalada, y el click explica qué pasa según el navegador.
-  if (isStandalone) return null;
+  // Ya instalada: el botón de descarga no tiene sentido, pero acá sí se puede ver y activar el estado de las notificaciones
+  if (isStandalone) return variant === "pill" ? <NotificationsStatus /> : null;
 
   const isIcon = variant === "icon";
 

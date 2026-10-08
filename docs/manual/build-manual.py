@@ -87,7 +87,7 @@ add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
     ]) + points([
         "<b>El ícono</b> sale automáticamente del <b>Favicon</b> que cargues en Configuración → General (se genera en todos los tamaños). Subí una imagen cuadrada de 512×512 para que se vea nítida.",
         "<b>El nombre</b> debajo del ícono es el <b>Nombre de la franquicia</b> de Configuración → Franquicia.",
-        "<b>Notificaciones push:</b> al tocar “Descargar Web App” el navegador pide permiso para mostrar avisos. Quien instaló la app por otro camino (por ejemplo en iPhone, con Compartir → Agregar a inicio) recibe, ya dentro de la app, un cartelito para activarlos, que puede postergar. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
+        "<b>Notificaciones push:</b> al tocar “Descargar Web App” el navegador pide permiso para mostrar avisos. Quien instaló la app por otro camino (por ejemplo en iPhone, con Compartir → Agregar a inicio) recibe, ya dentro de la app, un cartelito para activarlos, que puede postergar. Además, al final de la página (pie) de la app instalada hay un botón <b>Activar notificaciones</b> que muestra si están activadas, bloqueadas o si el dispositivo no las admite. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
         "No requiere ningún trabajo tuyo: la tienda ya está preparada. Conviene contarles a tus clientes que pueden instalarla.",
     ], "Qué tenés que saber") + callout("<b>Tip:</b> si cambiás el favicon o el nombre, quienes ya instalaron la app ven el cambio la próxima vez que la abran (a veces hace falta cerrarla y volver a abrirla)."))
 
