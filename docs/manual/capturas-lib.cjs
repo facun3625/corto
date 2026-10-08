@@ -42,6 +42,12 @@ module.exports = async function open() {
       await send("Network.clearBrowserCookies");
       if (role) await send("Network.setCookie", { name: "authjs.session-token", value: tokens[role], url: BASE + "/", path: "/" });
     },
+    // Entra como una persona puntual de la base (por ejemplo, una clienta de la demostración)
+    async asUser(id, role, email, name) {
+      await send("Network.clearBrowserCookies");
+      const value = await encode({ token: { sub: id, id, role, email, name }, secret: process.env.AUTH_SECRET, salt: "authjs.session-token" });
+      await send("Network.setCookie", { name: "authjs.session-token", value, url: BASE + "/", path: "/" });
+    },
     async size(width, height) { await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false }); },
     async go(path, wait = 1800) {
       await send("Page.navigate", { url: BASE + path });

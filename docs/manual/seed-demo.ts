@@ -103,7 +103,7 @@ async function main() {
       faviconUrl: favicon.url,
       currency: "ARS",
       pointsEnabled: true,
-      pointsRatio: 1,
+      pointsRatio: 0.01,
       hideOutOfStock: false,
       cartAutoCloseSeconds: 2,
       homeFeaturedTitle: "Productos destacados",
@@ -401,6 +401,13 @@ async function main() {
   for (const [t, pts, v] of [["10% de descuento", 100, 10], ["$3.000 de descuento", 250, 3000], ["20% de descuento", 500, 20]] as const) {
     await prisma.pointReward.create({ data: { title: t, pointsRequired: pts, discountType: t.startsWith("$") ? "fixed" : "percentage", discountValue: v } });
   }
+
+  // Una clienta con historia: dirección guardada y movimientos de puntos (para las capturas de "Mi cuenta")
+  await prisma.address.create({ data: { userId: users[6].id, street: "Av. Principal", number: "1234", apartment: "3B", city: "Tu ciudad", province: "Buenos Aires", zipCode: "3000", phone: users[6].phone ?? undefined, isDefault: true } });
+  await prisma.pointTransaction.createMany({ data: [
+    { userId: users[6].id, amount: 251, description: "Puntos ganados por pedido entregado", createdAt: ago(34) },
+    { userId: users[6].id, amount: 309, description: "Puntos ganados por pedido entregado", createdAt: ago(9) },
+  ] });
 
   // ---------- recuperar clientes ----------
   const items = (idx: number[]) => idx.map((i) => ({ productId: prods[i % prods.length].id, variantId: null, name: prods[i % prods.length].name, price: prods[i % prods.length].price, quantity: 1 }));

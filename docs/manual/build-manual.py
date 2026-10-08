@@ -114,8 +114,84 @@ add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
     callout("<b>Para el administrador:</b> las claves de envío se generan solas, no hay nada que configurar. Solo hace falta que el sitio use <b>https</b> y que en Configuración haya un mail de contacto o de remitente. Los dispositivos que desinstalan la app o bloquean los avisos se quitan solos de la lista."))
 
 # ------------------------------------------------------------------ TIENDA PÚBLICA
-add(G1, "tienda", "Cómo la ve el cliente", "/", "Lo que configurás en el panel se ve así en la tienda.",
-    shot("tienda-home", "/") + sub("Listado de productos", "Categorías a la izquierda (primero), buscador y productos con existencia primero.", "tienda-listado") + sub("Ficha de producto", "Fotos o video, precio, variantes, existencia y botón de compra.", "tienda-ficha"))
+G9 = "La tienda: el comprador"
+add(G9, "front-navegar", "Navegar y buscar", "/",
+    "Así recorre la tienda quien entra sin cuenta: el inicio, las categorías y el buscador. No hace falta registrarse para mirar ni para comprar.",
+    shot("tienda-home", "/") + points([
+        "<b>Inicio:</b> portada con slider, franja de beneficios, rubros, ofertas y productos destacados. Todo se arma desde el panel (Temas, Configuración y Productos).",
+        "<b>Menú de arriba:</b> Inicio, Dónde estamos, Contacto, las páginas que publiques y el botón <b>Tienda</b>. En el celular se abre con el botón de las tres rayitas.",
+        "<b>Categorías:</b> en la Tienda, a la izquierda (primero las categorías, con subcategorías que se despliegan), sin mostrar cuántos productos hay en cada una. Los productos con existencia se muestran primero.",
+        "<b>Filtros:</b> por categoría, por texto (buscador del listado), por etiqueta (Nuevo, Oferta, Regalo…) y “solo ofertas”.",
+    ]) + sub("Buscador con sugerencias", "Al escribir tres letras o más aparecen los productos que coinciden, con su foto y precio. Un toque lleva a la búsqueda.", "front-buscador", "", "mid")
+    + sub("Listado de la tienda", "Categorías a la izquierda, buscador y productos en tarjetas con precio y botón para agregar.", "tienda-listado")
+    + sub("En el celular", "El menú se abre a pantalla completa, con los datos de contacto y los botones de WhatsApp e Instagram.", "front-menu-movil", "", "narrow"))
+
+add(G9, "front-producto", "Ficha del producto", "/producto/…",
+    "La página de cada producto: fotos o video, precio, variantes, existencia y el botón de compra.",
+    shot("tienda-ficha", "/producto/mochila-urbana") + points([
+        "<b>Galería:</b> varias fotos y, si el producto lo tiene, un <b>video</b>. Se puede ampliar la imagen.",
+        "<b>Precio:</b> con el precio anterior tachado cuando hay oferta.",
+        "<b>Variantes:</b> si el producto viene en talles o colores, se elige cada opción antes de agregar; el precio y la existencia cambian según la variante elegida.",
+        "<b>Cantidad:</b> se elige con los botones − y +, y no deja pasar de la existencia disponible.",
+        "<b>Favoritos:</b> el corazón guarda el producto en <b>Mis favoritos</b> (hace falta tener una sesión iniciada).",
+        "<b>Productos relacionados</b> al final de la página.",
+    ]) + sub("Producto con variantes", "El botón “Elegí una opción” se activa cuando están elegidas todas las opciones.", "front-ficha-variable")
+    + sub("Sin existencia: “Avisarme cuando haya stock”", "En un producto agotado el comprador deja nombre, email y, si quiere, teléfono. Queda en la <a href=\"#lista-espera\">lista de espera</a> del panel y se le avisa cuando se repone.", "front-avisarme", "", "mid"))
+
+add(G9, "front-acceso", "Crear cuenta e ingresar", "Ícono de la persona, arriba a la derecha",
+    "Se puede comprar sin cuenta, pero con una cuenta el comprador guarda sus pedidos, direcciones, favoritos y puntos.",
+    sub("Ingresar", "Con email y contraseña o con un toque en <b>Continuar con Google</b>.", "front-login", "", "narrow")
+    + sub("Crear cuenta", "Nombre, email y una contraseña de al menos 8 caracteres; o directamente con Google.", "front-registro", "", "narrow") + points([
+        "<b>Con Google:</b> no hace falta crear contraseña. La cuenta queda creada con su mail de Google.",
+        "<b>¿Olvidaste tu contraseña?</b> El link del formulario manda un mail para crear una nueva; el enlace dura 1 hora.",
+        "Una cuenta creada con Google no tiene contraseña: se entra siempre con Google (o se crea una desde “Olvidé mi contraseña”).",
+        "El panel de administración usa las mismas cuentas: si una persona es administradora, ve además un acceso al panel en el menú.",
+    ], "Qué hay que saber"))
+
+add(G9, "front-carrito", "Carrito", "Ícono del carrito",
+    "Se abre al agregar un producto y se cierra solo a los pocos segundos. Se guarda en el navegador, así que no se pierde al cerrar la página.",
+    shot("front-carrito-drawer", "Carrito lateral") + points([
+        "Cambiar cantidades con − y +, o quitar un producto. No deja superar la existencia (se muestra “Stock máx.”).",
+        "<b>“También te puede gustar”:</b> sugerencias para sumar con un toque.",
+        "<b>Finalizar compra</b> lleva a la página del pedido.",
+        "Si la persona deja productos sin comprar, el carrito queda en <a href=\"#carritos\">Carritos abandonados</a> y puede recuperarlo desde un link que le llega por mail o WhatsApp: vuelve a cargar los productos, con los precios y la existencia de hoy.",
+    ]))
+
+add(G9, "front-comprar", "Finalizar la compra", "/carrito",
+    "Todo el pedido en una sola página: datos, medio de pago, envío y cupón, con el resumen y el total a la derecha.",
+    shot("front-checkout-b", "/carrito", "") + points([
+        "<b>Datos:</b> nombre, email y teléfono. Si tiene sesión iniciada, se completan solos.",
+        "<b>Medio de pago:</b> aparecen solo los que estén activos en <a href=\"#pagos\">Pagos</a>: Mercado Pago, tarjeta, transferencia, contra entrega o “coordinar el pago con la tienda”. Cada uno puede traer un descuento (por ejemplo 10% off por transferencia), que se ve en el resumen.",
+        "<b>Transferencia:</b> se muestran los datos de la cuenta y hay que adjuntar el comprobante (obligatorio).",
+        "<b>Envío:</b> con el código postal se calculan las opciones: OCA a domicilio o a sucursal, retiro en el local, cadetería o envío a acordar. Si la zona está restringida, se avisa que no se puede vender ahí. Quien tiene sesión puede elegir una dirección guardada y tildar “Guardar dirección” para la próxima vez.",
+        "<b>Envío gratis:</b> desde el monto que defina la tienda o con un cupón que lo incluya; se ve el aviso en la página.",
+        "<b>Cupón:</b> se escribe el código y se aplica; si no sirve para ese medio de pago o ya venció, lo explica.",
+        "<b>Resumen:</b> productos, descuentos, envío y <b>total a pagar</b>. <b>Confirmar pedido</b> cierra la compra.",
+    ]) + sub("Al abrir la página", "Primero se ven los productos del carrito y el botón Finalizar compra.", "front-checkout-a")
+    + sub("Pedido registrado", "Pantalla de agradecimiento con el número de pedido y el mensaje según el medio de pago (se editan en Configuración → Checkout y mensajes). También llega un mail con el detalle.", "front-gracias", "", "mid")
+    + callout("<b>Después de comprar:</b> el comprador recibe un mail de confirmación y otro cada vez que el pedido cambia de estado. Si pagó por transferencia, la tienda confirma el pago desde el panel; con Mercado Pago se confirma solo."))
+
+add(G9, "front-mi-cuenta", "Mi cuenta", "/mi-cuenta/…",
+    "Con la sesión iniciada, el comprador tiene su propia zona. Se entra desde el ícono de la persona.",
+    sub("Mis pedidos", "Historial con fecha, medio de pago, productos, total y estado (pendiente, confirmado, entregado o cancelado). Cuando la tienda carga el seguimiento, aparece el número y el link para ver el envío de OCA.", "front-pedidos")
+    + sub("Mis direcciones", "Las que se guardaron al comprar. La predeterminada se completa sola en el próximo pedido; se pueden borrar.", "front-direcciones", "", "mid")
+    + sub("Mis favoritos", "Los productos marcados con el corazón, con acceso directo para agregarlos al carrito.", "front-favoritos")
+    + sub("Mis puntos", "Si la tienda tiene activado el sistema de puntos: se acumulan con cada pedido <b>entregado</b>, y se canjean por cupones de un solo uso del catálogo de recompensas. Se ve el saldo y el historial de movimientos.", "front-puntos", "", "mid"))
+
+add(G9, "front-ayuda", "Ayuda, contacto y novedades", "Toda la tienda",
+    "Los canales para que el comprador consulte, y las formas de enterarse de novedades.",
+    shot("front-chat", "Vendedora virtual", "narrow") + points([
+        "<b>Vendedora virtual (IA):</b> el botón <b>¿Te ayudo?</b> abre un chat que recomienda productos reales del catálogo, con su precio y existencia de hoy. Al empezar pide nombre y teléfono (se puede omitir con “Ahora no”) para que la tienda pueda retomar la consulta. Se configura en <a href=\"#config-ia\">Configuración → Vendedora IA</a>; si está apagada, el botón abre directamente WhatsApp.",
+        "<b>Hablar con una persona:</b> botón verde que abre WhatsApp, dentro del horario que la tienda defina (fuera de horario se avisa).",
+        "<b>Formulario de contacto:</b> en la página Contacto; lo que escribe llega por mail a la tienda y queda en <a href=\"#mensajes\">Mensajes</a>.",
+        "<b>Newsletter:</b> al final del inicio, “Sumate a nuestro newsletter”. Los mails quedan en <a href=\"#suscriptores\">Suscriptores</a>.",
+        "<b>Datos de contacto y mapa:</b> teléfonos, WhatsApp, Instagram y dirección de cada local, en el pie de página y en “Dónde estamos”.",
+        "<b>Páginas:</b> Quiénes somos y los textos legales (términos, privacidad, cambios y envíos), en el menú y el pie.",
+        "<b>Pop-up promocional</b> al entrar, si la tienda lo configuró.",
+        "<b>App instalable y avisos:</b> <a href=\"#pwa\">descargar la web app</a> y recibir notificaciones.",
+    ]) + sub("Formulario de contacto", "Una de las páginas que se arman desde Páginas.", "front-contacto", "", "mid")
+    + sub("Pop-up promocional", "Aparece pocos segundos después de entrar; se muestra una vez por visitante o cada vez, según lo configurado.", "front-popup", "", "mid"))
+
 
 # ------------------------------------------------------------------ CATÁLOGO
 prod_body = (
@@ -380,8 +456,8 @@ for i, t, s_, d in cfg:
 INTRO = '''
 <div class="intro" id="intro">
   <div class="intro-eyebrow">Manual de uso</div>
-  <h1>El panel de tu tienda,<br>pantalla por pantalla.</h1>
-  <p class="lead">Una guía para manejar la tienda día a día: cargar y ordenar productos, atender pedidos, recuperar clientes, definir las reglas de pago y envío y dejar todo a tu medida. Las imágenes son de una tienda de ejemplo.</p>
+  <h1>Tu tienda y su panel,<br>pantalla por pantalla.</h1>
+  <p class="lead">Una guía para manejar la tienda día a día y para saber qué puede hacer quien compra: cargar y ordenar productos, atender pedidos, recuperar clientes, definir las reglas de pago y envío y dejar todo a tu medida. Las imágenes son de una tienda de ejemplo.</p>
   <div class="howto">
     <div class="howto-step"><div class="n">1</div><p>Entrá a <code>/admin</code> con tu mail y contraseña. El ojito te deja ver lo que escribís.</p></div>
     <div class="howto-step"><div class="n">2</div><p>Cargá tus <b>categorías</b>, <b>atributos</b> y <b>productos</b>. Si ya tenés una lista, usá el CSV.</p></div>
@@ -405,11 +481,11 @@ q.addEventListener('input',function(){var v=norm(q.value.trim()),n=0;links.forEa
 """
 
 page = f'''<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>Manual del panel</title>
+<html lang="es"><head><meta charset="UTF-8"><title>Manual de uso</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <style>{CSS}</style></head><body>
-<div class="shell"><nav class="toc"><div class="brand"><span class="dot"></span><b>Manual del panel</b></div>
+<div class="shell"><nav class="toc"><div class="brand"><span class="dot"></span><b>Manual de uso</b></div>
 <input id="manual-q" type="search" placeholder="Buscar en el manual…" aria-label="Buscar en el manual"><div class="none">Sin resultados</div>
 {"".join(toc)}</nav>
 <main class="content">{INTRO}{"".join(SECTIONS)}</main></div>
