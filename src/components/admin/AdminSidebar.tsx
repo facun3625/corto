@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon, BookIcon } from "@/components/icons";
+import { ChevronDownIcon, ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon, BookIcon } from "@/components/icons";
 import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
 
 const LINKS = [
@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/productos", keywords: "articulos stock precios variantes importar exportar catalogo", label: "Productos", icon: PackageIcon },
   { href: "/admin/categorias", keywords: "rubros arbol", label: "Categorías", icon: TagIcon },
   { href: "/admin/atributos", keywords: "talles colores variantes", label: "Atributos", icon: ClipboardIcon },
+  { href: "/admin/etiquetas", keywords: "marcas nuevo oferta regalo cartelitos", label: "Etiquetas", icon: TagIcon },
   { href: "/admin/migracion", keywords: "woocommerce woo importar traer", label: "Migración Woo", icon: SendIcon },
   { href: "/admin/ventas", keywords: "pedidos ordenes compras ventas rotulo oca seguimiento", label: "Ventas", icon: SalesIcon },
   { href: "/admin/estadisticas", keywords: "reportes informes ingresos metricas", label: "Estadísticas", icon: TrendUpIcon },
@@ -35,6 +36,26 @@ const LINKS = [
   { href: "/admin/configuracion", keywords: "logo favicon correo smtp resend ia vendedora telegram moneda mantenimiento popup pie", label: "Configuración", icon: GearIcon },
 ];
 
+type NavLink = (typeof LINKS)[number];
+type NavEntry = { kind: "link"; href: string } | { kind: "group"; id: string; label: string; icon: NavLink["icon"]; items: { href: string; label?: string }[] };
+
+// Cómo se agrupa el menú. Los ítems sueltos van directo; los grupos se despliegan y se recuerda cuáles quedaron abiertos.
+const TREE: NavEntry[] = [
+  { kind: "link", href: "/admin/inicio" },
+  { kind: "group", id: "catalogo", label: "Catálogo", icon: PackageIcon, items: [{ href: "/admin/productos" }, { href: "/admin/categorias" }, { href: "/admin/atributos" }, { href: "/admin/etiquetas" }, { href: "/admin/migracion" }] },
+  { kind: "link", href: "/admin/ventas" },
+  { kind: "group", id: "estadisticas", label: "Estadísticas", icon: TrendUpIcon, items: [{ href: "/admin/estadisticas", label: "De ventas" }, { href: "/admin/visitas" }] },
+  { kind: "group", id: "clientes", label: "Clientes", icon: UsersIcon, items: [{ href: "/admin/usuarios" }, { href: "/admin/segmentos" }, { href: "/admin/suscriptores" }, { href: "/admin/puntos" }] },
+  { kind: "group", id: "tienda", label: "Tienda", icon: StoreIcon, items: [{ href: "/admin/pagos" }, { href: "/admin/envios" }, { href: "/admin/cupones" }, { href: "/admin/temas" }, { href: "/admin/paginas" }, { href: "/admin/contacto" }] },
+  { kind: "group", id: "recuperar", label: "Recuperar clientes", icon: CartIcon, items: [{ href: "/admin/carritos-abandonados" }, { href: "/admin/lista-espera" }, { href: "/admin/notificaciones" }] },
+  { kind: "link", href: "/admin/mailing" },
+  { kind: "link", href: "/admin/conversaciones" },
+  { kind: "link", href: "/admin/mensajes" },
+  { kind: "group", id: "sistema", label: "Sistema", icon: ClipboardIcon, items: [{ href: "/admin/logs" }] },
+  { kind: "link", href: "/admin/configuracion" },
+];
+const OPEN_KEY = "admin_nav_open";
+
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
@@ -45,6 +66,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   // Mensajes solo aparece si existe un formulario de contacto o ya hay mensajes (ver lib/adminCounts.ts)
   const showMessages = counts?.showMessages !== false;
@@ -73,6 +95,30 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Grupos abiertos: lo que quedó recordado en este navegador + el grupo de la página actual
+  const activeGroupId = useMemo(() => {
+    for (const e of TREE) if (e.kind === "group" && e.items.some((i) => pathname.startsWith(i.href))) return e.id;
+    return null;
+  }, [pathname]);
+  useEffect(() => {
+    let saved: string[] = [];
+    try { saved = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]"); } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpenGroups(Array.isArray(saved) ? saved : []);
+  }, []);
+  useEffect(() => {
+    if (!activeGroupId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpenGroups((prev) => (prev.includes(activeGroupId) ? prev : [...prev, activeGroupId]));
+  }, [activeGroupId]);
+  function toggleGroup(id: string) {
+    setOpenGroups((prev) => {
+      const next = prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id];
+      try { localStorage.setItem(OPEN_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+
   function go(href: string) {
     setQuery("");
     setOpen(false);
@@ -80,7 +126,39 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
   }
 
   const searching = query.trim().length > 0;
-  const list = searching ? matches : visibleLinks;
+  const linkByHref = (href: string) => visibleLinks.find((l) => l.href === href);
+
+  // Un ítem del menú (suelto, dentro de un grupo o resultado de la búsqueda)
+  function linkNode(link: NavLink, opts: { index?: number; nested?: boolean; label?: string } = {}) {
+    const active = pathname.startsWith(link.href);
+    const picked = searching && opts.index === highlight;
+    const Icon = link.icon;
+    // Números a la derecha: pedidos nuevos (sin ver) en Ventas, mensajes sin leer y conversaciones de IA con contacto por revisar
+    const n = link.href === "/admin/ventas" ? counts?.newOrders : link.href === "/admin/mensajes" ? counts?.unreadMessages : link.href === "/admin/conversaciones" ? counts?.pendingConversations : 0;
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        onClick={() => {
+          setQuery("");
+          setOpen(false);
+        }}
+        className={`flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:min-h-0 md:px-2 md:py-1.5 md:text-[12px] ${opts.nested ? "md:py-1" : ""} ${
+          picked
+            ? "bg-brand-pink/10 text-brand-pink-dark ring-1 ring-brand-pink"
+            : active
+            ? "bg-brand-pink/10 text-brand-pink-dark md:bg-brand-pink md:text-white"
+            : "text-brand-ink/80 hover:bg-black/[0.04] hover:text-brand-ink"
+        }`}
+      >
+        {!opts.nested && <Icon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />}
+        <span className="min-w-0 flex-1 truncate">{opts.label ?? link.label}</span>
+        {n ? (
+          <span className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white text-brand-pink-dark" : "bg-brand-pink text-white"}`}>{n > 99 ? "99+" : n}</span>
+        ) : null}
+      </Link>
+    );
+  }
 
   return (
     <aside className="relative z-50 flex w-full shrink-0 flex-col border-b border-black/5 bg-white px-3 py-2 md:h-full md:w-56 md:border-0 md:border-r md:border-black/10 md:bg-white md:py-3">
@@ -141,38 +219,40 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
 
         <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-px overflow-y-auto pb-2 md:pb-0">
         {searching && matches.length === 0 && <p className="px-3 py-2 text-xs text-brand-muted md:px-2">Sin resultados para “{query}”.</p>}
-        {list.map((link, index) => {
-          const active = pathname.startsWith(link.href);
-          const picked = searching && index === highlight;
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => {
-                setQuery("");
-                setOpen(false);
-              }}
-              className={`flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:min-h-0 md:px-2 md:py-1.5 md:text-[12px] ${
-                picked
-                  ? "bg-brand-pink/10 text-brand-pink-dark ring-1 ring-brand-pink"
-                  : active
-                  ? "bg-brand-pink/10 text-brand-pink-dark md:bg-brand-pink md:text-white"
-                  : "text-brand-ink/80 hover:bg-black/[0.04] hover:text-brand-ink"
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
-              <span className="min-w-0 flex-1 truncate">{link.label}</span>
-              {(() => {
-                // Números a la derecha: pedidos nuevos (sin ver) en Ventas, mensajes sin leer y conversaciones de IA con contacto por revisar
-                const n = link.href === "/admin/ventas" ? counts?.newOrders : link.href === "/admin/mensajes" ? counts?.unreadMessages : link.href === "/admin/conversaciones" ? counts?.pendingConversations : 0;
-                return n ? (
-                  <span className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-white text-brand-pink-dark" : "bg-brand-pink text-white"}`}>{n > 99 ? "99+" : n}</span>
-                ) : null;
-              })()}
-            </Link>
-          );
-        })}
+        {searching
+          ? matches.map((link, index) => linkNode(link, { index }))
+          : TREE.map((entry) => {
+              if (entry.kind === "link") {
+                const link = linkByHref(entry.href);
+                return link ? linkNode(link) : null;
+              }
+              const items = entry.items.map((i) => ({ link: linkByHref(i.href), label: i.label })).filter((i): i is { link: NavLink; label: string | undefined } => Boolean(i.link));
+              if (items.length === 0) return null;
+              const isOpen = openGroups.includes(entry.id);
+              const holdsActive = entry.id === activeGroupId;
+              const GroupIcon = entry.icon;
+              return (
+                <div key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(entry.id)}
+                    aria-expanded={isOpen}
+                    className={`flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors md:min-h-0 md:px-2 md:py-1.5 md:text-[12px] ${
+                      holdsActive && !isOpen ? "text-brand-pink-dark" : "text-brand-ink/80 hover:bg-black/[0.04] hover:text-brand-ink"
+                    }`}
+                  >
+                    <GroupIcon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
+                    <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+                    <ChevronDownIcon className={`h-3.5 w-3.5 shrink-0 text-brand-muted transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="ml-4 flex flex-col gap-px border-l border-black/10 pl-1.5 md:ml-3.5">
+                      {items.map(({ link, label }) => linkNode(link, { nested: true, label }))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
         </nav>
 
         <div className="mt-1.5 flex shrink-0 flex-col gap-px border-t border-black/5 pt-1.5">

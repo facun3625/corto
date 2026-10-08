@@ -74,7 +74,7 @@ add(G1, "inicio", "Inicio", "/admin/inicio",
         "Crear un <b>cupón rápido</b> sin salir de la pantalla (porcentaje, vigencia y, si querés, mandarlo por WhatsApp).",
         "Entrar a cualquier sección desde el menú de la izquierda.",
         "Buscar una sección del panel escribiendo su nombre (atajo <code>Ctrl</code>/<code>⌘</code> + <code>K</code>).",
-    ]) + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
+    ]) + callout("<b>El menú está ordenado en grupos que se despliegan:</b> <b>Catálogo</b> (productos, categorías, atributos, etiquetas), <b>Ventas</b>, <b>Estadísticas</b> (de ventas y visitas), <b>Clientes</b> (clientes, segmentos, suscriptores, puntos), <b>Tienda</b> (pagos, envíos, cupones, temas, páginas y contacto) y <b>Recuperar clientes</b> (carritos, lista de espera, notificaciones). Mailing, Conversaciones IA y Mensajes están sueltos, y Configuración al final. Tocá el nombre de un grupo para abrirlo o cerrarlo: el panel recuerda cuáles dejaste abiertos y abre solo el de la pantalla en la que estás. Los números rojos (pedidos nuevos, mensajes, consultas de la IA) se ven siempre.") + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
     + sub("La campanita", "Avisa cuando entra un pedido nuevo, un mensaje o una consulta de la vendedora IA. Al abrirla se marcan como vistos.", "campanita", "", "mid"))
 
 add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
