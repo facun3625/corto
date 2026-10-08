@@ -33,5 +33,26 @@ const wanted = (g) => only.length === 0 || only.includes(g);
         await b.click("css:button[aria-label='Descargar Web App']"); await b.sleep(800); await b.shot("tienda-instalar");
       });
     }
+    if (wanted("pwa")) {
+      // Simula la app instalada (el navegador sin interfaz no puede instalarla de verdad)
+      await b.as(null);
+      await b.send("Page.addScriptToEvaluateOnNewDocument", { source: `const mm=window.matchMedia.bind(window);window.matchMedia=q=>/display-mode: standalone/.test(q)?{matches:true,media:q,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}}:mm(q);` });
+      await b.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 780, deviceScaleFactor: 2, mobile: true });
+      await step("pwa-cartelito", async () => {
+        await b.go("/", 3500);
+        await b.js(`document.querySelector('button[aria-label="Cerrar"]')?.click()`);
+        await b.sleep(600);
+        await b.shot("pwa-cartelito", { clip: { x: 0, y: 380, width: 390, height: 400 } });
+      });
+      await step("pwa-pie", async () => {
+        // pantalla muy alta para que la página entre entera, sin desplazarse: así el recorte sale bien
+        await b.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 5400, deviceScaleFactor: 2, mobile: true });
+        await b.go("/", 3500);
+        await b.js(`document.querySelector('button[aria-label="Cerrar"]')?.click();[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Ahora no')?.click()`);
+        await b.sleep(700);
+        const top = await b.js(`Math.round([...document.querySelectorAll('footer button')].find(x=>/Activar notificaciones/.test(x.innerText)).getBoundingClientRect().y)`);
+        await b.shot("pwa-pie", { clip: { x: 0, y: Math.max(0, top - 230), width: 390, height: 330 } });
+      });
+    }
   } finally { b.close(); await db.end(); }
 })();

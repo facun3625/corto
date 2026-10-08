@@ -78,18 +78,40 @@ add(G1, "inicio", "Inicio", "/admin/inicio",
     + sub("La campanita", "Avisa cuando entra un pedido nuevo, un mensaje o una consulta de la vendedora IA. Al abrirla se marcan como vistos.", "campanita", "", "mid"))
 
 add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
-    "La tienda se puede instalar en el celular o la computadora como una aplicación, sin pasar por ninguna tienda de apps. Se llama web app progresiva (PWA): es la misma tienda, pero con ícono propio, pantalla completa y avisos.",
-    shot("tienda-movil", "Tienda en el celular", "narrow") + steps([
-        "<b>Android / Chrome:</b> tocá el ícono de descarga que aparece arriba, junto al carrito (“Descargar Web App”) y confirmá <b>Instalar</b>.",
-        "<b>iPhone / iPad:</b> abrí la tienda en <b>Safari</b> (en Chrome o Firefox de iPhone no se puede instalar), tocá el botón <b>Compartir</b> y elegí <b>Agregar a pantalla de inicio</b>. El botón de la tienda te muestra este mismo paso a paso.",
-        "<b>Computadora (Chrome / Edge):</b> usá el mismo botón o el ícono de instalar que aparece a la derecha de la barra de direcciones.",
-        "Si el navegador no permite instalar, la tienda lo avisa en lugar de no hacer nada. Cuando la app ya está instalada, el botón desaparece.",
-    ]) + points([
-        "<b>El ícono</b> sale automáticamente del <b>Favicon</b> que cargues en Configuración → General (se genera en todos los tamaños). Subí una imagen cuadrada de 512×512 para que se vea nítida.",
+    "La tienda se puede instalar en el celular o en la computadora como una aplicación, sin pasar por ninguna tienda de apps. Se llama web app progresiva (PWA): es la misma tienda, pero con ícono propio, pantalla completa y avisos (notificaciones).",
+    shot("tienda-movil", "Tienda en el celular", "narrow") +
+    '<h3 class="sec">Cómo la instala el cliente</h3>' + table(["Dispositivo", "Pasos"], [
+        ["<b>Android</b> (Chrome)", "Tocar el ícono de descarga que aparece arriba, junto al carrito (“Descargar Web App”) y confirmar <b>Instalar</b>. Chrome también la ofrece desde su menú ⋮ → <i>Instalar app</i>."],
+        ["<b>iPhone / iPad</b>", "Abrir la tienda en <b>Safari</b> (desde Chrome o Firefox del iPhone no se puede instalar), tocar el botón <b>Compartir</b> y elegir <b>Agregar a pantalla de inicio</b>. El botón de la tienda muestra este mismo paso a paso."],
+        ["<b>Computadora</b> (Chrome / Edge)", "Usar el mismo botón o el ícono de instalar que aparece a la derecha de la barra de direcciones."],
+    ]) + callout("Cuando la app ya está instalada, el botón de descarga desaparece y, en su lugar, al final de la página se ve el estado de las notificaciones (más abajo). Si el navegador no permite instalar, la tienda lo avisa en lugar de no hacer nada.") +
+    '<h3 class="sec">Ícono y nombre de la app</h3>' + points([
+        "<b>El ícono</b> sale del <b>Favicon</b> que cargues en Configuración → General (no del logo del encabezado). La tienda lo adapta sola a todos los tamaños, también para iPhone y para las notificaciones. Subí una imagen cuadrada de 512×512.",
         "<b>El nombre</b> debajo del ícono es el <b>Nombre de la franquicia</b> de Configuración → Franquicia.",
-        "<b>Notificaciones push:</b> al tocar “Descargar Web App” el navegador pide permiso para mostrar avisos. Quien instaló la app por otro camino (por ejemplo en iPhone, con Compartir → Agregar a inicio) recibe, ya dentro de la app, un cartelito para activarlos, que puede postergar. Además, al final de la página (pie) de la app instalada hay un botón <b>Activar notificaciones</b> que muestra si están activadas, bloqueadas o si el dispositivo no las admite. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
-        "No requiere ningún trabajo tuyo: la tienda ya está preparada. Conviene contarles a tus clientes que pueden instalarla.",
-    ], "Qué tenés que saber") + callout("<b>Tip:</b> si cambiás el favicon o el nombre, quienes ya instalaron la app ven el cambio la próxima vez que la abran (a veces hace falta cerrarla y volver a abrirla)."))
+        "Si cambiás el favicon o el nombre, quienes ya instalaron la app lo ven la próxima vez que la abran (a veces hace falta cerrarla del todo y volver a abrirla).",
+    ], "Qué usa la app") +
+    '<h3 class="sec">Notificaciones: cómo se activan</h3>'
+    '<p class="panel-summary">Para recibir avisos, la persona tiene que <b>aceptar el permiso</b> del navegador. Cada celular o computadora que lo acepta es un “suscripto” en <a href="#notificaciones">Notificaciones</a>.</p>' +
+    steps([
+        "<b>Android y computadora:</b> al tocar <b>Descargar Web App</b>, el navegador pide permiso para mostrar avisos. Si lo acepta, queda suscripto.",
+        "<b>iPhone:</b> la persona instala la app (Compartir → Agregar a pantalla de inicio) y la <b>abre desde el ícono</b>. A los pocos segundos aparece el cartelito <i>“¿Querés enterarte de las ofertas?”</i>: al tocar <b>Activar</b>, el iPhone pide el permiso. En iPhone esto es obligatorio: el permiso solo se puede pedir desde dentro de la app instalada y con un toque.",
+        "Si toca <b>Ahora no</b>, el cartelito no vuelve a aparecer por 14 días. Puede activarlas cuando quiera con el botón del pie.",
+    ]) + sub("El cartelito dentro de la app instalada", "Aparece una sola vez por visita y no tapa el carrito ni el panel.", "pwa-cartelito", "", "narrow") +
+    sub("El estado en el pie de la app", "Siempre se puede activar desde acá y sirve para saber en qué estado está cada celular.", "pwa-pie", "", "narrow") +
+    table(["Lo que dice el pie", "Qué significa"], [
+        ["<b>🔔 Activar notificaciones</b> (botón)", "Todavía no aceptó. Al tocarlo, el dispositivo pide el permiso."],
+        ["<b>🔔 Notificaciones activadas</b>", "Todo listo: ese dispositivo recibe los avisos."],
+        ["<b>Las notificaciones están bloqueadas…</b>", "Había rechazado el permiso. Hay que cambiarlo en los Ajustes del teléfono → Notificaciones, buscando la app."],
+        ["<b>Este dispositivo no permite notificaciones</b>", "En iPhone hace falta iOS 16.4 o más nuevo, y la app instalada desde Safari."],
+    ]) +
+    '<h3 class="sec">Si una persona no recibe avisos</h3>' + points([
+        "Que la app esté <b>instalada</b> y abierta desde el ícono de la pantalla de inicio (en iPhone, no desde Safari).",
+        "Que sea <b>iOS 16.4 o más nuevo</b> (Ajustes → General → Información).",
+        "Que el permiso no esté bloqueado: mirá el mensaje del pie de la app.",
+        "Cerrar la app del todo (deslizar hacia arriba desde el selector de apps) y volver a abrirla, para que cargue la última versión.",
+        "En <a href=\"#notificaciones\">Notificaciones</a>, el número de <b>Suscriptos</b> sube cuando alguien acepta. Si sigue en 0, nadie llegó a aceptar el permiso.",
+    ], "Revisar") +
+    callout("<b>Para el administrador:</b> las claves de envío se generan solas, no hay nada que configurar. Solo hace falta que el sitio use <b>https</b> y que en Configuración haya un mail de contacto o de remitente. Los dispositivos que desinstalan la app o bloquean los avisos se quitan solos de la lista."))
 
 # ------------------------------------------------------------------ TIENDA PÚBLICA
 add(G1, "tienda", "Cómo la ve el cliente", "/", "Lo que configurás en el panel se ve así en la tienda.",
