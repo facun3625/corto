@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon } from "@/components/icons";
+import { ChatIcon, SearchIcon, PackageIcon, SalesIcon, UsersIcon, StoreIcon, UserIcon, CardIcon, TruckIcon, TagIcon, MailIcon, CartIcon, StarIcon, GearIcon, BellIcon, BellRingIcon, SendIcon, HomeIcon, ClipboardIcon, TrendUpIcon, EyeIcon, BookIcon } from "@/components/icons";
 import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
 
 const LINKS = [
@@ -188,6 +188,16 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
           <StoreIcon className="h-3.5 w-3.5 shrink-0" />
           Volver al sitio
         </Link>
+        {/* El manual se abre aparte para no perder el lugar en el panel */}
+        <a
+          href="/manual"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-brand-ink/80 transition-colors hover:bg-black/[0.04] hover:text-brand-ink"
+        >
+          <BookIcon className="h-3.5 w-3.5 shrink-0" />
+          Manual de uso
+        </a>
         <AdminLogoutButton />
         </div>
       </div>

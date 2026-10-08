@@ -301,7 +301,7 @@ add(G6, "temas", "Temas y campañas", "/admin/temas", "Cambiá la identidad visu
 add(G6, "paginas", "Páginas", "/admin/paginas", "Quiénes somos, contacto y textos legales. Las que activás aparecen en el pie de página.",
     shot("paginas", "/admin/paginas", "mid") + points([
         "Crear páginas con editor de texto, URL propia y datos para buscadores.",
-        "Elegir si se muestra en el <b>menú de arriba</b> y en el <b>pie</b>, y si incluye el <b>formulario de contacto</b>. Una página publicada aparece en el menú salvo que destildes “Mostrar en el menú”.",
+        "Elegir si se muestra en el <b>menú de arriba</b> y en el <b>pie</b>, y si incluye el <b>formulario de contacto</b>. Una página publicada aparece en el menú salvo que destildes “Mostrar en el menú” (los textos legales vienen sin tildar). En pantallas grandes entra una sola página en la barra; las demás quedan juntas bajo <b>Más</b> para que el menú no se desborde.",
         "Vienen precargados los textos legales (términos, privacidad, cambios, envíos) para completar y publicar.",
     ]) + sub("Editar una página", "Título, URL, contenido y opciones de publicación.", "pagina-editar", "", "mid"))
 

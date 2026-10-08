@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter, usePathname } from "next/navigation";
@@ -24,10 +24,18 @@ const BASE_LINKS = [
 
 // Menú: los links fijos + las páginas publicadas que se tildaron "Mostrar en el menú" (antes de "Tienda", que va como botón).
 // Si una página se llama igual que un link fijo (por ejemplo "Contacto") no se repite.
+// En pantallas grandes entra 1 página en la barra; si hay más, van juntas bajo "Más" para que el menú no se desborde.
+const MAX_INLINE_PAGES = 1;
 function buildLinks(pages: { slug: string; title: string }[]) {
   const taken = new Set(BASE_LINKS.map((l) => l.label.toLowerCase()));
   const extra = pages.filter((p) => !taken.has(p.title.trim().toLowerCase())).map((p) => ({ href: `/pagina/${p.slug}`, label: p.title }));
-  return [...BASE_LINKS.slice(0, -1), ...extra, BASE_LINKS[BASE_LINKS.length - 1]];
+  const tienda = BASE_LINKS[BASE_LINKS.length - 1];
+  const fixed = BASE_LINKS.slice(0, -1);
+  return {
+    all: [...fixed, ...extra, tienda],
+    desktop: [...fixed, ...extra.slice(0, MAX_INLINE_PAGES), tienda],
+    more: extra.slice(MAX_INLINE_PAGES),
+  };
 }
 
 function NavbarSearch({ className }: { className: string }) {
@@ -70,7 +78,7 @@ function NavbarSearch({ className }: { className: string }) {
 }
 
 export function Navbar({ settings }: { settings: SiteSettings }) {
-  const LINKS = buildLinks(settings.menuPages);
+  const { all: LINKS, desktop: DESKTOP_LINKS, more: MORE_LINKS } = buildLinks(settings.menuPages);
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"inicio" | "donde-estamos" | "contacto">("inicio");
@@ -165,12 +173,29 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
           </Link>
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center gap-4 lg:flex xl:gap-6 2xl:gap-8">
-            {LINKS.map((link) => {
+            {DESKTOP_LINKS.map((link) => {
               const active = isActive(link.href);
               const isTienda = link.href === "/tienda";
               return (
+                <Fragment key={link.href}>
+                {isTienda && MORE_LINKS.length > 0 && (
+                  <div className="group relative">
+                    <button type="button" className="flex cursor-pointer items-center gap-1 whitespace-nowrap py-2 text-[11px] font-medium uppercase tracking-wider text-brand-ink/70 transition-colors hover:text-brand-pink-dark group-focus-within:text-brand-pink-dark xl:text-xs xl:tracking-widest" aria-haspopup="menu">
+                      Más
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3 w-3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    <div className="invisible absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 pt-2 opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                      <div className="rounded-xl border border-black/10 bg-white p-1.5 shadow-lg">
+                        {MORE_LINKS.map((m) => (
+                          <Link key={m.href} href={m.href} className="block rounded-lg px-3 py-2 text-xs font-medium uppercase tracking-wide text-brand-ink hover:bg-brand-soft">
+                            {m.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <Link
-                  key={link.href}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={
@@ -187,6 +212,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                     <span className="absolute -bottom-0.5 left-0 h-0.5 w-full rounded-full bg-brand-pink-dark" />
                   )}
                 </Link>
+                </Fragment>
               );
             })}
           </nav>
@@ -194,7 +220,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
           <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-3 lg:flex-none">
             {/* En /tienda ya está el buscador de ShopControls, sincronizado
                 con el filtro actual — repetirlo acá era espacio duplicado. */}
-            {pathname !== "/tienda" && <NavbarSearch className="hidden max-w-[220px] flex-1 sm:block lg:max-w-[130px] xl:max-w-[220px]" />}
+            {pathname !== "/tienda" && <NavbarSearch className="hidden max-w-[220px] flex-1 sm:block lg:max-w-[130px] xl:max-w-[170px] 2xl:max-w-[220px]" />}
 
             {/* Solo en mobile/tablet — en desktop ya está la versión pill en
                 el footer, no hace falta duplicarla acá al lado del buscador. */}

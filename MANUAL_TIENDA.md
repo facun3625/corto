@@ -720,7 +720,7 @@ El **aspecto base** (el de siempre, que se ve cuando no hay ninguna campaña act
 
 ### 11.2 Páginas y textos legales
 
-En **Páginas** se editan las páginas institucionales (**Quiénes somos**, **Contacto**) y los textos legales (**Términos y condiciones**, **Política de privacidad**, **Cambios y devoluciones**, **Envíos y entregas**). Las legales vienen **ocultas** con un texto de ejemplo: completalas (conviene que las revise un profesional) y publicalas. Cada página publicada aparece en el **menú de arriba** de la tienda (se destilda con *Mostrar en el menú*; las legales vienen sin tildar), puede mostrarse en el **pie** y puede incluir un **formulario de contacto**.
+En **Páginas** se editan las páginas institucionales (**Quiénes somos**, **Contacto**) y los textos legales (**Términos y condiciones**, **Política de privacidad**, **Cambios y devoluciones**, **Envíos y entregas**). Las legales vienen **ocultas** con un texto de ejemplo: completalas (conviene que las revise un profesional) y publicalas. Cada página publicada aparece en el **menú de arriba** de la tienda (se destilda con *Mostrar en el menú*; las legales vienen sin tildar). En pantallas grandes entra una página en la barra y el resto va junto bajo **Más**; en el celular se listan todas, puede mostrarse en el **pie** y puede incluir un **formulario de contacto**.
 
 Lo que los clientes escriben en el formulario llega por mail a la tienda y queda en **Mensajes**, donde se marcan como leídos, se responden por mail o se eliminan.
 

@@ -326,6 +326,15 @@ export function ClipboardIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function BookIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" />
+      <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
+    </svg>
+  );
+}
+
 export function WrenchIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
