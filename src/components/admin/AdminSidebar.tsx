@@ -67,6 +67,8 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
   const [highlight, setHighlight] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
+  // Las transiciones arrancan después de la primera carga: al entrar, los grupos recordados aparecen ya abiertos, sin animarse
+  const [animate, setAnimate] = useState(false);
 
   // Mensajes solo aparece si existe un formulario de contacto o ya hay mensajes (ver lib/adminCounts.ts)
   const showMessages = counts?.showMessages !== false;
@@ -105,6 +107,8 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
     try { saved = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]"); } catch {}
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenGroups(Array.isArray(saved) ? saved : []);
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+    return () => cancelAnimationFrame(frame);
   }, []);
   useEffect(() => {
     if (!activeGroupId) return;
@@ -243,13 +247,19 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
                   >
                     <GroupIcon className="h-4 w-4 shrink-0 md:h-3 md:w-3" />
                     <span className="min-w-0 flex-1 truncate">{entry.label}</span>
-                    <ChevronDownIcon className={`h-3.5 w-3.5 shrink-0 text-brand-muted transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    <ChevronDownIcon className={`h-3.5 w-3.5 shrink-0 text-brand-muted ${animate ? "transition-transform duration-300 ease-out motion-reduce:transition-none" : ""} ${isOpen ? "rotate-180" : ""}`} />
                   </button>
-                  {isOpen && (
-                    <div className="ml-4 flex flex-col gap-px border-l border-black/10 pl-1.5 md:ml-3.5">
-                      {items.map(({ link, label }) => linkNode(link, { nested: true, label }))}
+                  {/* El alto se anima con grid-rows (0fr → 1fr): se despliega suave sin medir nada, y cerrado no se puede tabular */}
+                  <div
+                    inert={!isOpen}
+                    className={`grid ${animate ? "transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none" : ""} ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className={`ml-4 flex flex-col gap-px border-l border-black/10 pl-1.5 md:ml-3.5 ${animate ? "transition-transform duration-300 ease-out motion-reduce:transition-none" : ""} ${isOpen ? "translate-y-0" : "-translate-y-1.5"}`}>
+                        {items.map(({ link, label }) => linkNode(link, { nested: true, label }))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
