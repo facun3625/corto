@@ -10,15 +10,23 @@ CSS = open(os.path.join(HERE, "manual.css")).read()
 used = set()
 
 
+def webp_size(path):
+    from PIL import Image
+    with Image.open(path) as im:
+        return im.size
+
+
 def shot(name, path="", cls="", alt=""):
     f = os.path.join(HERE, "shots", name + ".webp")
     if not os.path.exists(f):
         sys.exit("Falta la captura: " + name)
     used.add(name)
     b64 = base64.b64encode(open(f, "rb").read()).decode()
+    # medidas reales de la captura: el navegador reserva el alto antes de decodificarla y los enlaces internos caen justo
+    w, h = webp_size(f)
     url = f'<span style="margin-left:.6rem;font-size:.7rem;color:rgba(255,255,255,.55)">{html.escape(path)}</span>' if path else ""
     return (f'<div class="shot {cls}"><div class="bar"><span></span><span></span><span></span>{url}</div>'
-            f'<img loading="lazy" alt="{html.escape(alt or name)}" src="data:image/webp;base64,{b64}"></div>')
+            f'<img alt="{html.escape(alt or name)}" width="{w}" height="{h}" decoding="async" src="data:image/webp;base64,{b64}"></div>')
 
 
 def sub(title, desc, name, path="", cls=""):
@@ -41,7 +49,7 @@ def steps(items):
 def table(head, rows):
     h = "".join(f"<th>{c}</th>" for c in head)
     r = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>" for row in rows)
-    return f'<table class="t"><thead><tr>{h}</tr></thead><tbody>{r}</tbody></table>'
+    return f'<div class="tw"><table class="t"><thead><tr>{h}</tr></thead><tbody>{r}</tbody></table></div>'
 
 
 def panel(id, title, path, summary, body):
@@ -461,10 +469,6 @@ INTRO = '''
   <div class="intro-eyebrow">Manual de uso</div>
   <h1>Tu tienda y su panel,<br>pantalla por pantalla.</h1>
   <p class="lead">Una guía para manejar la tienda día a día y para saber qué puede hacer quien compra: cargar y ordenar productos, atender pedidos, recuperar clientes, definir las reglas de pago y envío y dejar todo a tu medida. Las imágenes son de una tienda de ejemplo.</p>
-  <div class="parts">
-    <a href="#parte-panel"><small>Parte 1</small><b>Panel de administración</b><span>Productos, ventas, clientes, pagos, envíos, aspecto y configuración.</span></a>
-    <a href="#parte-usuario"><small>Parte 2</small><b>La tienda: lo que hace el comprador</b><span>Navegar, comprar, entrar con Google, Mi cuenta, puntos y la app.</span></a>
-  </div>
   <div class="howto">
     <div class="howto-step"><div class="n">1</div><p>Entrá a <code>/admin</code> con tu mail y contraseña. El ojito te deja ver lo que escribís.</p></div>
     <div class="howto-step"><div class="n">2</div><p>Cargá tus <b>categorías</b>, <b>atributos</b> y <b>productos</b>. Si ya tenés una lista, usá el CSV.</p></div>
@@ -490,7 +494,6 @@ toc = []
 body_parts = []
 for pid, eyebrow, title, desc, pred in PARTS:
     secs = ordered(pred)
-    toc.append(f'<a class="toc-part" href="#{pid}"><small>{eyebrow}</small>{title}</a>')
     groups = []
     for g, i, _ in secs:
         if not groups or groups[-1][0] != g:
@@ -503,16 +506,37 @@ for pid, eyebrow, title, desc, pred in PARTS:
         a = "".join('<a href="#%s"%s>%s%s</a>' % (i, ' class="sub"' if s_ else "", "↳ " if s_ else "", t) for i, t, s_ in items)
         if gname == G1:
             a = '<a href="#intro">Cómo entrar</a>' + a
-        toc.append(f'<div class="toc-group"><span class="toc-label">{gname}</span>{a}</div>')
+        toc.append(f'<div class="toc-group" data-part="{pid}"><span class="toc-label">{gname}</span>{a}</div>')
     body_parts.append(f'<section class="part" id="{pid}"><div class="part-eyebrow">{eyebrow}</div><h2>{title}</h2><p>{desc}</p></section>' + "".join(h for _, _, h in secs))
 
 JS = """
-(function(){var q=document.getElementById('manual-q');if(!q)return;var links=[].slice.call(document.querySelectorAll('.toc a'));
-var none=document.querySelector('.toc .none');
+(function(){
+var d=document,body=d.body,q=d.getElementById('manual-q'),links=[].slice.call(d.querySelectorAll('.toc a')),none=d.querySelector('.toc .none');
 function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')}
-var text={};[].forEach.call(document.querySelectorAll('section.panel'),function(s){text['#'+s.id]=norm(s.textContent)});
-q.addEventListener('input',function(){var v=norm(q.value.trim()),n=0;links.forEach(function(a){var h=a.getAttribute('href');var ok=!v||norm(a.textContent).indexOf(v)>=0||(text[h]||'').indexOf(v)>=0;a.classList.toggle('hide',!ok);if(ok)n++});
-[].forEach.call(document.querySelectorAll('.toc-group'),function(g){g.classList.toggle('hide',!g.querySelector('a:not(.hide)'))});none.style.display=n?'none':'block'});})();
+var text={};[].forEach.call(d.querySelectorAll('section.panel'),function(s){text['#'+s.id]=norm(s.textContent)});
+// buscador del índice
+q.addEventListener('input',function(){var v=norm(q.value.trim()),n=0;body.classList.toggle('searching',!!v);
+links.forEach(function(a){var h=a.getAttribute('href');var ok=!v||norm(a.textContent).indexOf(v)>=0||(text[h]||'').indexOf(v)>=0;a.classList.toggle('hide',!ok);if(ok)n++});
+[].forEach.call(d.querySelectorAll('.toc-group'),function(g){g.classList.toggle('hide',!g.querySelector('a:not(.hide)'))});none.style.display=n?'none':'block'});
+// índice del celular: se abre con el botón y se cierra al elegir una sección
+var btn=d.querySelector('.menu-btn'),bd=d.querySelector('.backdrop');
+function toggle(open){body.classList.toggle('toc-open',open);btn.setAttribute('aria-expanded',open?'true':'false')}
+btn.addEventListener('click',function(){toggle(!body.classList.contains('toc-open'))});
+bd.addEventListener('click',function(){toggle(false)});
+links.forEach(function(a){a.addEventListener('click',function(){toggle(false)})});
+d.addEventListener('keydown',function(e){if(e.key==='Escape')toggle(false)});
+// parte y sección actuales según el desplazamiento
+var tb=d.querySelector('.topbar'),buttons=[].slice.call(d.querySelectorAll('.tb-parts a')),blocks=[].slice.call(d.querySelectorAll('section.part,section.panel')),tocLinks={};
+links.forEach(function(a){tocLinks[a.getAttribute('href')]=a});
+var ticking=false;
+function spy(){ticking=false;var y=tb.offsetHeight+80,cur=blocks[0].id,last=null;
+blocks.forEach(function(s){if(s.getBoundingClientRect().top<=y){if(s.classList.contains('part')){cur=s.id;last=null}else last=s.id}});
+body.setAttribute('data-part',cur);buttons.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-part')===cur)});
+links.forEach(function(a){a.classList.toggle('cur',a.getAttribute('href')==='#'+last)});
+var c=tocLinks['#'+last];if(c&&window.innerWidth>900){var box=c.closest('.toc');if(box){var r=c.getBoundingClientRect(),br=box.getBoundingClientRect();if(r.top<br.top+40||r.bottom>br.bottom-40)box.scrollTop+=r.top-br.top-120}}}
+window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(spy)}},{passive:true});
+window.addEventListener('resize',spy);spy();
+})();
 """
 
 page = f'''<!DOCTYPE html>
@@ -520,7 +544,13 @@ page = f'''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <style>{CSS}</style></head><body>
-<div class="shell"><nav class="toc"><div class="brand"><span class="dot"></span><b>Manual de uso</b></div>
+<header class="topbar"><div class="tb-in">
+<button class="menu-btn" type="button" aria-label="Abrir el índice" aria-expanded="false">☰</button>
+<div class="tb-brand"><span class="dot"></span><b>Manual de uso</b></div>
+<nav class="tb-parts" aria-label="Partes del manual"><a href="#parte-panel" data-part="parte-panel"><span class="long">Panel de administración</span><span class="short">Panel</span></a><a href="#parte-usuario" data-part="parte-usuario"><span class="long">La tienda (usuario)</span><span class="short">Usuario</span></a></nav>
+</div></header>
+<div class="backdrop"></div>
+<div class="shell"><nav class="toc">
 <input id="manual-q" type="search" placeholder="Buscar en el manual…" aria-label="Buscar en el manual"><div class="none">Sin resultados</div>
 {"".join(toc)}</nav>
 <main class="content">{INTRO}{"".join(body_parts)}</main></div>
