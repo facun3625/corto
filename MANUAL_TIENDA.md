@@ -751,7 +751,7 @@ Cuando la aplicación ya está instalada, el botón deja de mostrarse.
 
 ### 12.2 Notificaciones
 
-Después de instalarla, el cliente puede aceptar notificaciones para recibir novedades y avisos de pedidos.
+Al tocar *Descargar Web App* el navegador pide permiso para mostrar avisos. Quien instaló la app por otro camino (por ejemplo en iPhone, con Compartir → Agregar a inicio) ve, ya dentro de la app instalada, un cartelito *¿Querés enterarte de las ofertas?* con **Activar** y **Ahora no** (si lo posterga, no vuelve a aparecer por 14 días). En iPhone las notificaciones solo funcionan con la app instalada. Las claves de envío (VAPID) se generan solas la primera vez y quedan guardadas; los dispositivos que desinstalan la app o bloquean los avisos se quitan solos de la lista de suscriptos. Al tocar una notificación, la tienda se abre (o se reutiliza la ventana ya abierta) en el enlace indicado.
 
 ### 12.3 Adaptación a pantallas
 

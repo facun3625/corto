@@ -27,14 +27,18 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/";
+  // El enlace llega relativo ("/producto/..."): se compara y se abre siempre con la dirección completa
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      // Si la tienda ya está abierta, se usa esa ventana y se la lleva al enlace
       for (const client of clients) {
-        if (client.url === url && "focus" in client) return client.focus();
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
+          return client.focus().then((focused) => (focused && "navigate" in focused && focused.url !== target ? focused.navigate(target) : focused));
+        }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+      if (self.clients.openWindow) return self.clients.openWindow(target);
     })
   );
 });

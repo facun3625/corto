@@ -2,38 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useInstallPrompt } from "@/lib/useInstallPrompt";
+import { enablePush } from "@/lib/pushClient";
 import { DownloadIcon, ShareIcon } from "@/components/icons";
-
-// La Push API pide la VAPID public key como ArrayBuffer — conversión
-// estándar del formato base64url en que se guarda/expone.
-function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0))).buffer;
-}
-
-async function subscribeToPush(vapidPublicKey: string) {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return;
-
-  const registration = await navigator.serviceWorker.ready;
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToArrayBuffer(vapidPublicKey),
-    });
-  }
-
-  await fetch("/api/push/subscribe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(subscription.toJSON()),
-  }).catch(() => {});
-}
 
 // Chrome/Firefox/Edge en iOS corren sobre WebKit pero no pueden instalar —
 // esa capacidad no existe fuera de Safari en iOS.
@@ -76,11 +46,7 @@ export function InstallPwaButton({ variant = "pill" }: { variant?: "pill" | "ico
       setShowUnsupported(true);
     }
 
-    const response = await fetch("/api/push/public-key", { cache: "no-store" }).catch(() => null);
-    if (response?.ok) {
-      const result = await response.json() as { publicKey?: string };
-      if (result.publicKey) await subscribeToPush(result.publicKey);
-    }
+    await enablePush().catch(() => {});
   }
 
   // Antes esto se ocultaba del todo si el browser no soportaba

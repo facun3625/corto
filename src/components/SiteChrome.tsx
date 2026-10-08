@@ -8,6 +8,7 @@ import { SalesAssistant } from "@/components/SalesAssistant";
 import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 import { VisitTracker } from "@/components/VisitTracker";
 import { SitePopupModal } from "@/components/SitePopupModal";
+import { PushPrompt } from "@/components/PushPrompt";
 import type { SiteSettings } from "@/lib/settings";
 import { BASE_COLORS } from "@/lib/themes";
 
@@ -88,6 +89,7 @@ export function SiteChrome({
         <WhatsAppFloatingButton humanSeller={settings.assistant.humanSeller} />
       )}
       <SitePopupModal popup={settings.popup} />
+      <PushPrompt />
       {previewThemeName && (
         <div className="fixed inset-x-0 bottom-0 z-[90] flex flex-wrap items-center justify-center gap-3 bg-brand-ink px-4 py-2.5 text-center text-xs text-white sm:text-sm">
           <span>Vista previa del tema <b>{previewThemeName}</b>: solo la ves vos.</span>

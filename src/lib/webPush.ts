@@ -2,6 +2,7 @@ import "server-only";
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 import { getStoreSettingsRow } from "@/lib/settings";
+import { siteUrl } from "@/lib/siteUrl";
 
 export type PushPayload = {
   title: string;
@@ -38,8 +39,11 @@ export async function getVapidPublicKey(): Promise<string> {
 
 async function configuredWebPush(contactEmail: string | null) {
   const { publicKey, privateKey } = await getOrCreateVapidKeys();
-  // El contacto del servicio de push es un mail de la tienda o, si no hay, la dirección del sitio
-  webpush.setVapidDetails(contactEmail ? `mailto:${contactEmail}` : (process.env.NEXTAUTH_URL ?? "https://localhost"), publicKey, privateKey);
+  // El contacto del servicio de push: un mail de la tienda o, si no hay, la dirección pública del sitio. Tiene que ser mailto: o
+  // https (Apple rechaza "localhost"); en una instalación de prueba con http se usa un mail genérico para que el envío no falle.
+  const email = contactEmail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail) ? contactEmail : null;
+  const subject = email ? `mailto:${email}` : siteUrl().startsWith("https://") ? siteUrl() : "mailto:avisos@example.com";
+  webpush.setVapidDetails(subject, publicKey, privateKey);
   return webpush;
 }
 

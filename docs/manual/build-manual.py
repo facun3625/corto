@@ -87,7 +87,7 @@ add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
     ]) + points([
         "<b>El ícono</b> sale automáticamente del <b>Favicon</b> que cargues en Configuración → General (se genera en todos los tamaños). Subí una imagen cuadrada de 512×512 para que se vea nítida.",
         "<b>El nombre</b> debajo del ícono es el <b>Nombre de la franquicia</b> de Configuración → Franquicia.",
-        "<b>Notificaciones push:</b> quien instala la app puede aceptar recibir avisos. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
+        "<b>Notificaciones push:</b> al tocar “Descargar Web App” el navegador pide permiso para mostrar avisos. Quien instaló la app por otro camino (por ejemplo en iPhone, con Compartir → Agregar a inicio) recibe, ya dentro de la app, un cartelito para activarlos, que puede postergar. Vos los mandás desde <a href=\"#notificaciones\">Notificaciones</a>.",
         "No requiere ningún trabajo tuyo: la tienda ya está preparada. Conviene contarles a tus clientes que pueden instalarla.",
     ], "Qué tenés que saber") + callout("<b>Tip:</b> si cambiás el favicon o el nombre, quienes ya instalaron la app ven el cambio la próxima vez que la abran (a veces hace falta cerrarla y volver a abrirla)."))
 
@@ -242,7 +242,7 @@ add(G4, "notificaciones", "Notificaciones push", "/admin/notificaciones",
         "Ver cuántos dispositivos están suscriptos.",
         "Escribir título, mensaje y, si querés, un link a un producto o categoría.",
         "Mandar a todos los suscriptos y ver el historial de envíos.",
-    ]) + callout("Las notificaciones requieren que la persona haya instalado la <a href=\"#pwa\">web app</a> y aceptado los avisos."))
+    ]) + callout("Las notificaciones requieren que la persona haya aceptado los avisos desde la <a href=\"#pwa\">web app</a>. En iPhone solo funcionan con la app instalada. Los suscriptos que desinstalan la app o bloquean los avisos se quitan solos de la lista. El pedido confirmado también le llega como aviso a quien tiene la app y sesión iniciada."))
 
 add(G4, "conversaciones", "Conversaciones con la vendedora IA", "/admin/conversaciones",
     "Cada charla del chat de la tienda queda guardada con el nombre y el teléfono que dejó el cliente al empezar.",
