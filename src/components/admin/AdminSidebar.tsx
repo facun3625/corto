@@ -45,16 +45,17 @@ const TREE: NavEntry[] = [
   { kind: "group", id: "catalogo", label: "Catálogo", icon: PackageIcon, items: [{ href: "/admin/productos" }, { href: "/admin/categorias" }, { href: "/admin/atributos" }, { href: "/admin/etiquetas" }, { href: "/admin/migracion" }] },
   { kind: "link", href: "/admin/ventas" },
   { kind: "group", id: "estadisticas", label: "Estadísticas", icon: TrendUpIcon, items: [{ href: "/admin/estadisticas", label: "De ventas" }, { href: "/admin/visitas" }] },
-  { kind: "group", id: "clientes", label: "Clientes", icon: UsersIcon, items: [{ href: "/admin/usuarios" }, { href: "/admin/segmentos" }, { href: "/admin/suscriptores" }, { href: "/admin/puntos" }] },
+  { kind: "group", id: "clientes", label: "Clientes", icon: UsersIcon, items: [{ href: "/admin/usuarios", label: "Clientes y usuarios" }, { href: "/admin/segmentos" }, { href: "/admin/suscriptores" }, { href: "/admin/puntos" }] },
   { kind: "group", id: "tienda", label: "Tienda", icon: StoreIcon, items: [{ href: "/admin/pagos" }, { href: "/admin/envios" }, { href: "/admin/cupones" }, { href: "/admin/temas" }, { href: "/admin/paginas" }, { href: "/admin/contacto" }] },
-  { kind: "group", id: "recuperar", label: "Recuperar clientes", icon: CartIcon, items: [{ href: "/admin/carritos-abandonados" }, { href: "/admin/lista-espera" }, { href: "/admin/notificaciones" }] },
+  { kind: "group", id: "recuperar", label: "Recuperar clientes", icon: CartIcon, items: [{ href: "/admin/carritos-abandonados" }, { href: "/admin/lista-espera" }] },
   { kind: "link", href: "/admin/mailing" },
+  { kind: "link", href: "/admin/notificaciones" },
   { kind: "link", href: "/admin/conversaciones" },
   { kind: "link", href: "/admin/mensajes" },
   { kind: "group", id: "sistema", label: "Sistema", icon: ClipboardIcon, items: [{ href: "/admin/logs" }] },
   { kind: "link", href: "/admin/configuracion" },
 ];
-const OPEN_KEY = "admin_nav_open";
+const OPEN_KEY = "admin_nav_group";
 
 // Sin tildes ni mayúsculas, para que "configuracion" encuentre "Configuración"
 const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -66,7 +67,8 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [openGroups, setOpenGroups] = useState<string[]>([]);
+  // Un solo grupo abierto a la vez: al abrir uno, el anterior se cierra (no se amontonan)
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   // Las transiciones arrancan después de la primera carga: al entrar, los grupos recordados aparecen ya abiertos, sin animarse
   const [animate, setAnimate] = useState(false);
 
@@ -97,30 +99,27 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Grupos abiertos: lo que quedó recordado en este navegador + el grupo de la página actual
+  // Grupo abierto: el de la pantalla actual, o el que quedó recordado en este navegador
   const activeGroupId = useMemo(() => {
     for (const e of TREE) if (e.kind === "group" && e.items.some((i) => pathname.startsWith(i.href))) return e.id;
     return null;
   }, [pathname]);
   useEffect(() => {
-    let saved: string[] = [];
-    try { saved = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]"); } catch {}
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(OPEN_KEY); } catch {}
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpenGroups(Array.isArray(saved) ? saved : []);
+    setOpenGroup(saved || null);
     const frame = requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
     return () => cancelAnimationFrame(frame);
   }, []);
   useEffect(() => {
-    if (!activeGroupId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpenGroups((prev) => (prev.includes(activeGroupId) ? prev : [...prev, activeGroupId]));
+    if (activeGroupId) setOpenGroup(activeGroupId);
   }, [activeGroupId]);
   function toggleGroup(id: string) {
-    setOpenGroups((prev) => {
-      const next = prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id];
-      try { localStorage.setItem(OPEN_KEY, JSON.stringify(next)); } catch {}
-      return next;
-    });
+    const next = openGroup === id ? null : id;
+    setOpenGroup(next);
+    try { localStorage.setItem(OPEN_KEY, next ?? ""); } catch {}
   }
 
   function go(href: string) {
@@ -232,7 +231,7 @@ export function AdminSidebar({ userLabel, logoUrl = "/logo2.png", counts, isSupe
               }
               const items = entry.items.map((i) => ({ link: linkByHref(i.href), label: i.label })).filter((i): i is { link: NavLink; label: string | undefined } => Boolean(i.link));
               if (items.length === 0) return null;
-              const isOpen = openGroups.includes(entry.id);
+              const isOpen = openGroup === entry.id;
               const holdsActive = entry.id === activeGroupId;
               const GroupIcon = entry.icon;
               return (
