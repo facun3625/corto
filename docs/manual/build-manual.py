@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Arma el manual del panel (HTML de un solo archivo, capturas incrustadas) -> src/content/manual-panel.html
+"""Arma el manual del panel (HTML de un solo archivo, capturas incrustadas) -> src/content/manual-tienda-modelo.html
 Uso: python3 docs/manual/build-manual.py
 Las capturas salen de docs/manual/shots (ver capturas.cjs / capturas-2.cjs). El texto es genérico: "tienda modelo"."""
 import base64, html, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "src", "content", "manual-panel.html")
+OUT = os.path.join(HERE, "..", "..", "src", "content", "manual-tienda-modelo.html")
 CSS = open(os.path.join(HERE, "manual.css")).read()
 used = set()
 
@@ -53,18 +53,22 @@ def panel(id, title, path, summary, body):
 # (grupo, [(id, título, es_sub)])
 TOC = [("Empezar", [("intro", "Cómo entrar", False)])]
 SECTIONS = []
+TOC_FLAT = []
 
 
 def add(group, id, title, path, summary, body, sub_=False):
+    TOC_FLAT.append((group, id, title, sub_))
     g = next((x for x in TOC if x[0] == group), None)
     if g is None:
         g = (group, [])
         TOC.append(g)
     g[1].append((id, title, sub_))
-    SECTIONS.append(panel(id, title, path, summary, body))
+    SECTIONS.append((group, id, panel(id, title, path, summary, body)))
 
 
 G1, G2, G3, G4, G5, G6, G7, G8 = "Empezar", "Catálogo", "Ventas del día a día", "Recuperar clientes", "Reglas de la tienda", "Aspecto y contenido", "Clientes y equipo", "Configuración"
+# Segunda parte del manual: lo que hace quien compra (el usuario de la tienda)
+G9 = "Lo que hace el comprador"
 
 # ------------------------------------------------------------------ EMPEZAR
 add(G1, "inicio", "Inicio", "/admin/inicio",
@@ -77,7 +81,7 @@ add(G1, "inicio", "Inicio", "/admin/inicio",
     ]) + callout("<b>El menú está ordenado en grupos que se despliegan:</b> <b>Catálogo</b> (productos, categorías, atributos, etiquetas), <b>Ventas</b>, <b>Estadísticas</b> (de ventas y visitas), <b>Clientes y usuarios</b> (clientes, administradores, segmentos, suscriptores, puntos), <b>Tienda</b> (pagos, envíos, cupones, temas, páginas y contacto) y <b>Recuperar clientes</b> (carritos y lista de espera). Mailing, Notificaciones, Conversaciones IA y Mensajes están sueltos, y Configuración al final. Tocá el nombre de un grupo para abrirlo o cerrarlo: se mantiene abierto uno solo a la vez (al abrir otro, el anterior se cierra) y el panel abre solo el de la pantalla en la que estás. Los números rojos (pedidos nuevos, mensajes, consultas de la IA) se ven siempre.") + sub("Buscador del panel", "Escribí parte del nombre y el panel te lleva directo. Sirve para no recorrer el menú.", "buscador-panel", "", "narrow")
     + sub("La campanita", "Avisa cuando entra un pedido nuevo, un mensaje o una consulta de la vendedora IA. Al abrirla se marcan como vistos.", "campanita", "", "mid"))
 
-add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
+add(G9, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
     "La tienda se puede instalar en el celular o en la computadora como una aplicación, sin pasar por ninguna tienda de apps. Se llama web app progresiva (PWA): es la misma tienda, pero con ícono propio, pantalla completa y avisos (notificaciones).",
     shot("tienda-movil", "Tienda en el celular", "narrow") +
     '<h3 class="sec">Cómo la instala el cliente</h3>' + table(["Dispositivo", "Pasos"], [
@@ -114,7 +118,6 @@ add(G1, "pwa", "Descargar la web app", "Botón “Descargar Web App”",
     callout("<b>Para el administrador:</b> las claves de envío se generan solas, no hay nada que configurar. Solo hace falta que el sitio use <b>https</b> y que en Configuración haya un mail de contacto o de remitente. Los dispositivos que desinstalan la app o bloquean los avisos se quitan solos de la lista."))
 
 # ------------------------------------------------------------------ TIENDA PÚBLICA
-G9 = "La tienda: el comprador"
 add(G9, "front-navegar", "Navegar y buscar", "/",
     "Así recorre la tienda quien entra sin cuenta: el inicio, las categorías y el buscador. No hace falta registrarse para mirar ni para comprar.",
     shot("tienda-home", "/") + points([
@@ -458,6 +461,10 @@ INTRO = '''
   <div class="intro-eyebrow">Manual de uso</div>
   <h1>Tu tienda y su panel,<br>pantalla por pantalla.</h1>
   <p class="lead">Una guía para manejar la tienda día a día y para saber qué puede hacer quien compra: cargar y ordenar productos, atender pedidos, recuperar clientes, definir las reglas de pago y envío y dejar todo a tu medida. Las imágenes son de una tienda de ejemplo.</p>
+  <div class="parts">
+    <a href="#parte-panel"><small>Parte 1</small><b>Panel de administración</b><span>Productos, ventas, clientes, pagos, envíos, aspecto y configuración.</span></a>
+    <a href="#parte-usuario"><small>Parte 2</small><b>La tienda: lo que hace el comprador</b><span>Navegar, comprar, entrar con Google, Mi cuenta, puntos y la app.</span></a>
+  </div>
   <div class="howto">
     <div class="howto-step"><div class="n">1</div><p>Entrá a <code>/admin</code> con tu mail y contraseña. El ojito te deja ver lo que escribís.</p></div>
     <div class="howto-step"><div class="n">2</div><p>Cargá tus <b>categorías</b>, <b>atributos</b> y <b>productos</b>. Si ya tenés una lista, usá el CSV.</p></div>
@@ -466,10 +473,38 @@ INTRO = '''
   <div class="callout"><p><b>Antes de salir en vivo:</b> cargá tu logo y favicon, el nombre de la tienda (Configuración → Franquicia), al menos un medio de pago y uno de envío, y hacé una compra de prueba.</p></div>
 </div>'''
 
+# Dos partes: 1) panel de administración, 2) lo que hace el comprador. La web app va al final de la segunda.
+PARTS = [
+    ("parte-panel", "Parte 1", "Panel de administración", "Todo lo que se maneja desde el panel: catálogo, ventas, clientes, reglas de la tienda, aspecto y configuración.", lambda g: g != G9),
+    ("parte-usuario", "Parte 2", "La tienda: lo que hace el comprador", "Cómo recorre la tienda quien compra: desde buscar un producto y entrar con Google hasta pagar, ver sus pedidos, juntar puntos e instalar la app.", lambda g: g == G9),
+]
+LAST = {"pwa"}  # va al final de su grupo
+
+
+def ordered(pred):
+    secs = [(g, i, h) for g, i, h in SECTIONS if pred(g)]
+    return [x for x in secs if x[1] not in LAST] + [x for x in secs if x[1] in LAST]
+
+
 toc = []
-for g, items in TOC:
-    a = "".join('<a href="#%s"%s>%s%s</a>' % (i, ' class="sub"' if s else "", "↳ " if s else "", t) for i, t, s in items)
-    toc.append(f'<div class="toc-group"><span class="toc-label">{g}</span>{a}</div>')
+body_parts = []
+for pid, eyebrow, title, desc, pred in PARTS:
+    secs = ordered(pred)
+    toc.append(f'<a class="toc-part" href="#{pid}"><small>{eyebrow}</small>{title}</a>')
+    groups = []
+    for g, i, _ in secs:
+        if not groups or groups[-1][0] != g:
+            groups.append((g, []))
+    # armado del índice de cada grupo respetando el orden final de las secciones
+    for gname, _ in groups:
+        items = [(i, t, sub_) for (grp, i, t, sub_) in TOC_FLAT if grp == gname]
+        order = {i: n for n, (g, i, _) in enumerate(secs)}
+        items.sort(key=lambda it: order.get(it[0], 0))
+        a = "".join('<a href="#%s"%s>%s%s</a>' % (i, ' class="sub"' if s_ else "", "↳ " if s_ else "", t) for i, t, s_ in items)
+        if gname == G1:
+            a = '<a href="#intro">Cómo entrar</a>' + a
+        toc.append(f'<div class="toc-group"><span class="toc-label">{gname}</span>{a}</div>')
+    body_parts.append(f'<section class="part" id="{pid}"><div class="part-eyebrow">{eyebrow}</div><h2>{title}</h2><p>{desc}</p></section>' + "".join(h for _, _, h in secs))
 
 JS = """
 (function(){var q=document.getElementById('manual-q');if(!q)return;var links=[].slice.call(document.querySelectorAll('.toc a'));
@@ -488,7 +523,7 @@ page = f'''<!DOCTYPE html>
 <div class="shell"><nav class="toc"><div class="brand"><span class="dot"></span><b>Manual de uso</b></div>
 <input id="manual-q" type="search" placeholder="Buscar en el manual…" aria-label="Buscar en el manual"><div class="none">Sin resultados</div>
 {"".join(toc)}</nav>
-<main class="content">{INTRO}{"".join(SECTIONS)}</main></div>
+<main class="content">{INTRO}{"".join(body_parts)}</main></div>
 <script>{JS}</script></body></html>'''
 
 # nada de marcas ajenas en el documento de venta

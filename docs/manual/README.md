@@ -1,6 +1,6 @@
 # Manual del panel (tienda modelo)
 
-El manual que sirve `/manual` (`src/content/manual-panel.html`) se genera acá. Es genérico: no lleva marcas ni datos reales.
+El manual (`src/content/manual-tienda-modelo.html`, que se sirve en `/manual`) se genera acá y tiene dos partes: el panel de administración y lo que hace el comprador. No lleva marcas ni datos reales. El manual anterior de Cortopassi (`src/content/manual-cortopassi.html`) se conserva en `/manual/anterior` y no lo toca este generador.
 
 1. **Base de demostración:** `DATABASE_URL=postgresql://…/tienda_demo node tests/e2e/run.cjs docs/manual/seed-demo.ts` (crea "Tienda Modelo" con datos inventados y logo "Tu logo").
 2. **Levantar la app contra esa base** (`DATABASE_URL=…/tienda_demo_e2e npm run dev`) y sacar las capturas:
