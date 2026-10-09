@@ -3,15 +3,19 @@
 import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/currency";
-import { CartIcon } from "@/components/icons";
+import { isStaff } from "@/lib/roles";
+import { CartIcon, PencilIcon } from "@/components/icons";
 import { WaitlistModal } from "@/components/WaitlistModal";
 import type { ProductDetail } from "@/lib/productDetail";
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { addItem } = useCart();
   const { formatMoney } = useMoney();
+  const { data: session } = useSession();
+  const isAdmin = isStaff(session?.user?.role);
   const isVariable = product.type === "variable";
   const [imageIndex, setImageIndex] = useState(0);
   // atributo -> término elegido
@@ -74,15 +78,26 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-8 sm:px-6 sm:py-12">
-      <nav className="mb-6 text-xs text-brand-muted">
-        <Link href="/tienda" className="hover:text-brand-pink-dark">Tienda</Link>
-        {product.categories[0] && (
-          <>
-            {" / "}
-            <Link href={`/categoria/${product.categories[0].slug}`} className="hover:text-brand-pink-dark">
-              {product.categories[0].name}
-            </Link>
-          </>
+      <nav className="mb-6 flex items-center justify-between gap-3 text-xs text-brand-muted">
+        <span>
+          <Link href="/tienda" className="hover:text-brand-pink-dark">Tienda</Link>
+          {product.categories[0] && (
+            <>
+              {" / "}
+              <Link href={`/categoria/${product.categories[0].slug}`} className="hover:text-brand-pink-dark">
+                {product.categories[0].name}
+              </Link>
+            </>
+          )}
+        </span>
+        {isAdmin && (
+          <Link
+            href={`/admin/productos/${product.id}`}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 px-3 py-1.5 font-semibold uppercase tracking-wide text-brand-ink transition-colors hover:border-brand-pink hover:text-brand-pink-dark"
+          >
+            <PencilIcon className="h-3.5 w-3.5" />
+            Editar producto
+          </Link>
         )}
       </nav>
 

@@ -8,14 +8,15 @@ import { useMoney } from "@/lib/currency";
 import { useCart } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
 import { useAuthModal } from "@/lib/authModal";
-import { CartIcon, BellIcon, HeartIcon } from "@/components/icons";
+import { isStaff } from "@/lib/roles";
+import { CartIcon, BellIcon, HeartIcon, PencilIcon } from "@/components/icons";
 import { ProductImage } from "@/components/ProductImage";
 import { WaitlistModal } from "@/components/WaitlistModal";
 
 export function ProductCard({ product }: { product: ProductListItem }) {
   const { addItem } = useCart();
   const { formatMoney } = useMoney();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const { isFavorite, toggle } = useFavorites();
   const { openLogin } = useAuthModal();
   const [waitlistOpen, setWaitlistOpen] = useState(false);
@@ -24,6 +25,7 @@ export function ProductCard({ product }: { product: ProductListItem }) {
   const categoryName = product.categoryName ?? undefined;
   const hasDiscount = product.compareAtPrice !== null && product.compareAtPrice > product.price;
   const favorite = isFavorite(product.id);
+  const isAdmin = isStaff(session?.user?.role);
 
   function handleToggleFavorite() {
     if (status !== "authenticated") {
@@ -54,6 +56,16 @@ export function ProductCard({ product }: { product: ProductListItem }) {
         >
           <HeartIcon className={`h-4 w-4 ${favorite ? "fill-current" : "fill-none"}`} />
         </button>
+        {isAdmin && (
+          <Link
+            href={`/admin/productos/${product.id}`}
+            title="Editar producto"
+            aria-label="Editar producto"
+            className="absolute left-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-brand-ink shadow transition-colors hover:bg-brand-pink hover:text-white"
+          >
+            <PencilIcon className="h-4 w-4" />
+          </Link>
+        )}
       </div>
 
       {categoryName && (
