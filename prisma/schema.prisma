@@ -106,6 +106,13 @@ model StoreSettings {
   // "limpia".
   hideOutOfStock Boolean @default(false)
 
+  // Si está prendido, la tienda pública muestra primero las categorías como
+  // tarjetas (y sus subcategorías, en cascada) antes de llegar a los
+  // productos, en vez del menú lateral fijo con todo el árbol a la vista.
+  // Apagado por defecto para no cambiar la experiencia actual sin que el
+  // admin lo elija.
+  categoryDrilldownEnabled Boolean @default(false)
+
   // Vendedora virtual. El proveedor se puede cambiar sin alterar el chat ni
   // las herramientas: el catálogo y el stock reales son los de la base propia.
   aiAssistantEnabled    Boolean     @default(false)

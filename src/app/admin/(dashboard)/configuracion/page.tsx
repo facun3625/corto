@@ -8,7 +8,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TelegramTestButton } from "./TelegramTestButton";
 import { SettingsTabs } from "./SettingsTabs";
 import { CategoryChipSelector } from "./CategoryChipSelector";
-import { WrenchIcon, PackageIcon, StarIcon } from "@/components/icons";
+import { WrenchIcon, PackageIcon, StarIcon, DashboardIcon } from "@/components/icons";
 import { LogoField } from "./LogoField";
 import { BenefitsEditor } from "./BenefitsEditor";
 import { sanitizeBenefits } from "@/lib/benefitIcons";
@@ -41,6 +41,7 @@ import {
   updateCheckoutTexts,
   updateMaintenanceMode,
   updateHideOutOfStock,
+  updateCategoryDrilldown,
   updateCartAutoCloseSettings,
   updateAiAssistantSettings,
   updatePopupSettings,
@@ -174,6 +175,28 @@ export default async function AdminConfiguracionPage({
           </div>
           <div className="flex items-center gap-3">
             <ToggleSwitch name="hideOutOfStock" defaultChecked={settings.hideOutOfStock} />
+            <SaveButton trackDirty />
+          </div>
+        </div>
+      </form>
+
+      <form action={updateCategoryDrilldown} className="rounded-xl border border-black/10 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-muted">
+              <DashboardIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-brand-ink">Navegar por categorías en tarjetas</p>
+              <p className="max-w-xl text-xs text-brand-muted">
+                {settings.categoryDrilldownEnabled
+                  ? "La tienda muestra primero las categorías como tarjetas; al tocar una se ven sus subcategorías (y así en cascada) hasta llegar a los productos."
+                  : "La tienda muestra el menú lateral de categorías de siempre, con los productos a la vista desde el principio."}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <ToggleSwitch name="categoryDrilldownEnabled" defaultChecked={settings.categoryDrilldownEnabled} />
             <SaveButton trackDirty />
           </div>
         </div>

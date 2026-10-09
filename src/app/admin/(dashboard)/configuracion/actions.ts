@@ -42,6 +42,20 @@ export async function updateHideOutOfStock(formData: FormData) {
   revalidatePath("/");
 }
 
+export async function updateCategoryDrilldown(formData: FormData) {
+  await requireAdmin();
+
+  await prisma.storeSettings.upsert({
+    where: { id: "global" },
+    create: { id: "global", categoryDrilldownEnabled: formData.get("categoryDrilldownEnabled") === "on" },
+    update: { categoryDrilldownEnabled: formData.get("categoryDrilldownEnabled") === "on" },
+  });
+
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/tienda");
+  revalidatePath("/");
+}
+
 function optionalText(formData: FormData, name: string, maxLength: number): string | null {
   const value = formData.get(name);
   if (typeof value !== "string") return null;

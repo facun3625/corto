@@ -7,7 +7,7 @@ import { siteUrl } from "@/lib/siteUrl";
 
 type Props = {
   params: Promise<{ path: string[] }>;
-  searchParams: Promise<{ q?: string; page?: string; etiqueta?: string; ofertas?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; etiqueta?: string; ofertas?: string; todos?: string }>;
 };
 
 // Acepta /categoria/<slug>, /categoria/<id> y rutas anidadas al estilo WooCommerce
