@@ -13,6 +13,7 @@ const ACTION_LABELS: Record<string, string> = {
   "user.make_admin": "Hizo administrador a un usuario",
   "user.reset_password": "Restableció la contraseña de un usuario",
   "user.remove_admin": "Quitó el rol de administrador",
+  "user.make_coupon_staff": "Dio acceso a cupón rápido (sucursal)",
   "order.confirm": "Confirmó el pago",
   "order.cancel": "Canceló el pedido",
   "order.deliver": "Marcó como entregado",

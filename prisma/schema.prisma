@@ -8,11 +8,14 @@ datasource db {
 }
 
 // customer: cliente de la tienda · admin: administrador de la tienda · superadmin: dueño técnico de la instalación
-// (ve todo el panel, crea administradores y no aparece en la lista de usuarios del administrador)
+// (ve todo el panel, crea administradores y no aparece en la lista de usuarios del administrador) ·
+// couponStaff: cuenta genérica de sucursal sin acceso al panel, solo entra a /cupon-rapido a generar
+// cupones de un solo uso para invitar clientes del local a probar la tienda online.
 enum Role {
   customer
   admin
   superadmin
+  couponStaff
 }
 
 model User {

@@ -21,7 +21,7 @@ export type CustomerRow = {
   id: string;
   email: string;
   name: string | null;
-  role: "customer" | "admin" | "superadmin";
+  role: "customer" | "admin" | "superadmin" | "couponStaff";
   points: number;
   createdAt: Date;
   stats: CustomerStats;

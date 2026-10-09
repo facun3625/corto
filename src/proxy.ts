@@ -33,9 +33,18 @@ async function isMaintenanceOn(): Promise<boolean> {
 // Auth revalida el rol del JWT contra la base en cada solicitud para
 // proteger /admin. No hay login propio del panel: se usa el mismo login del
 // sitio (AuthModal); si esa cuenta no es admin, se manda al home.
+// Cuenta genérica de sucursal (sin panel): solo puede estar en esta pantalla,
+// se la manda para acá desde cualquier otra ruta que pida.
+const COUPON_STAFF_PATH = "/cupon-rapido";
+
 export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const isAdminUser = req.auth?.user?.role === "admin" || req.auth?.user?.role === "superadmin";
+  const isCouponStaffUser = req.auth?.user?.role === "couponStaff";
+
+  if (isCouponStaffUser && pathname !== COUPON_STAFF_PATH) {
+    return NextResponse.redirect(new URL(COUPON_STAFF_PATH, req.url));
+  }
 
   if (pathname.startsWith("/admin")) {
     if (!isAdminUser) return NextResponse.redirect(new URL("/", req.url));

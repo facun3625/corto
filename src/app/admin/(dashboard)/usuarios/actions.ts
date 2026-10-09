@@ -23,12 +23,15 @@ export async function setUserRole(id: string, role: "admin" | "customer") {
   revalidatePath("/admin/usuarios");
 }
 
-export type NewAdminInput = { name: string; email: string; password: string };
+export type NewAdminInput = { name: string; email: string; password: string; role?: "admin" | "couponStaff" };
 
-// Un administrador (o el superadministrador) puede crear otros administradores de la tienda. Si el email ya tiene cuenta, esa
-// cuenta pasa a ser administrador y conserva su contraseña (o su ingreso con Google).
+// Un administrador (o el superadministrador) puede crear otros administradores de la tienda, o cuentas
+// genéricas de sucursal (couponStaff: sin panel, solo /cupon-rapido). Si el email ya tiene cuenta, esa
+// cuenta pasa a tener el rol elegido y conserva su contraseña (o su ingreso con Google).
 export async function createAdminUser(input: NewAdminInput): Promise<{ ok: boolean; message: string }> {
   await requireAdmin();
+  const role = input.role === "couponStaff" ? "couponStaff" : "admin";
+  const roleLabel = role === "admin" ? "administrador" : "con acceso a cupón rápido";
   const email = input.email.trim().toLowerCase();
   const name = input.name.trim().slice(0, 80) || null;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, message: "El email no es válido." };
@@ -36,17 +39,17 @@ export async function createAdminUser(input: NewAdminInput): Promise<{ ok: boole
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } });
   if (existing) {
     if (existing.role === "superadmin") return { ok: false, message: "Ese email no se puede usar." };
-    if (existing.role === "admin") return { ok: false, message: "Esa persona ya es administradora." };
-    await prisma.user.update({ where: { id: existing.id }, data: { role: "admin" } });
-    await logAdminAction("user.make_admin", { targetType: "user", targetId: existing.id, detail: email });
+    if (existing.role === role) return { ok: false, message: `Esa persona ya es ${roleLabel}.` };
+    await prisma.user.update({ where: { id: existing.id }, data: { role } });
+    await logAdminAction(role === "admin" ? "user.make_admin" : "user.make_coupon_staff", { targetType: "user", targetId: existing.id, detail: email });
     revalidatePath("/admin/usuarios");
-    return { ok: true, message: `${email} ya tenía una cuenta: ahora es administrador (entra con su misma clave o con Google).` };
+    return { ok: true, message: `${email} ya tenía una cuenta: ahora es ${roleLabel} (entra con su misma clave o con Google).` };
   }
   if (input.password.length < 8) return { ok: false, message: "La contraseña tiene que tener al menos 8 caracteres." };
-  const created = await prisma.user.create({ data: { email, name, role: "admin", passwordHash: await bcrypt.hash(input.password, 10) }, select: { id: true } });
-  await logAdminAction("user.create_admin", { targetType: "user", targetId: created.id, detail: email });
+  const created = await prisma.user.create({ data: { email, name, role, passwordHash: await bcrypt.hash(input.password, 10) }, select: { id: true } });
+  await logAdminAction(role === "admin" ? "user.create_admin" : "user.make_coupon_staff", { targetType: "user", targetId: created.id, detail: email });
   revalidatePath("/admin/usuarios");
-  return { ok: true, message: `Administrador creado. Puede entrar con ${email} y la contraseña que cargaste.` };
+  return { ok: true, message: `Cuenta creada. Puede entrar con ${email} y la contraseña que cargaste.` };
 }
 
 // Restablecer la contraseña de alguien que la olvidó (solo el superadministrador). La cuenta del

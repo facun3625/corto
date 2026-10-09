@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/adminAuth";
+import { requireAdmin, requireCouponAccess } from "@/lib/adminAuth";
 import { prisma } from "@/lib/prisma";
 import { dayToInstant } from "@/lib/storeTime";
 import type { DiscountType, PaymentMethod } from "@/generated/prisma/enums";
@@ -84,7 +84,7 @@ export type QuickCouponResult =
 // de categoría/producto/medio de pago, con vencimiento corto para generar
 // urgencia. Se manda por WhatsApp desde el mismo panel (QuickCouponGenerator).
 export async function generateQuickCoupon(formData: FormData): Promise<QuickCouponResult> {
-  await requireAdmin();
+  await requireCouponAccess();
 
   const rawPct = Number(formData.get("discountValue"));
   if (!Number.isFinite(rawPct) || rawPct <= 0) {

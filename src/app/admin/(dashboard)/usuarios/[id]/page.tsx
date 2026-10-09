@@ -75,7 +75,7 @@ export default async function CustomerFichaPage({ params }: { params: Promise<{ 
           </p>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${user.role !== "customer" ? "bg-brand-pink/10 text-brand-pink-dark" : "bg-gray-100 text-gray-700"}`}>
-          {user.role === "superadmin" ? "Superadministrador" : user.role === "admin" ? "Administrador" : "Cliente"}
+          {user.role === "superadmin" ? "Superadministrador" : user.role === "admin" ? "Administrador" : user.role === "couponStaff" ? "Cupón rápido" : "Cliente"}
         </span>
       </div>
 

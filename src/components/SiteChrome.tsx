@@ -45,6 +45,9 @@ export function SiteChrome({
   // Página de integraciones (IA y mail): aparte de /admin a propósito, pero misma
   // idea — pantalla propia, sin navbar/footer/whatsapp del sitio público.
   const isIntegrations = pathname === "/integraciones";
+  // Pantalla única de la cuenta genérica de sucursal (rol couponStaff, ver
+  // proxy.ts) — tampoco lleva navbar/footer/whatsapp del sitio público.
+  const isCuponRapido = pathname === "/cupon-rapido";
 
   if (isAdmin) {
     // El dashboard admin maneja su propio scroll interno (sidebar fijo +
@@ -54,7 +57,7 @@ export function SiteChrome({
     return <div className="admin-root h-screen overflow-hidden" style={ADMIN_BASE_VARS}>{children}</div>;
   }
 
-  if (isIntegrations) {
+  if (isIntegrations || isCuponRapido) {
     return <div className="admin-root" style={ADMIN_BASE_VARS}>{children}</div>;
   }
 
