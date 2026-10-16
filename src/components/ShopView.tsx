@@ -136,7 +136,7 @@ export async function ShopView({
                   category?.comingSoonMessage ? (
                     <div className="rounded-xl border border-black/10 bg-brand-soft/40 px-6 py-10 text-center">
                       <div
-                        className="rich-content mx-auto max-w-md text-sm text-brand-ink/80"
+                        className="rich-content mx-auto max-w-xl text-sm text-brand-ink/80"
                         dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(category.comingSoonMessage) }}
                       />
                     </div>
