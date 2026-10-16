@@ -16,7 +16,7 @@ export function CategoryTile({ slug, name, image }: { slug: string; name: string
         <div className="absolute inset-0 bg-brand-soft" />
       )}
 
-      <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2 rounded-full bg-white py-2 pl-4 pr-2 shadow-md ring-1 ring-black/10 transition-colors group-hover:bg-brand-pink">
+      <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 rounded-full bg-white py-2 pl-4 pr-2 shadow-md ring-1 ring-black/10 transition-colors group-hover:bg-brand-pink">
         <p className="truncate text-xs font-bold uppercase tracking-wide text-brand-ink transition-colors group-hover:text-white">
           {name}
         </p>
