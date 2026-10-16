@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { prisma } from '@/lib/prisma';
 import { createCategory, saveCategoryDetails, deleteCategoryAction } from '../../src/app/admin/(dashboard)/categorias/actions';
 
-const base = { name: '', slug: '', parentId: '', sortOrder: 0, description: '', imageUrl: '', seoTitle: '', seoDescription: '' };
+const base = { name: '', slug: '', parentId: '', sortOrder: 0, description: '', comingSoonMessage: '', imageUrl: '', seoTitle: '', seoDescription: '' };
 
 async function main() {
   await prisma.$executeRawUnsafe('TRUNCATE "Product","Category" CASCADE');

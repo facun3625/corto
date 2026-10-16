@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { uniqueSlug } from "@/lib/slug";
+import { sanitizeRichHtml } from "@/lib/sanitizeHtml";
 
 type Result = { ok: true; id?: string; message?: string } | { ok: false; error: string };
 
@@ -14,6 +15,7 @@ export type CategoryInput = {
   parentId: string;
   sortOrder: number;
   description: string;
+  comingSoonMessage: string;
   imageUrl: string;
   seoTitle: string;
   seoDescription: string;
@@ -68,6 +70,7 @@ export async function saveCategoryDetails(id: string, input: CategoryInput): Pro
       parentId,
       sortOrder: Math.trunc(Number(input.sortOrder)) || 0,
       description: nul(input.description, 2000),
+      comingSoonMessage: input.comingSoonMessage.replace(/<[^>]+>/g, "").trim() ? sanitizeRichHtml(input.comingSoonMessage) : null,
       imageUrl: nul(input.imageUrl),
       seoTitle: nul(input.seoTitle, 120),
       seoDescription: nul(input.seoDescription, 300),

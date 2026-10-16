@@ -26,7 +26,7 @@ export function CategoryCardGrid({
                 {cat.name}
               </p>
               <p className="text-[11px] text-brand-muted transition-colors group-hover:text-white/80">
-                {cat.count} producto{cat.count === 1 ? "" : "s"}
+                {cat.count > 0 ? `${cat.count} producto${cat.count === 1 ? "" : "s"}` : "Próximamente"}
               </p>
             </div>
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white transition-colors group-hover:bg-white group-hover:text-brand-pink-dark">

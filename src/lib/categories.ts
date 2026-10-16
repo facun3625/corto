@@ -6,7 +6,7 @@ import type { CategoryItem } from "@/types/catalog";
 // client component (este importa Prisma).
 export async function getAllCategories(): Promise<CategoryItem[]> {
   return prisma.category.findMany({
-    select: { id: true, name: true, slug: true, parentId: true, imageUrl: true },
+    select: { id: true, name: true, slug: true, parentId: true, imageUrl: true, comingSoonMessage: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 }

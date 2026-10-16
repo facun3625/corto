@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogoField } from "../../configuracion/LogoField";
 import { DeleteCategoryButton } from "../DeleteCategoryButton";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { saveCategoryDetails, type CategoryInput } from "../actions";
 
 const field = "w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
@@ -82,6 +83,27 @@ export function CategoryForm({
                 <textarea className={field} rows={3} value={form.description} maxLength={2000} onChange={(e) => set("description", e.target.value)} />
               </div>
             </div>
+          </div>
+
+          <div className={card}>
+            <p className="text-sm font-semibold text-brand-ink">Cartel de "todavía sin productos"</p>
+            <p className="mb-3 text-xs text-brand-muted">
+              Para una categoría que armaste pero todavía no cargaste productos. Si escribís algo acá, esta categoría
+              se va a seguir mostrando en el menú y en el inicio como si tuviera productos, y al entrar se ve este
+              cartel en vez de la grilla vacía. Dejalo en blanco para que la categoría se oculte sola mientras no
+              tenga productos (comportamiento de siempre).
+            </p>
+            <RichTextEditor
+              name="comingSoonMessage"
+              compact
+              initialValue={initial.comingSoonMessage}
+              onChange={(html) => set("comingSoonMessage", html)}
+              uploadImage={async (fd) => {
+                const res = await fetch("/api/admin/images", { method: "POST", body: fd });
+                const data = await res.json().catch(() => ({}));
+                return res.ok ? { ok: true, url: data.url } : { ok: false, error: data.error ?? "No se pudo subir" };
+              }}
+            />
           </div>
 
           <div className={card}>

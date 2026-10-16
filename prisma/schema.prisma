@@ -903,6 +903,11 @@ model Category {
   name           String
   slug           String     @unique
   description    String?
+  // Cartel (texto enriquecido) que se muestra en vez de la grilla cuando la categoría
+  // todavía no tiene productos — mientras tenga esto cargado, cuenta como "con contenido"
+  // para aparecer en el menú/inicio igual que si tuviera productos (ver getAllCategories
+  // y el armado de `counts` en ShopView).
+  comingSoonMessage String?
   imageUrl       String?
   parentId       String?
   parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)

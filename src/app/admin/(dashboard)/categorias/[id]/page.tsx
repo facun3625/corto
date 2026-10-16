@@ -45,6 +45,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ id: s
           parentId: cat.parentId ?? "",
           sortOrder: cat.sortOrder,
           description: cat.description ?? "",
+          comingSoonMessage: cat.comingSoonMessage ?? "",
           imageUrl: cat.imageUrl ?? "",
           seoTitle: cat.seoTitle ?? "",
           seoDescription: cat.seoDescription ?? "",

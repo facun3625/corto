@@ -26,4 +26,6 @@ export type CategoryItem = {
   slug: string;
   parentId: string | null;
   imageUrl: string | null;
+  // Cartel de "todavía no tiene productos" — ver Category.comingSoonMessage en el schema.
+  comingSoonMessage: string | null;
 };
