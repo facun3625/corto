@@ -15,9 +15,10 @@ export function sanitizeRichHtml(html: string): string {
     // Las imágenes que inserta el editor no traen estilo — se les agrega acá
     // para que no se salgan del ancho del contenedor.
     .replace(/<img(?![^>]*\bstyle=)([^>]*)>/gi, '<img$1 style="max-width:100%;height:auto;border-radius:8px;" />')
-    // Los links del editor tampoco traen color — se les da el color de marca.
+    // Los links del editor tampoco traen color — se les da el color de marca (sin
+    // subrayado: el estilo de los links vive en .rich-content a, ver globals.css).
     .replace(
       /<a(?![^>]*\bstyle=)([^>]*)>/gi,
-      '<a$1 style="color:#c4161a;text-decoration:underline;">'
+      '<a$1 style="color:#c4161a;text-decoration:none;">'
     );
 }
