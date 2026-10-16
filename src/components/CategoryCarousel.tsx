@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
+import { CategoryTile } from "@/components/CategoryTile";
 
 export function CategoryCarousel({
   categories,
@@ -44,33 +44,12 @@ export function CategoryCarousel({
           className="flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {categories.map((cat) => (
-            <Link
+            <div
               key={cat.id}
-              href={`/categoria/${cat.slug}`}
-              className="group flex w-[calc((100%-1rem)/2)] shrink-0 snap-start flex-col items-center rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)]"
+              className="w-[calc((100%-1rem)/2)] shrink-0 snap-start sm:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)]"
             >
-              {cat.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="h-32 w-32 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="h-32 w-32 rounded-xl bg-brand-soft" />
-              )}
-
-              <div className="mt-4 flex w-full items-center justify-between gap-2 rounded-full bg-white py-2 pl-4 pr-2 shadow-md ring-1 ring-black/10 transition-colors group-hover:bg-brand-pink">
-                <p className="truncate text-xs font-bold uppercase tracking-wide text-brand-ink transition-colors group-hover:text-white">
-                  {cat.name}
-                </p>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white transition-colors group-hover:bg-white group-hover:text-brand-pink-dark">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
+              <CategoryTile slug={cat.slug} name={cat.name} image={cat.image} />
+            </div>
           ))}
         </div>
 

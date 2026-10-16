@@ -114,7 +114,6 @@ export async function ShopView({
                       slug: c.slug,
                       name: c.name,
                       image: c.imageUrl,
-                      count: counts.get(c.id) ?? 0,
                     }))}
                   />
                 </div>

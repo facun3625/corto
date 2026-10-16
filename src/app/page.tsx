@@ -38,8 +38,14 @@ export default async function Home() {
     const byId = new Map(categories.map((c) => [c.id, c]));
     const topLevelIds = categories.filter((c) => c.parentId === null).map((c) => c.id);
     const heroIds = topLevelIds.slice(0, FALLBACK_CATEGORY_COUNT);
-    const featuredIds =
-      settings.featuredCategoryIds.length > 0 ? settings.featuredCategoryIds : topLevelIds.slice(0, 6);
+    // El orden siempre sigue el de Categorías (campo "Orden" de cada una, mismo orden que el
+    // menú de la tienda) — aunque se hayan elegido a mano en Configuración en otro orden.
+    const orderIndex = new Map(categories.map((c, i) => [c.id, i]));
+    const featuredIds = (
+      settings.featuredCategoryIds.length > 0 ? settings.featuredCategoryIds : topLevelIds.slice(0, 6)
+    )
+      .slice()
+      .sort((a, b) => (orderIndex.get(a) ?? 0) - (orderIndex.get(b) ?? 0));
 
     const [heroResults, featuredResults, carouselResults] = await Promise.all([
       Promise.all(
