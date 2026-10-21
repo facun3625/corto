@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isLikelyPhone } from "@/lib/whatsapp";
 
 type SyncBody = {
   sessionId: string;
@@ -23,6 +24,7 @@ type SyncBody = {
 export async function POST(req: Request) {
   const body = (await req.json()) as SyncBody;
   const { sessionId, userId, email, name, phone, items, total } = body;
+  const validPhone = typeof phone === "string" && isLikelyPhone(phone) ? phone.trim().slice(0, 40) : undefined;
 
   if (!sessionId) {
     return NextResponse.json({ error: "sessionId requerido" }, { status: 400 });
@@ -44,8 +46,8 @@ export async function POST(req: Request) {
 
   await prisma.abandonedCart.upsert({
     where: { sessionId },
-    create: { sessionId, userId: validUserId, email, name, phone, items, total },
-    update: { userId: validUserId, email, name, phone, items, total },
+    create: { sessionId, userId: validUserId, email, name, phone: validPhone, items, total },
+    update: { userId: validUserId, email, name, phone: validPhone, items, total },
   });
 
   return NextResponse.json({ ok: true });

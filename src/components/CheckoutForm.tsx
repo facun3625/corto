@@ -11,6 +11,7 @@ import { tokenizeCard } from "@/lib/decidirScript";
 import { PAYWAY_CARD_BRANDS, PROVINCIAS_AR } from "@/lib/payway";
 import { detectCardBrand, tokenizeMercadoPagoCard } from "@/lib/mercadoPagoScript";
 import { ShippingPicker, type ShippingSelection } from "@/components/ShippingPicker";
+import { isLikelyPhone } from "@/lib/whatsapp";
 
 type PaymentMethod = "mercadopago" | "transferencia" | "contra_entrega" | "payway" | "sin_pago";
 
@@ -46,6 +47,8 @@ export function CheckoutForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [recoveryStepDone, setRecoveryStepDone] = useState(false);
+  const [recoveryPhoneError, setRecoveryPhoneError] = useState<string | null>(null);
   const [comprobante, setComprobante] = useState<File | null>(null);
   const checkoutIdRef = useRef<string | null>(null);
   const [requiresReview, setRequiresReview] = useState(false);
@@ -110,7 +113,11 @@ export function CheckoutForm() {
   // guardaba como "Anónimo"). Este segundo sync manda lo que se va
   // completando en el checkout, para el mismo sessionId.
   useEffect(() => {
-    if (!name.trim() && !email.trim() && !phone.trim()) return;
+    // No persistimos un telefono a medio escribir. Apenas tiene formato
+    // suficiente para poder abrir WhatsApp, queda asociado al carrito aunque
+    // la persona no avance al resto del checkout.
+    const recoveryPhone = isLikelyPhone(phone) ? phone.trim() : undefined;
+    if (!name.trim() && !email.trim() && !recoveryPhone) return;
     const handle = setTimeout(() => {
       const sessionId = getCartSessionId();
       if (!sessionId || items.length === 0) return;
@@ -122,7 +129,7 @@ export function CheckoutForm() {
           userId: session?.user?.id,
           email: email.trim() || undefined,
           name: name.trim() || undefined,
-          phone: phone.trim() || undefined,
+          phone: recoveryPhone,
           items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, name: i.name, price: i.price, quantity: i.quantity })),
           total,
         }),
@@ -406,6 +413,66 @@ export function CheckoutForm() {
       <p className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
         No hay métodos de pago disponibles en este momento. Escribinos por WhatsApp para coordinar tu pedido.
       </p>
+    );
+  }
+
+  if (!recoveryStepDone) {
+    return (
+      <form
+        className="mt-6 rounded-2xl border border-black/10 bg-white p-4 sm:p-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!isLikelyPhone(phone)) {
+            setRecoveryPhoneError("Ingresá un número válido, con código de área.");
+            return;
+          }
+          setRecoveryPhoneError(null);
+          setRecoveryStepDone(true);
+        }}
+      >
+        <h2 className="font-semibold text-brand-ink">Guardá tu carrito</h2>
+        <p className="mt-1 text-sm text-brand-muted">
+          Dejanos tu WhatsApp por si necesitás ayuda para terminar esta compra.
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            autoFocus
+            maxLength={30}
+            value={phone}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              setRecoveryPhoneError(null);
+            }}
+            placeholder="Ej.: 342 555 1234"
+            aria-label="Número de WhatsApp"
+            aria-describedby="cart-recovery-phone-note"
+            className="min-h-11 flex-1 rounded-full border border-black/10 px-4 text-sm text-brand-ink outline-none focus:border-brand-pink"
+          />
+          <button
+            type="submit"
+            className="min-h-11 cursor-pointer rounded-full bg-brand-pink px-6 text-sm font-semibold text-white transition-colors hover:bg-brand-pink-dark"
+          >
+            Continuar
+          </button>
+        </div>
+        {recoveryPhoneError && <p className="mt-2 text-xs text-red-600">{recoveryPhoneError}</p>}
+        <p id="cart-recovery-phone-note" className="mt-2 text-xs text-brand-muted">
+          Sólo lo usaremos para ayudarte a recuperar este carrito. No te suscribe a campañas.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setRecoveryPhoneError(null);
+            setRecoveryStepDone(true);
+          }}
+          className="mt-3 cursor-pointer text-xs font-medium text-brand-muted underline-offset-2 hover:text-brand-ink hover:underline"
+        >
+          Omitir por ahora
+        </button>
+      </form>
     );
   }
 
