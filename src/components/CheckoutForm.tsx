@@ -39,16 +39,15 @@ export function CheckoutForm() {
   const { formatMoney } = useMoney();
   const router = useRouter();
   const { data: session } = useSession();
-  const { items, total, clear } = useCart();
+  const { items, total, clear, recoveryPhone, saveRecoveryPhone } = useCart();
 
   const [methods, setMethods] = useState<AvailableMethod[] | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [shippingSel, setShippingSel] = useState<ShippingSelection | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [recoveryStepDone, setRecoveryStepDone] = useState(false);
-  const [recoveryPhoneError, setRecoveryPhoneError] = useState<string | null>(null);
+  const [phoneInput, setPhoneInput] = useState<string | null>(null);
+  const phone = phoneInput ?? recoveryPhone;
   const [comprobante, setComprobante] = useState<File | null>(null);
   const checkoutIdRef = useRef<string | null>(null);
   const [requiresReview, setRequiresReview] = useState(false);
@@ -416,66 +415,6 @@ export function CheckoutForm() {
     );
   }
 
-  if (!recoveryStepDone) {
-    return (
-      <form
-        className="mt-6 rounded-2xl border border-black/10 bg-white p-4 sm:p-5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!isLikelyPhone(phone)) {
-            setRecoveryPhoneError("Ingresá un número válido, con código de área.");
-            return;
-          }
-          setRecoveryPhoneError(null);
-          setRecoveryStepDone(true);
-        }}
-      >
-        <h2 className="font-semibold text-brand-ink">Guardá tu carrito</h2>
-        <p className="mt-1 text-sm text-brand-muted">
-          Dejanos tu WhatsApp por si necesitás ayuda para terminar esta compra.
-        </p>
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <input
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            autoFocus
-            maxLength={30}
-            value={phone}
-            onChange={(event) => {
-              setPhone(event.target.value);
-              setRecoveryPhoneError(null);
-            }}
-            placeholder="Ej.: 342 555 1234"
-            aria-label="Número de WhatsApp"
-            aria-describedby="cart-recovery-phone-note"
-            className="min-h-11 flex-1 rounded-full border border-black/10 px-4 text-sm text-brand-ink outline-none focus:border-brand-pink"
-          />
-          <button
-            type="submit"
-            className="min-h-11 cursor-pointer rounded-full bg-brand-pink px-6 text-sm font-semibold text-white transition-colors hover:bg-brand-pink-dark"
-          >
-            Continuar
-          </button>
-        </div>
-        {recoveryPhoneError && <p className="mt-2 text-xs text-red-600">{recoveryPhoneError}</p>}
-        <p id="cart-recovery-phone-note" className="mt-2 text-xs text-brand-muted">
-          Sólo lo usaremos para ayudarte a recuperar este carrito. No te suscribe a campañas.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            setRecoveryPhoneError(null);
-            setRecoveryStepDone(true);
-          }}
-          className="mt-3 cursor-pointer text-xs font-medium text-brand-muted underline-offset-2 hover:text-brand-ink hover:underline"
-        >
-          Omitir por ahora
-        </button>
-      </form>
-    );
-  }
-
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="mt-6 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6">
       <div className="flex min-w-0 flex-col gap-4 rounded-2xl border border-black/10 bg-white p-3 sm:p-5">
@@ -503,13 +442,39 @@ export function CheckoutForm() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-brand-muted">Teléfono</label>
-          <input
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-lg border border-black/10 px-3.5 py-2 text-sm focus:border-brand-pink focus:outline-none"
-          />
+          {recoveryPhone && phoneInput === null ? (
+            <div className="rounded-lg border border-black/10 bg-brand-soft/50 px-3.5 py-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-brand-muted">WhatsApp guardado</p>
+                  <p className="truncate text-sm text-brand-ink">{recoveryPhone}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPhoneInput(recoveryPhone)}
+                  className="shrink-0 cursor-pointer text-xs font-semibold text-brand-pink-dark hover:underline"
+                >
+                  Cambiar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <label className="mb-1 block text-xs font-semibold text-brand-muted">Teléfono</label>
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                onBlur={() => {
+                  if (phoneInput && isLikelyPhone(phoneInput)) saveRecoveryPhone(phoneInput);
+                }}
+                className="w-full rounded-lg border border-black/10 px-3.5 py-2 text-sm focus:border-brand-pink focus:outline-none"
+              />
+            </>
+          )}
         </div>
       </div>
 

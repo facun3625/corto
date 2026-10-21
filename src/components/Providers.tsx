@@ -8,6 +8,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { FavoritesProvider } from "@/lib/favorites";
 import { CouponCapture } from "@/components/CouponCapture";
 import { CurrencyProvider, type CurrencyCode } from "@/lib/currency";
+import { CartRecoveryPrompt } from "@/components/CartRecoveryPrompt";
 
 export function Providers({ children, currency, cartAutoCloseSeconds }: { children: React.ReactNode; currency: CurrencyCode; cartAutoCloseSeconds: number }) {
   return (
@@ -19,6 +20,7 @@ export function Providers({ children, currency, cartAutoCloseSeconds }: { childr
             <CouponCapture />
             {children}
             <CartDrawer />
+            <CartRecoveryPrompt />
             <AuthModal />
           </AuthModalProvider>
         </CartProvider>
