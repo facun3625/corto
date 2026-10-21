@@ -100,7 +100,7 @@ export function CartRecoveryPrompt() {
             <button
               type="button"
               onClick={dismissRecoveryPrompt}
-              className="mt-3 w-full cursor-pointer text-center text-sm font-medium text-brand-muted hover:text-brand-ink"
+              className="mt-3 min-h-10 w-full cursor-pointer rounded-full border border-black/10 bg-brand-soft/40 px-5 text-center text-sm font-semibold text-brand-muted transition-colors hover:border-black/20 hover:bg-brand-soft hover:text-brand-ink"
             >
               Ahora no, seguir comprando
             </button>
