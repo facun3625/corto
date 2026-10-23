@@ -230,7 +230,15 @@ export async function saveProduct(input: ProductInput): Promise<SaveResult> {
     return { ok: true, id };
   } catch (err) {
     if (typeof err === "object" && err && "code" in err && (err as { code: string }).code === "P2002") {
-      return { ok: false, error: "Ya existe otro producto o variante con ese SKU" };
+      console.error("saveProduct unique constraint violation", err);
+      const target = (err as { meta?: { target?: string | string[] } }).meta?.target;
+      const fields = Array.isArray(target) ? target.join(",") : String(target ?? "");
+      const error = /sku/i.test(fields)
+        ? "Ya existe otro producto o variante con ese SKU"
+        : /slug/i.test(fields)
+          ? "Ya existe otro producto con esa URL (slug). Cambiá el nombre o la URL."
+          : "Ya existe otro registro con ese valor (clave duplicada)";
+      return { ok: false, error };
     }
     console.error("saveProduct failed", err);
     return { ok: false, error: "No se pudo guardar el producto" };
