@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isoToLocalInput, localInputToIso } from "@/lib/datetimeLocal";
 import { checkVideoUrl } from "@/lib/video";
 import { FONT_CHOICES, MAX_BANNERS, MAX_SLIDES, type ButtonStyle, type FontKey, type ThemeConfig, type ThemeSlide } from "@/lib/themes";
+import type { CategoryItem } from "@/types/catalog";
 import { probeVideo, saveTheme, type ThemeInput } from "./actions";
 
 const field = "w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-brand-ink focus:border-brand-pink focus:outline-none";
@@ -254,7 +255,7 @@ function StylePreview({ c, font }: { c: ThemeConfig; font: { family: string | nu
   );
 }
 
-export function ThemeForm({ initial, isBase = false }: { initial: ThemeInput; isBase?: boolean }) {
+export function ThemeForm({ initial, isBase = false, categories = [] }: { initial: ThemeInput; isBase?: boolean; categories?: CategoryItem[] }) {
   const router = useRouter();
   const [form, setForm] = useState<ThemeInput>(initial);
   const [error, setError] = useState<string | null>(null);
@@ -265,8 +266,16 @@ export function ThemeForm({ initial, isBase = false }: { initial: ThemeInput; is
   const setConfig = (patch: Partial<ThemeConfig>) => setForm((f) => ({ ...f, config: { ...f.config, ...patch } }));
   const setColor = (key: keyof ThemeConfig["colors"], value: string) => setConfig({ colors: { ...c.colors, [key]: value } });
   const setSlide = (i: number, patch: Partial<ThemeSlide>) => setConfig({ hero: c.hero.map((s, n) => (n === i ? { ...s, ...patch } : s)) });
+  const setCategoryImage = (categoryId: string, url: string) => {
+    const next = { ...c.categoryImages };
+    if (url) next[categoryId] = url;
+    else delete next[categoryId];
+    setConfig({ categoryImages: next });
+  };
   const font = FONT_CHOICES[c.headingFont];
-  // Secciones del editor (menú lateral): el aspecto base no tiene nombre ni programación
+  const categoryById = useMemo(() => new Map(categories.map((cat) => [cat.id, cat])), [categories]);
+  // Secciones del editor (menú lateral): el aspecto base no tiene nombre, programación ni portadas de categoría
+  // (esas se cargan en Categorías; acá solo las campañas pueden reemplazarlas)
   const sections = useMemo(() => [
     ...(isBase ? [] : [{ id: "sec-titulo", label: "Título" }, { id: "sec-programacion", label: "Programación" }]),
     { id: "sec-colores", label: "Colores" },
@@ -275,6 +284,7 @@ export function ThemeForm({ initial, isBase = false }: { initial: ThemeInput; is
     { id: "sec-anuncio", label: "Barra de anuncio" },
     { id: "sec-slider", label: isBase ? "Slider de la portada" : "Slider de la campaña" },
     { id: "sec-tarjetas", label: "Tarjetas destacadas" },
+    ...(isBase ? [] : [{ id: "sec-portadas", label: "Portadas de categorías" }]),
   ], [isBase]);
 
   function submit(activate = false) {
@@ -472,6 +482,40 @@ export function ThemeForm({ initial, isBase = false }: { initial: ThemeInput; is
         </div>
         {c.banners.some((b) => !b.image) && <p className="mt-3 text-xs text-amber-700">Las tarjetas sin imagen no se muestran.</p>}
       </div>
+
+      {!isBase && (
+        <div id="sec-portadas" className={`${card} scroll-mt-4`}>
+          <p className="text-sm font-semibold text-brand-ink">Portadas de categorías</p>
+          <p className="mt-1 text-xs text-brand-muted">
+            Opcional: reemplazá la portada de una categoría solo mientras esta campaña esté activa. Si no cargás nada, se sigue viendo la del aspecto base (la que está en Categorías).
+          </p>
+          <div className="mt-4 flex flex-col gap-4">
+            {categories.map((cat) => {
+              const parentName = cat.parentId ? categoryById.get(cat.parentId)?.name : null;
+              return (
+                <div key={cat.id} className="flex flex-wrap items-start gap-4 rounded-lg border border-black/10 p-3">
+                  <div className="min-w-[10rem]">
+                    <p className="text-sm font-medium text-brand-ink">{parentName ? `${parentName} › ${cat.name}` : cat.name}</p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-brand-muted">
+                      <span>Aspecto base:</span>
+                      {cat.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={cat.imageUrl} alt="" className="h-8 w-14 rounded border border-black/10 object-cover" />
+                      ) : (
+                        <span>sin portada</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="min-w-[14rem] flex-1">
+                    <ImageField label="Portada para esta campaña" value={c.categoryImages[cat.id] ?? ""} onChange={(url) => setCategoryImage(cat.id, url)} />
+                  </div>
+                </div>
+              );
+            })}
+            {categories.length === 0 && <p className="text-sm text-brand-muted">No hay categorías todavía.</p>}
+          </div>
+        </div>
+      )}
 
       </div>
 

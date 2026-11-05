@@ -35,3 +35,8 @@ export const getThemeForRequest = cache(async (): Promise<RequestTheme | null> =
     return null;
   }
 });
+
+// Portada de categoría propia de la campaña vigente, si cargó una para esa categoría. null = usar la del aspecto base.
+export function categoryImageOverride(theme: RequestTheme | null, categoryId: string): string | null {
+  return theme?.config.categoryImages[categoryId] || null;
+}

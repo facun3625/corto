@@ -1,14 +1,20 @@
 import assert from 'node:assert/strict';
 import { prisma } from '@/lib/prisma';
 import * as t from '@/app/admin/(dashboard)/temas/actions';
-import { pickActiveTheme, themeStatus } from '@/lib/themes';
+import { DEFAULT_THEME_CONFIG, pickActiveTheme, sanitizeThemeConfig, themeStatus } from '@/lib/themes';
+
+async function createBlank(name: string): Promise<string> {
+  const result = await t.saveTheme({ name, description: '', startsAt: '', endsAt: '', config: DEFAULT_THEME_CONFIG }, false);
+  assert.equal(result.ok, true);
+  return (result as { ok: true; id: string }).id;
+}
 
 async function main() {
   await prisma.theme.deleteMany();
-  const { id } = await t.createThemeFromTemplate('navidad');
+  const id = await createBlank('Navidad');
   const row = await prisma.theme.findUniqueOrThrow({ where: { id } });
   assert.equal(row.name, 'Navidad'); assert.equal(row.enabled, false);
-  console.log('creado desde plantilla OK, enabled=', row.enabled);
+  console.log('creado sin guardar en el servidor hasta Guardar OK, enabled=', row.enabled);
   await t.activateTheme(id);
   const all = await prisma.theme.findMany({ where: { enabled: true } });
   assert.equal(pickActiveTheme(all)?.id, id);
@@ -54,19 +60,22 @@ async function main() {
   assert.notEqual((base.config as { colors: { primary: string } }).colors.primary, '#123456');
   // un solo aspecto a la vez: activar una campaña apaga la que se veía; "activar el base" las apaga a todas
   await prisma.theme.deleteMany({ where: { isBase: false } });
-  const nav = await t.createThemeFromTemplate(''); const bf = await t.createThemeFromTemplate('');
+  const navId = await createBlank('Tema nuevo'); const bfId = await createBlank('Tema nuevo');
   const prog = await prisma.theme.create({ data: { name: 'Futura', enabled: true, startsAt: new Date(Date.now() + 5 * 86400_000), config: {} } });
-  await t.activateTheme(nav.id);
-  await t.activateTheme(bf.id);
-  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: nav.id } })).enabled, false, 'activar una campaña apaga la anterior');
-  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bf.id } })).enabled, true);
-  await t.activateTheme(nav.id);
-  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bf.id } })).enabled, false);
+  await t.activateTheme(navId);
+  await t.activateTheme(bfId);
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: navId } })).enabled, false, 'activar una campaña apaga la anterior');
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bfId } })).enabled, true);
+  await t.activateTheme(navId);
+  assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: bfId } })).enabled, false);
   await t.activateBaseTheme();
   assert.equal(await prisma.theme.count({ where: { isBase: false, enabled: true, startsAt: { lte: new Date() } } }), 0, 'el base apaga las campañas visibles');
   assert.equal((await prisma.theme.findUniqueOrThrow({ where: { id: prog.id } })).enabled, true, 'las programadas a futuro no se tocan');
   const rest = await prisma.theme.findMany({ where: { isBase: false } });
   assert.equal(pickActiveTheme(rest), null, 'sin campañas vigentes se ve el aspecto base');
+  // Portadas de categoría por campaña: solo entradas con id válido y url segura sobreviven el saneo
+  const sanitized = sanitizeThemeConfig({ ...DEFAULT_THEME_CONFIG, categoryImages: { ok1: '/img/a.jpg', 'bad id': '/img/b.jpg', ok2: 'javascript:alert(1)' } });
+  assert.deepEqual(sanitized.categoryImages, { ok1: '/img/a.jpg' });
   console.log('themes e2e OK');
   await prisma.$disconnect();
 }

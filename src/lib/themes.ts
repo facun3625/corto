@@ -31,6 +31,9 @@ export type ThemeConfig = {
   // Tarjetas destacadas del inicio (arriba de "Explorá por categoría"), con un título de sección opcional
   bannersTitle: string;
   banners: { image: string; title: string; href: string; alt: string }[];
+  // Portadas de categoría propias de esta campaña (categoryId -> url). Sin entrada para una categoría, se usa
+  // la del aspecto base (Category.imageUrl). No aplica al aspecto base en sí, que usa Category.imageUrl directo.
+  categoryImages: Record<string, string>;
 };
 
 // Los colores de la tienda tal cual están hoy (el "tema base")
@@ -52,6 +55,7 @@ export const DEFAULT_THEME_CONFIG: ThemeConfig = {
   hero: [],
   bannersTitle: "",
   banners: [],
+  categoryImages: {},
 };
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -120,6 +124,13 @@ export function sanitizeThemeConfig(input: unknown): ThemeConfig {
       .map((raw) => ({ image: url(asObj(raw).image), title: str(asObj(raw).title, 60), href: url(asObj(raw).href), alt: str(asObj(raw).alt, 120) }))
       .filter((b) => b.image)
       .slice(0, MAX_BANNERS),
+    categoryImages: Object.fromEntries(
+      Object.entries(asObj(c.categoryImages))
+        .filter(([id]) => /^[A-Za-z0-9_-]{1,40}$/.test(id))
+        .map(([id, v]) => [id, url(v)])
+        .filter(([, v]) => v)
+        .slice(0, 200)
+    ),
   };
 }
 

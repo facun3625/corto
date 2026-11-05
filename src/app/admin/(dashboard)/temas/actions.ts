@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminLog";
 import { prisma } from "@/lib/prisma";
 import { createBaseTheme, ensureBaseTheme } from "@/lib/baseTheme";
-import { configFromTemplate, DEFAULT_THEME_CONFIG, isThemeLive, sanitizeThemeConfig, THEME_TEMPLATES, type ThemeConfig } from "@/lib/themes";
+import { DEFAULT_THEME_CONFIG, isThemeLive, sanitizeThemeConfig, type ThemeConfig } from "@/lib/themes";
 
 export type ThemeInput = { id?: string; name: string; description: string; startsAt: string; endsAt: string; config: ThemeConfig };
 
@@ -80,21 +80,6 @@ export async function saveTheme(input: ThemeInput, activate = false): Promise<{ 
   await logAdminAction(activate ? "theme.activate" : "theme.save", { targetType: "theme", targetId: theme.id, detail: name });
   refresh();
   return { ok: true, id: theme.id };
-}
-
-export async function createThemeFromTemplate(key: string): Promise<{ id: string }> {
-  await requireAdmin();
-  const template = THEME_TEMPLATES.find((t) => t.key === key);
-  const theme = await prisma.theme.create({
-    data: {
-      name: template ? template.name : "Tema nuevo",
-      description: template?.description ?? null,
-      config: (template ? configFromTemplate(key) : DEFAULT_THEME_CONFIG) as object,
-    },
-  });
-  await logAdminAction("theme.save", { targetType: "theme", targetId: theme.id, detail: `Creado ${template ? `desde la plantilla ${template.name}` : "en blanco"}` });
-  refresh();
-  return { id: theme.id };
 }
 
 // "Activar ahora": queda vigente desde este momento (y pasa por encima de otros temas que hayan empezado antes).

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAllCategories } from "@/lib/categories";
 import { descendantIds } from "@/lib/categoryHelpers";
 import { getStoreSettingsRow } from "@/lib/settings";
+import { categoryImageOverride, getThemeForRequest } from "@/lib/themeRuntime";
 import type { Prisma } from "@/generated/prisma/client";
 import type { ProductListItem } from "@/types/catalog";
 import { effectivePricing } from "@/lib/pricing";
@@ -357,8 +358,8 @@ export async function getProductCountsByCategory(
 // Imagen representativa de una categoría: la propia, o la del primer producto
 // publicado de la categoría (o sus descendientes).
 export async function getCategoryShowcaseImage(categoryId: string): Promise<string | null> {
-  const categories = await getAllCategories();
-  const own = categories.find((c) => c.id === categoryId)?.imageUrl;
+  const [categories, theme] = await Promise.all([getAllCategories(), getThemeForRequest()]);
+  const own = categoryImageOverride(theme, categoryId) ?? categories.find((c) => c.id === categoryId)?.imageUrl;
   if (own) return own;
 
   const image = await prisma.productImage.findFirst({

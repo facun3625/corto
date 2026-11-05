@@ -4,6 +4,7 @@ import { getAllCategories } from "@/lib/categories";
 import { topLevelCategories, childrenOf } from "@/lib/categoryHelpers";
 import { getProductsPage, getProductCountsByCategory } from "@/lib/products";
 import { getStoreSettingsRow } from "@/lib/settings";
+import { categoryImageOverride, getThemeForRequest } from "@/lib/themeRuntime";
 import { CategorySidebar } from "@/components/CategorySidebar";
 import { CategoryCardGrid } from "@/components/CategoryCardGrid";
 import { ShopControls } from "@/components/ShopControls";
@@ -27,7 +28,7 @@ export async function ShopView({
   const tagSlug = /^[a-z0-9-]{1,80}$/.test(searchParams.etiqueta ?? "") ? searchParams.etiqueta : undefined;
   const onlyOffers = searchParams.ofertas === "1";
   const showAll = searchParams.todos === "1";
-  const [categories, settings] = await Promise.all([getAllCategories(), getStoreSettingsRow()]);
+  const [categories, settings, theme] = await Promise.all([getAllCategories(), getStoreSettingsRow(), getThemeForRequest()]);
   // Orden elegido en Configuración: solo en la vista general (sin categoría, búsqueda ni filtros) y solo con
   // categorías que todavía existen
   const known = new Set(categories.map((c) => c.id));
@@ -113,7 +114,7 @@ export async function ShopView({
                       id: c.id,
                       slug: c.slug,
                       name: c.name,
-                      image: c.imageUrl,
+                      image: categoryImageOverride(theme, c.id) ?? c.imageUrl,
                     }))}
                   />
                 </div>

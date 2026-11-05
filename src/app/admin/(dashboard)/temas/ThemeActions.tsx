@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { activateBaseTheme, activateTheme, openBaseTheme, resetBaseTheme, createThemeFromTemplate, deactivateTheme, deleteTheme, duplicateTheme, scheduleTheme } from "./actions";
+import { activateBaseTheme, activateTheme, openBaseTheme, resetBaseTheme, deactivateTheme, deleteTheme, duplicateTheme, scheduleTheme } from "./actions";
 import { useConfirm } from "@/lib/useConfirm";
 
 const btn = "cursor-pointer rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-brand-ink hover:bg-brand-soft disabled:opacity-50";
@@ -53,12 +53,10 @@ export function ThemeCardActions({ id, enabled, hasSchedule, isLive, expired }: 
 }
 
 export function NewTheme() {
-  const router = useRouter();
-  const [pending, start] = useTransition();
   return (
-    <button disabled={pending} onClick={() => start(async () => { const { id } = await createThemeFromTemplate(""); router.push(`/admin/temas/${id}`); })} className={btnPrimary}>
+    <Link href="/admin/temas/nuevo" className={btnPrimary}>
       + Crear tema nuevo
-    </button>
+    </Link>
   );
 }
 

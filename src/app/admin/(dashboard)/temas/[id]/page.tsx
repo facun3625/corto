@@ -1,12 +1,16 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getAllCategories } from "@/lib/categories";
 import { sanitizeThemeConfig } from "@/lib/themes";
 import { ThemeForm } from "../ThemeForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditThemePage({ params }: { params: Promise<{ id: string }> }) {
-  const theme = await prisma.theme.findUnique({ where: { id: (await params).id } });
+  const [theme, categories] = await Promise.all([
+    prisma.theme.findUnique({ where: { id: (await params).id } }),
+    getAllCategories(),
+  ]);
   if (!theme) notFound();
   return (
     <div>
@@ -15,6 +19,7 @@ export default async function EditThemePage({ params }: { params: Promise<{ id: 
       <ThemeForm
         isBase={theme.isBase}
         key={theme.id}
+        categories={categories}
         initial={{
           id: theme.id,
           name: theme.name,
